@@ -8,7 +8,10 @@
      novye_raboty      - [{ id, nazvanie, komnata, rasskaz, foto: [{src}], video: [{fajl, oblozhka}] }] - в начало списка;
      k_rabotam         - [{ rabota, nazvanie?, rasskaz?, foto: [...], video: [...] }] - правка готовой работы и новые фото к ней;
                          у обеих ещё поля описания material, cvet, razmery, god (строки; пустая в k_rabotam - стереть);
-     skryt             - [id работы, ...] - убрать работы с витрины (вместе с их видео).
+     skryt             - [id работы, ...] - убрать работы с витрины (вместе с их видео);
+     fon               - фон первого экрана: { tip: "video", video?, video_tel?, kadr?, kadr_tel? } - своё видео (для
+                         компьютера / для телефона, нет одного - берётся другое), { tip: "foto", rabota, foto } - фото
+                         работы (номер фото с 0), { tip: "podborka" } или нет поля - подборка из данных витрины.
    Функция меняет V на месте и возвращает счётчики. */
 (function (root) {
   "use strict";
@@ -59,6 +62,17 @@
       V.raboty = V.raboty.filter(function (w) { return !hide[w.id]; });
       V.video = V.video.filter(function (v) { return !hide[v.rabota]; });
       cnt.skryto = n - V.raboty.length;
+    }
+    var F = P.fon;
+    if (F && typeof F === "object") {
+      if (F.tip === "video" && (F.video || F.video_tel)) {
+        V.fon = { video: F.video || F.video_tel, video_tel: F.video_tel || F.video, kadr: F.kadr || F.kadr_tel || "", kadr_tel: F.kadr_tel || F.kadr || "" };
+      } else if (F.tip === "foto") {
+        var fw = null; V.raboty.forEach(function (x) { if (x.id === F.rabota) fw = x; });
+        var ff = fw && fw.foto && (fw.foto[F.foto | 0] || fw.foto[0]);
+        if (ff && ff.src) V.fon = { kadr: ff.src, kadr_tel: ff.src };
+        else if (warn) warn("фон: нет фото работы " + F.rabota + " - остаётся прежний фон");
+      }
     }
     return cnt;
   }

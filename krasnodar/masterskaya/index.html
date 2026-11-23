@@ -36,6 +36,7 @@ a{color:inherit}
 .tabs button::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--ink);transform:scaleX(0);transform-origin:0 50%;transition:transform .5s var(--ease)}
 .tabs button[aria-selected=true]{color:var(--ink)}
 .tabs button[aria-selected=true]::after{transform:scaleX(1)}
+@media (max-width:440px){.tabs{gap:15px}.tabs button{letter-spacing:.15em}}
 .tabs button i{font-style:normal;font-weight:400;margin-left:4px;vertical-align:4px;font-size:10px}
 main{max-width:1100px;margin:0 auto;padding:clamp(22px,4vh,40px) var(--pad)}
 section[role=tabpanel]{animation:rise .6s var(--ease) both}
@@ -101,6 +102,17 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
 .rng output{min-width:46px;text-align:right;font-variant-numeric:tabular-nums;font-size:14px}
 .note{font-size:13.5px;color:var(--muted);border-left:1px solid var(--ink);padding:4px 0 4px 14px;margin:16px 0}
 .note b{color:var(--ink)}
+.fon-g{display:grid;grid-template-columns:minmax(0,.62fr) minmax(0,1fr);gap:16px;align-items:start}
+.fon-s{display:flex;flex-direction:column;gap:8px;min-width:0}
+.fon-s .bx{position:relative;background:var(--bg2);border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;padding:10px;color:var(--muted);font-size:12.5px;line-height:1.35;text-align:center}
+.fon-s .bx.t{aspect-ratio:9/16}.fon-s .bx.w{aspect-ratio:16/9}
+.fon-s .bx video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.fon-s .bx.err{border-color:var(--err);color:var(--err)}
+.fon-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.fon-pick button{position:relative;aspect-ratio:4/3;padding:0;border:1px solid var(--line);overflow:hidden;background:var(--bg2)}
+.fon-pick button img{width:100%;height:100%;object-fit:cover;display:block}
+.fon-pick button[aria-pressed=true]{outline:2px solid var(--ink);outline-offset:2px}
+.fon-cur{width:min(220px,60%);aspect-ratio:9/16;margin-top:14px;background:#222 center/cover no-repeat;border:1px solid var(--line)}
 .toast{position:fixed;left:50%;bottom:calc(20px + var(--sb));z-index:50;transform:translate(-50%,20px);opacity:0;padding:12px 18px;background:var(--card);color:var(--ink);border:1px solid var(--kr-line2);font-weight:500;font-size:13px;letter-spacing:.03em;transition:opacity .3s,transform .3s var(--ease);pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .save{font-size:12px;color:var(--muted)}
@@ -151,6 +163,7 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
       <button type="button" role="tab" aria-selected="true" data-t="master">О мастере</button>
       <button type="button" role="tab" aria-selected="false" data-t="lenta">Работы<i id="cntL"></i></button>
       <button type="button" role="tab" aria-selected="false" data-t="znak">Знак</button>
+      <button type="button" role="tab" aria-selected="false" data-t="fon">Фон</button>
       <button type="button" role="tab" aria-selected="false" data-t="paket">Опубликовать<i id="cntP"></i></button>
     </nav>
   </div>

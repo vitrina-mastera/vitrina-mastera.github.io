@@ -27,7 +27,10 @@
   try { S = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) {}
   S = S || {};
   S.master = S.master || {}; S.kontakty = S.kontakty || {};
-  S.znak = Object.assign({ chto: "oba", pos: "np", razmer: 11, prozr: 70, cvet: "#ffffff", tekst: M0.znak || M0.imya || "" }, S.znak || {});
+  // знак: опубликованный (m.bin, window.KR_SLOJ.znak) главнее черновика, пока мастер не тронул знак на этом устройстве (S.znakEd)
+  var ZN0 = { chto: "oba", pos: "np", razmer: 11, prozr: 70, cvet: "#ffffff", tekst: M0.znak || M0.imya || "" };
+  var ZPUB = (window.KR_SLOJ && window.KR_SLOJ.znak) || null;
+  S.znak = Object.assign({}, ZN0, S.znakEd || !ZPUB ? S.znak || {} : ZPUB);
   if (!/^(uzor|[vcn][lcp])$/.test(S.znak.pos)) S.znak.pos = "np";
   S.novye = S.novye || []; S.k = S.k || []; // k - добавки к готовым работам: [{ rabota, media: [...] }]
   var saveT = 0;
@@ -222,7 +225,7 @@
     var k = t.getAttribute("data-k"), base = ((sec === "master" ? M0 : K0)[k] || "");
     if (t.value.trim() === String(base).trim()) delete S[sec][k]; else S[sec][k] = t.value; // лишний пробел - не правка
     if (k === "imya") drawTop();
-    if (k === "znak" && sec === "master") { S.znak.tekst = t.value; }
+    if (k === "znak" && sec === "master") { S.znak.tekst = t.value; S.znakEd = true; }
     save();
   });
 
@@ -232,13 +235,13 @@
   function go(t) {
     TAB = t;
     [].forEach.call(document.querySelectorAll(".tabs button"), function (b) { b.setAttribute("aria-selected", b.getAttribute("data-t") === t); });
-    ({ master: vMaster, lenta: vLenta, znak: vZnak, paket: vPaket })[t]();
+    ({ master: vMaster, lenta: vLenta, znak: vZnak, fon: vFon, paket: vPaket })[t]();
     scrollTo(0, 0);
   }
   function counts() {
     var n = 0; S.novye.concat(S.k).forEach(function (w) { n += (w.media || []).filter(function (m) { return m.st === "ok"; }).length; });
     $("cntL").textContent = n || "";
-    var c = changes(), ch = c.m + c.k + (c.logo ? 1 : 0) + n + c.raboty + c.pravka + c.skryt + c.vernut;
+    var c = changes(), ch = c.m + c.k + (c.logo ? 1 : 0) + n + c.raboty + c.pravka + c.skryt + c.vernut + (c.znak ? 1 : 0) + c.fon;
     $("cntP").textContent = ch || "";
   }
 
@@ -388,11 +391,11 @@
       $("zRe").innerHTML = old ? '<p class="note">Уже добавлено ' + old + " " + plural(old, ["фото", "фото", "фото"]) + ' со старым знаком.</p><button type="button" class="btn l sm" id="zReB">Наложить новый знак на них</button>' : "";
       if ($("zReB")) $("zReB").onclick = rewm;
     }
-    function set(k, v) { S.znak[k] = v; if (k === "cvet") logoImgP = null; save(); redraw(); }
+    function set(k, v) { S.znak[k] = v; S.znakEd = true; if (k === "cvet") logoImgP = null; save(); redraw(); }
     function seg(id, k) { var g = $(id); g.onclick = function (e) { var b = e.target.closest("button[data-v]"); if (!b) return; [].forEach.call(g.querySelectorAll("button"), function (x) { x.setAttribute("aria-pressed", x === b); }); if (k === "pos") $("zUzor").setAttribute("aria-pressed", "false"); set(k, b.getAttribute("data-v")); }; }
     seg("zChto", "chto"); seg("zPos", "pos"); seg("zCv", "cvet");
     $("zUzor").onclick = function () { [].forEach.call($("zPos").querySelectorAll("button"), function (x) { x.setAttribute("aria-pressed", "false"); }); this.setAttribute("aria-pressed", "true"); set("pos", "uzor"); };
-    $("zTekst").oninput = function () { S.znak.tekst = this.value; save(); redraw(); };
+    $("zTekst").oninput = function () { S.znak.tekst = this.value; S.znakEd = true; save(); redraw(); };
     $("zR").oninput = function () { $("zRo").textContent = this.value + "%"; set("razmer", +this.value); };
     $("zP").oninput = function () { $("zPo").textContent = this.value + "%"; set("prozr", +this.value); };
     redraw();
@@ -406,6 +409,146 @@
       get("o:" + m.id).then(function (o) { if (!o) return; return renderPhoto(o).then(function (r) { return put("m:" + m.id, r.blob).then(function () { m.znak = sig(); if (URLS["m:" + m.id]) { URL.revokeObjectURL(URLS["m:" + m.id]); delete URLS["m:" + m.id]; } }); }); })
         .catch(function () {}).then(next);
     })();
+  }
+
+  // ---------- Фон первого экрана ----------
+  // Подборка (видео из данных витрины), своё видео (для телефона и/или компьютера) или одно фото работы.
+  // Своё видео перекодируется на холсте: первые FON_SEK секунд, без звука, длинная сторона до 1280 px - чтобы
+  // витрина открывалась быстро. Начинается всегда с первого кадра (он же картинка, пока видео грузится).
+  // Черновик: S.fon = { tip: "podborka" | "video" | "foto", t, w (ролики для телефона и компьютера), rabota, foto, znak }.
+  var FON_SEK = 20;
+  function fonCur() { var F = (window.KR_SLOJ || {}).fon; return F && F.tip ? F : { tip: "podborka" }; }
+  function okm(m) { return m && m.st === "ok" ? m : null; }
+  function fonVids(all) { var F = S.fon; if (!F) return []; return [F.t, F.w].filter(function (m) { return m && (all || m.st === "ok"); }); }
+  function fonCh() {
+    var F = S.fon, C = fonCur(); if (!F) return false;
+    if (F.tip === "podborka") return C.tip !== "podborka";
+    if (F.tip === "foto") return !!F.rabota && !(C.tip === "foto" && C.rabota === F.rabota && (C.foto | 0) === (F.foto | 0));
+    if (F.tip === "video") return fonVids().length > 0;
+    return false;
+  }
+  function fonName(F) { return !F || F.tip === "podborka" ? "подборка мастерской" : F.tip === "foto" ? "фото работы «" + (wTitle(F.rabota) || "работа") + "»" : "своё видео"; }
+  // encFn(ролик) -> { f, k }: файл и первый кадр (зашифрованные "@id" или пути foto/... в пакете)
+  function fonOut(encFn) {
+    if (!fonCh()) return Promise.resolve(undefined);
+    var F = S.fon;
+    if (F.tip === "podborka") return Promise.resolve(null);
+    if (F.tip === "foto") return Promise.resolve({ tip: "foto", rabota: F.rabota, foto: F.foto | 0 });
+    var t = okm(F.t), w = okm(F.w);
+    return (t ? encFn(t) : Promise.resolve(null)).then(function (T) {
+      return (w ? encFn(w) : Promise.resolve(null)).then(function (W) {
+        var o = { tip: "video" };
+        if (W) { o.video = W.f; if (W.k) o.kadr = W.k; }
+        if (T) { o.video_tel = T.f; if (T.k) o.kadr_tel = T.k; }
+        return o;
+      });
+    });
+  }
+  function recFon(file, slot) {
+    if (!videoOk()) { toast("Этот браузер не умеет готовить видео. Откройте Мастерскую в Chrome или Safari 15+", 5000); return; }
+    var F = S.fon, old = F[slot];
+    if (old) { del("m:" + old.id); del("k:" + old.id); }
+    var it = F[slot] = { id: uid(), st: "work" }; save(); vFon();
+    var v = document.createElement("video"), src = URL.createObjectURL(file), stop = false, done = false;
+    v.src = src; v.muted = true; v.defaultMuted = true; v.playsInline = true; v.setAttribute("playsinline", ""); v.setAttribute("muted", ""); v.preload = "auto";
+    function fin(e) {
+      if (done) return; done = true;
+      $("busy").hidden = true; REC = null;
+      try { v.pause(); } catch (x) {}
+      URL.revokeObjectURL(src);
+      if (e) { it.st = "err"; it.err = e.message || String(e); }
+      save(); if (TAB === "fon") vFon();
+    }
+    v.onerror = function () { fin(new Error("Не получилось открыть видео: формат не поддерживается этим браузером")); };
+    v.onloadedmetadata = function () {
+      var dur = isFinite(v.duration) && v.duration > 0 ? v.duration : FON_SEK, len = Math.min(FON_SEK, dur), znak = !!F.znak;
+      Promise.all([znak ? logoImg() : null, znak ? fontsReady() : null]).then(function (a) {
+        var s = fit(v.videoWidth || 720, v.videoHeight || 1280, 1280), c = document.createElement("canvas"); c.width = s.w; c.height = s.h;
+        var x = c.getContext("2d"), logo = a[0], mime = recMime();
+        var rec = new MediaRecorder(c.captureStream(30), { mimeType: mime, videoBitsPerSecond: 1.8e6 });
+        var parts = [], kadr = null, ended = false;
+        rec.ondataavailable = function (e) { if (e.data && e.data.size) parts.push(e.data); };
+        rec.onstop = function () {
+          if (stop) { if (F[slot] === it) delete F[slot]; fin(); toast("Остановлено"); return; }
+          var type = (mime.split(";")[0]) || "video/webm", blob = new Blob(parts, { type: type });
+          it.ext = /mp4/.test(type) ? "mp4" : "webm"; it.w = s.w; it.h = s.h; it.dur = Math.round(len); it.size = blob.size;
+          put("m:" + it.id, blob).then(function () { return put("k:" + it.id, kadr && kadr !== "wait" ? kadr : new Blob()); })
+            .then(function () { it.st = "ok"; fin(); toast("Видео для фона готово"); }, fin);
+        };
+        function end() { if (ended) return; ended = true; try { v.pause(); } catch (e) {} setTimeout(function () { if (rec.state !== "inactive") rec.stop(); }, 150); }
+        function paint() {
+          x.drawImage(v, 0, 0, s.w, s.h); if (znak) drawWM(x, s.w, s.h, S.znak, logo);
+          if (!kadr) { kadr = "wait"; c.toBlob(function (b) { kadr = b; }, "image/jpeg", .85); } // первый кадр - картинка, пока видео грузится
+          $("busyP").style.width = (Math.min(1, v.currentTime / len) * 100).toFixed(1) + "%";
+          if (v.currentTime >= len) end();
+        }
+        var useRVFC = "requestVideoFrameCallback" in HTMLVideoElement.prototype;
+        function loop() { if (ended || stop) return; paint(); if (ended) return; if (useRVFC) v.requestVideoFrameCallback(loop); else requestAnimationFrame(loop); }
+        v.onended = function () { if (!ended) { paint(); end(); } };
+        REC = { stop: function () { stop = true; try { v.pause(); } catch (e) {} if (rec.state !== "inactive") rec.stop(); else fin(); } };
+        $("busyT").textContent = "Видео для фона"; $("busyP").style.width = "0"; $("busy").hidden = false; $("busyX").hidden = false;
+        $("busyS").textContent = "Готовлю первые " + Math.round(len) + " с ролика, без звука. Это занимает столько же времени. Не сворачивайте страницу и не гасите экран.";
+        rec.start(1000);
+        var pl = v.play();
+        if (pl && pl.then) pl.then(loop).catch(function (e) { stop = true; if (F[slot] === it) delete F[slot]; try { rec.stop(); } catch (x) {} fin(new Error("Браузер не дал проиграть ролик: " + (e.message || e))); });
+        else loop();
+      }).catch(function (e) { fin(e); });
+    };
+  }
+  function vFon() {
+    var C = fonCur(), F = S.fon || { tip: C.tip }, tip = F.tip, DF = D.fon || {};
+    var TIPS = [["podborka", "Подборка"], ["video", "Своё видео"], ["foto", "Фото работы"]];
+    var h = '<section role="tabpanel"><h1>Фон</h1><p class="lead">Что видно за домом на первом экране витрины. Начинается всегда с первого кадра - он же виден, пока видео загружается.</p>' +
+      '<p class="note">Сейчас на витрине: <b>' + esc(fonName(C)) + "</b>." + (fonCh() ? "<br>После публикации: <b>" + esc(fonName(S.fon)) + "</b>." : "") + "</p>" +
+      '<div class="seg" id="fTip">' + TIPS.map(function (o) { return '<button type="button" data-v="' + o[0] + '" aria-pressed="' + (tip === o[0]) + '">' + o[1] + "</button>"; }).join("") + "</div>";
+    if (tip === "podborka") {
+      var pk = C.tip === "podborka" ? (DF.kadr_tel || DF.kadr) : "";
+      h += '<div class="card" style="margin-top:16px"><p>Короткий ролик из ваших работ с подсветкой: кухня, ванная с зеркалом, гостиная. Начинается с кухни с подсветкой.</p>' +
+        (pk ? '<div class="fon-cur" style="background-image:url(&quot;' + esc(pk) + '&quot;)"></div>' : "") + "</div>";
+    } else if (tip === "video") {
+      function slot(k, nm, cls) {
+        var m = F[k], st = !m ? "Нет видео" : m.st === "work" ? "Готовлю видео..." : m.st === "err" ? esc(m.err || "Ошибка") : m.dur + " с, " + Math.round((m.size || 0) / 1048576 * 10) / 10 + " МБ";
+        return '<div class="fon-s"><div class="f"><label>' + nm + '</label></div><div class="bx ' + cls + (m && m.st === "err" ? " err" : "") + '" data-bx="' + k + '"><span>' + st + "</span></div>" +
+          '<div class="btns" style="margin-top:0"><span class="btn sm file">' + (m ? "Заменить" : "Выбрать видео") + '<input type="file" accept="video/*" data-fv="' + k + '"></span>' +
+          (m && m.st !== "work" ? '<button type="button" class="btn l sm" data-fx="' + k + '">Убрать</button>' : "") + "</div>" + (m && m.st === "ok" ? '<small class="was">' + st + "</small>" : "") + "</div>";
+      }
+      h += (videoOk() ? "" : '<p class="note">Этот браузер не умеет готовить видео. Откройте Мастерскую в <b>Chrome</b> или <b>Safari 15+</b>.</p>') +
+        (C.tip === "video" && !fonVids(true).length ? '<p class="note">Сейчас на витрине ваше видео. Чтобы заменить - выберите новое.</p>' : "") +
+        '<div class="card" style="margin-top:16px"><div class="fon-g">' + slot("t", "Для телефона", "t") + slot("w", "Для компьютера", "w") + "</div>" +
+        '<label class="chk"><input type="checkbox" id="fZn"' + (F.znak ? " checked" : "") + "> Водяной знак на фоне (как во вкладке «Знак»)</label>" +
+        '<p class="note">Хватит и одного ролика - тогда он пойдёт и на телефон, и на компьютер. Для телефона лучше снимать вертикально, для компьютера - горизонтально. ' +
+        "Красивее всего медленный плавный проход по работе с подсветкой, без резких поворотов и крупных планов. Берутся первые " + FON_SEK + " секунд - лишнее обрежьте в галерее телефона.</p></div>";
+    } else {
+      var ph = []; (D.raboty || []).forEach(function (w) { (w.foto || []).slice(0, 4).forEach(function (f, i) { if (f && f.src) ph.push({ r: w.id, i: i, src: f.src, t: w.nazvanie }); }); });
+      h += '<div class="card" style="margin-top:16px"><p style="margin-bottom:12px">Фото стоит неподвижно, без видео. Подойдёт широкий кадр всей комнаты.</p><div class="fon-pick" id="fPick">' +
+        ph.map(function (p) { return '<button type="button" data-r="' + esc(p.r) + '" data-i="' + p.i + '" aria-pressed="' + (F.rabota === p.r && (F.foto | 0) === p.i) + '" aria-label="' + esc(p.t) + '"><img src="' + esc(p.src) + '" alt="" loading="lazy" decoding="async"></button>'; }).join("") +
+        "</div>" + (ph.length ? "" : '<p class="note">На витрине пока нет фото работ.</p>') + "</div>";
+    }
+    if (S.fon) h += '<div class="btns"><button type="button" class="btn l sm" id="fUndo">Оставить как на витрине</button></div>';
+    $("main").innerHTML = h + "</section>";
+    function own() { if (!S.fon) S.fon = { tip: tip }; return S.fon; }
+    $("fTip").onclick = function (e) {
+      var b = e.target.closest("button[data-v]"); if (!b) return;
+      S.fon = S.fon || {}; S.fon.tip = b.getAttribute("data-v");
+      if (S.fon.tip === "foto" && !S.fon.rabota && C.tip === "foto") { S.fon.rabota = C.rabota; S.fon.foto = C.foto | 0; }
+      save(); vFon();
+    };
+    if ($("fUndo")) $("fUndo").onclick = function () { fonVids(true).forEach(function (m) { del("m:" + m.id); del("k:" + m.id); }); delete S.fon; save(); vFon(); };
+    if ($("fZn")) $("fZn").onchange = function () { own().znak = this.checked; save(); if (fonVids(true).length) toast("Знак ляжет на видео, выбранное после этого"); };
+    [].forEach.call(document.querySelectorAll("[data-fv]"), function (inp) { inp.onchange = function () { var f = inp.files && inp.files[0]; inp.value = ""; if (f) { own(); recFon(f, inp.getAttribute("data-fv")); } }; });
+    [].forEach.call(document.querySelectorAll("[data-fx]"), function (b) { b.onclick = function () { var k = b.getAttribute("data-fx"), m = S.fon[k]; if (m) { del("m:" + m.id); del("k:" + m.id); } delete S.fon[k]; save(); vFon(); }; });
+    [].forEach.call(document.querySelectorAll("[data-bx]"), function (bx) {
+      var m = S.fon && S.fon[bx.getAttribute("data-bx")]; if (!okm(m)) return;
+      Promise.all([blobUrl("m:" + m.id), blobUrl("k:" + m.id)]).then(function (u) {
+        if (!bx.isConnected || !u[0]) return;
+        bx.innerHTML = '<video muted loop playsinline autoplay preload="auto"' + (u[1] ? ' poster="' + u[1] + '"' : "") + ' src="' + u[0] + '"></video>';
+        var vv = bx.firstChild; vv.muted = true; var pp = vv.play(); if (pp && pp.catch) pp.catch(function () {});
+      });
+    });
+    if ($("fPick")) $("fPick").onclick = function (e) {
+      var b = e.target.closest("button[data-r]"); if (!b) return;
+      own().rabota = b.getAttribute("data-r"); S.fon.foto = +b.getAttribute("data-i"); save(); vFon();
+    };
   }
 
   // ---------- голос и вставка у полей ----------
@@ -488,19 +631,28 @@
     return { m: Object.keys(S.master).length, k: Object.keys(S.kontakty).length, logo: !!S.logo, foto: nm, video: nv,
       raboty: S.novye.filter(function (w) { return (w.media || []).some(function (m) { return m.st === "ok"; }) || w.nazvanie || w.rasskaz || wfHas(w); }).length,
       pravka: S.k.filter(function (w) { return w.nazvanie != null || w.rasskaz != null || WF.some(function (f) { return w[f[0]] != null; }); }).length,
-      skryt: S.k.filter(function (w) { return w.skryt; }).length, vernut: (S.vernut || []).length };
+      skryt: S.k.filter(function (w) { return w.skryt; }).length, vernut: (S.vernut || []).length, znak: znakChanged(),
+      fon: fonCh() ? 1 : 0, fonV: fonCh() && S.fon.tip === "video" ? fonVids().length : 0 };
+  }
+  // знак изменён, если мастер его трогал и он отличается от опубликованного (или опубликованного ещё нет)
+  function znakChanged() {
+    if (!S.znakEd) return false;
+    var P = (window.KR_SLOJ && window.KR_SLOJ.znak) || ZN0;
+    return Object.keys(ZN0).some(function (k) { return String(S.znak[k]) !== String(P[k] == null ? ZN0[k] : P[k]); });
   }
   function changeLines(c) {
     var L = [];
     if (c.m) L.push("Данные мастера: " + c.m + " " + plural(c.m, ["поле", "поля", "полей"]));
     if (c.k) L.push("Контакты: " + c.k + " " + plural(c.k, ["поле", "поля", "полей"]));
     if (c.logo) L.push("Новый знак");
+    if (c.znak) L.push("Настройки водяного знака");
     if (c.raboty) L.push("Новые работы: " + c.raboty);
     if (c.pravka) L.push("Правка готовых работ: " + c.pravka);
     if (c.foto) L.push("Фото со знаком: " + c.foto);
     if (c.video) L.push("Видео со знаком: " + c.video);
     if (c.skryt) L.push("Скрыть с витрины: " + c.skryt);
     if (c.vernut) L.push("Вернуть на витрину: " + c.vernut);
+    if (c.fon) L.push("Фон витрины: " + fonName(S.fon));
     return L;
   }
   var PJ, PB = null; // PJ - настройка публикации с сайта (enc/p.json, зашифрована), PB - она же расшифрованная (код введён)
@@ -580,7 +732,8 @@
   function clearDraft() {
     S.novye.concat(S.k).forEach(function (w) { (w.media || []).forEach(function (m) { del("m:" + m.id); del("o:" + m.id); del("k:" + m.id); }); });
     if (S.logo) del("logo");
-    S = { master: {}, kontakty: {}, znak: S.znak, novye: [], k: [], logoV: S.logoV || 0 };
+    fonVids(true).forEach(function (m) { del("m:" + m.id); del("k:" + m.id); });
+    S = { master: {}, kontakty: {}, znak: S.znak, znakEd: false, novye: [], k: [], logoV: S.logoV || 0 };
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
     LOGO_RASTER = null; counts();
   }
@@ -590,7 +743,7 @@
 
   // Публикация: свежие правки с GitHub + черновик -> новые зашифрованные файлы и m.bin одним коммитом.
   function publish() {
-    var B = PB, key, L, files = [], c = changes(), nF = c.foto + c.video * 2 + (c.logo ? 1 : 0), iF = 0;
+    var B = PB, key, L, files = [], c = changes(), nF = c.foto + c.video * 2 + (c.logo ? 1 : 0) + c.fonV * 2, iF = 0;
     var MAX = 95 * 1048576; // GitHub не принимает файлы больше 100 МБ
     busy("Публикую", "Проверяю доступ", .02);
     function enc(id) {
@@ -622,7 +775,8 @@
       L.v = 1; L.master = L.master || {}; L.kontakty = L.kontakty || {}; L.novye_raboty = L.novye_raboty || []; L.k_rabotam = L.k_rabotam || []; L.skryt = L.skryt || []; L.imena = L.imena || {};
       Object.keys(S.master).forEach(function (k) { L.master[k] = String(S.master[k]).trim(); });
       Object.keys(S.kontakty).forEach(function (k) { L.kontakty[k] = String(S.kontakty[k]).trim(); });
-      L.znak = S.znak;
+      // знак с этого устройства - только если мастер его менял, иначе остаётся опубликованный (с другого устройства)
+      if (S.znakEd || !L.znak) L.znak = S.znak; else S.znak = Object.assign({}, ZN0, L.znak);
       var chain = S.logo ? enc("logo").then(function (r) { if (r) L.logo = r; }) : Promise.resolve(), neu = [];
       S.novye.forEach(function (w) {
         chain = chain.then(function () { return media(w.media || []); }).then(function (md) {
@@ -648,6 +802,9 @@
           if (w.skryt && L.skryt.indexOf(w.rabota) < 0) { L.skryt.push(w.rabota); L.imena[w.rabota] = (w.nazvanie && w.nazvanie.trim()) || wTitle(w.rabota) || "Работа"; }
         });
       });
+      // фон: undefined - не трогаем, null - вернуть подборку, иначе новый фон
+      chain = chain.then(function () { return fonOut(function (m) { return enc("m:" + m.id).then(function (f) { return enc("k:" + m.id).then(function (k) { return { f: f, k: k }; }); }); }); })
+        .then(function (F) { if (F === null) delete L.fon; else if (F) L.fon = F; });
       return chain;
     }).then(function () {
       (S.vernut || []).forEach(function (id) { L.skryt = L.skryt.filter(function (x) { return x !== id; }); delete L.imena[id]; });
@@ -737,7 +894,9 @@
       if (w.skryt) P.skryt.push(w.rabota);
     });
     var lg = S.logo ? get("logo").then(function (b) { if (b) { var n = "foto/logo-" + (S.logoV || 1) + (/svg/.test(S.logo.type) ? ".svg" : ".png"); P.logo = n; files.push([n, "logo"]); } }) : Promise.resolve();
-    return lg.then(function () {
+    var fn = fonOut(function (m) { var n = "foto/ms-" + m.id + "." + m.ext, k = "foto/ms-" + m.id + "-kadr.jpg"; files.push([n, "m:" + m.id], [k, "k:" + m.id]); return Promise.resolve({ f: n, k: k }); })
+      .then(function (F) { if (F === null) P.fon = { tip: "podborka" }; else if (F) P.fon = F; });
+    return Promise.all([lg, fn]).then(function () {
       return Promise.all(files.map(function (f) { return get(f[1]).then(function (b) { return b ? b.arrayBuffer() : new ArrayBuffer(0); }).then(function (ab) { return [f[0], new Uint8Array(ab)]; }); }));
     }).then(function (arr) {
       $("busyP").style.width = "70%";
@@ -768,6 +927,7 @@
   // ---------- старт ----------
   // незаконченные записи (закрыли страницу посреди обработки) - помечаем ошибкой
   S.novye.concat(S.k).forEach(function (w) { (w.media || []).forEach(function (m) { if (m.st === "work") { m.st = "err"; m.err = "Обработка прервалась - добавьте файл ещё раз"; } }); });
+  if (S.fon) ["t", "w"].forEach(function (k) { var m = S.fon[k]; if (m && m.st === "work") { m.st = "err"; m.err = "Обработка прервалась - выберите видео ещё раз"; } });
   // мастер пришёл из клиентской версии (вход удержанием знака) - "назад" ведёт туда, а не на черновик
   try { if (sessionStorage.getItem("kr-iz-klienta")) setTimeout(function () { [].forEach.call(document.querySelectorAll("nav.kn a"), function (a) { if (/krasnodar\/?$/.test(a.pathname)) a.href = "../klient/"; }); }, 0); } catch (e) {}
   function hh() { var t = document.querySelector(".top"); if (t) document.documentElement.style.setProperty("--hh", t.offsetHeight + "px"); }

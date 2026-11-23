@@ -148,6 +148,10 @@
   if (foot) mbody.appendChild(el("div", "d2-mfoot", esc(foot)));
   menu.appendChild(mbody);
   B.appendChild(menu);
+  if (window.D2_P) { // меню на полстраницы: нажатие мимо него (по видео слева) закрывает меню
+    var mshade = el("div", "d2-mshade"); mshade.setAttribute("aria-hidden", "true");
+    mshade.addEventListener("click", function () { closeMenu(); }); B.insertBefore(mshade, menu);
+  }
   var MON = false, mFrom = null;
   function drawMenu() {
     var vh = $("tnVideo") && $("tnVideo").hidden;
@@ -191,6 +195,9 @@
   // Крупные подписи комнат с числом работ, в комнате все работы сразу плиткой (вид закреплён через VP_VID),
   // без переключателя видов, мини-карты и лишних кнопок. Правила - в d2.css (html[data-d2p]).
   var PROSTO = !!window.D2_P;
+  // подсветка названия разом: копия текста в data-t (её показывает ::after в d2.css)
+  function litT() { [].forEach.call(document.querySelectorAll("#dName, .d2-brand b"), function (e) { var t = e.textContent; if (e.getAttribute("data-t") !== t) e.setAttribute("data-t", t); }); }
+  if (PROSTO) { litT(); setTimeout(litT, 0); setTimeout(litT, 1500); }
   function plur(n, f) { n = Math.abs(n) % 100; var d = n % 10; return n > 10 && n < 20 ? f[2] : d === 1 ? f[0] : d >= 2 && d <= 4 ? f[1] : f[2]; }
   if (PROSTO) {
     H.setAttribute("data-d2p", "");
@@ -656,11 +663,17 @@
         // закрытая витрина отдаёт файлы через служебный работник без "кусочных" ответов - Safari такое видео не играет.
         // Поэтому скачиваем целиком (1-1,6 МБ) и играем из памяти.
         fetch(vsrc).then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(function (buf) {
-          v.src = URL.createObjectURL(new Blob([buf], { type: "video/mp4" }));
+          // своё видео мастера из Мастерской может быть записано в WebM (Chrome на Android) - тип по первым байтам
+          var u8 = new Uint8Array(buf, 0, Math.min(4, buf.byteLength)), webm = u8[0] === 0x1A && u8[1] === 0x45 && u8[2] === 0xDF && u8[3] === 0xA3;
+          v.src = URL.createObjectURL(new Blob([buf], { type: webm ? "video/webm" : "video/mp4" }));
           v.addEventListener("playing", function () { layer.classList.add("vid"); }, { once: true });
           bg.appendChild(v); KV.ok = true; loopCheck();
         }).catch(function () {});
       }, 1600); });
+    } else if (kadr) {
+      // фон - одно фото (мастер выбрал в Мастерской фото работы вместо видео)
+      bg.style.backgroundImage = 'url("' + kadr.replace(/"/g, "%22") + '")';
+      layer.classList.add("vid"); whenReady(function () { bg.classList.add("rdy"); });
     } else {
       // запасной фон без видео: медленная смена фото работ
       var covers = [];
