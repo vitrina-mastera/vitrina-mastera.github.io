@@ -1099,3 +1099,7 @@ html[data-d2p].d2-mopen #htop,html[data-d2p].d2-mopen #home>*:not(.d2-kino){opac
 html[data-d2p] .d2-mtop .d2-brand{min-width:0}
 html[data-d2p] .d2-mtop .d2-brand b{white-space:nowrap}
 @media (max-width:520px){html[data-d2p] .d2-mtop{gap:10px}html[data-d2p] .d2-mtop .d2-brand{gap:8px}html[data-d2p] .d2-mtop .d2-brand b{font-size:15px}html[data-d2p] .d2-mtop .d2-brand i{width:26px;height:26px}}
+/* закрыть меню - тонкая стрелка вправо (правка Александра) */
+html[data-d2p] .d2-mx.d2-mxa{width:52px;margin-right:-8px;opacity:.85;transition:opacity .3s,transform .4s cubic-bezier(.2,.8,.2,1)}
+html[data-d2p] .d2-mx.d2-mxa svg{width:36px;height:22px}
+@media (hover:hover){html[data-d2p] .d2-mx.d2-mxa:hover{opacity:1;transform:translate3d(4px,0,0)}}

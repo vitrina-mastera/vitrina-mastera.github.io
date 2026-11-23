@@ -117,6 +117,8 @@
   var menu = el("div", "d2-menu"); menu.id = "d2menu"; menu.setAttribute("role", "dialog"); menu.setAttribute("aria-modal", "true"); menu.setAttribute("aria-label", "Меню"); menu.inert = true;
   var mtop = el("div", "d2-mtop"), mb = brand(); mtop.appendChild(mb);
   var mx = el("button", "d2-mx", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>'); mx.type = "button"; mx.setAttribute("aria-label", "Закрыть меню");
+  // "Просто": вместо крестика тонкая длинная стрелка вправо - меню уезжает туда же, откуда выехало
+  if (window.D2_P) { mx.innerHTML = '<svg viewBox="0 0 40 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h33M29 5.5L36 12l-7 6.5"/></svg>'; mx.classList.add("d2-mxa"); }
   mtop.appendChild(mx); menu.appendChild(mtop);
   var mbody = el("div", "d2-mbody"), mnav = el("nav", "d2-mnav"); mnav.setAttribute("aria-label", "Разделы");
   var ITEMS = [["raboty", "Работы"], ["video", "Видео"], ["otzyvy", "Отзывы"], ["master", "О мастере"], ["write", "Написать мастеру"]];

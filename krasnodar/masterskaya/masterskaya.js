@@ -359,15 +359,35 @@
 
   // ---------- Водяной знак ----------
   var PV = null; // картинка для предпросмотра
+  // фон предпросмотра: своё фото мастера из черновика (оригинал, без знака) или нарисованный образец.
+  // Фото с витрины не берём: на многих уже впечатана надпись мастера, и в предпросмотре она путает.
   function pvImage() {
     if (PV) return Promise.resolve(PV);
-    var src = ""; (D.raboty || []).some(function (w) { var f = (w.foto || [])[0]; if (f && f.src) { src = f.src; return true; } return false; });
-    return new Promise(function (ok) {
-      if (!src) { var c = document.createElement("canvas"); c.width = 1200; c.height = 900; var x = c.getContext("2d"); var g = x.createLinearGradient(0, 0, 1200, 900); g.addColorStop(0, "#8a8173"); g.addColorStop(1, "#3c3a36"); x.fillStyle = g; x.fillRect(0, 0, 1200, 900); PV = c; return ok(c); }
-      var im = new Image(); im.onload = function () { PV = im; ok(im); }; im.onerror = function () { PV = null; ok(null); }; im.src = src;
-    });
+    var own = null; S.novye.concat(S.k).some(function (w) { return (w.media || []).some(function (m) { if (m.st === "ok" && m.tip === "foto") { own = m.id; return true; } return false; }); });
+    var sample = function () { PV = pvSample(); return PV; };
+    if (!own) return Promise.resolve(sample());
+    return get("o:" + own).then(function (b) {
+      if (!b) return sample();
+      return new Promise(function (ok) {
+        var u = URL.createObjectURL(b), im = new Image();
+        im.onload = function () { PV = im; ok(im); }; im.onerror = function () { ok(sample()); }; im.src = u;
+      });
+    }, sample);
+  }
+  // нейтральный образец: стена, пол и шкаф - чтобы было видно, где и какого размера ляжет знак
+  function pvSample() {
+    var c = document.createElement("canvas"); c.width = 1200; c.height = 900; var x = c.getContext("2d");
+    var g = x.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, "#d9d3c8"); g.addColorStop(1, "#bfb7aa"); x.fillStyle = g; x.fillRect(0, 0, 1200, 620);
+    g = x.createLinearGradient(0, 620, 0, 900); g.addColorStop(0, "#8f7458"); g.addColorStop(1, "#6b5540"); x.fillStyle = g; x.fillRect(0, 620, 1200, 280);
+    x.fillStyle = "#3f4a5c"; x.fillRect(180, 90, 840, 220); x.fillRect(180, 400, 840, 230);   // верхние и нижние шкафы
+    x.fillStyle = "#c79a64"; x.fillRect(160, 380, 880, 26);                                    // столешница
+    x.strokeStyle = "rgba(255,255,255,.18)"; x.lineWidth = 3;
+    for (var i = 1; i < 4; i++) { x.beginPath(); x.moveTo(180 + i * 210, 90); x.lineTo(180 + i * 210, 310); x.moveTo(180 + i * 210, 410); x.lineTo(180 + i * 210, 630); x.stroke(); }
+    x.fillStyle = "rgba(0,0,0,.25)"; x.fillRect(180, 630, 840, 12);
+    return c;
   }
   function vZnak() {
+    if (PV && PV.src) URL.revokeObjectURL(PV.src); PV = null; // фото могли добавить - берём заново
     var Z = S.znak, POS = [["vl", "вверху слева"], ["vc", "вверху"], ["vp", "вверху справа"], ["cl", "слева"], ["cc", "в центре"], ["cp", "справа"], ["nl", "внизу слева"], ["nc", "внизу"], ["np", "внизу справа"]];
     $("main").innerHTML = '<section role="tabpanel"><h1>Водяной знак</h1><p class="lead">Впечатывается в новые фото и видео, которые вы добавляете во вкладке «Работы». Защищает от того, чтобы ваши работы выдавали за свои.</p><p class="note">Название на витрине здесь не меняется - оно во вкладке «О мастере», поле «Название». Уже выложенные фото тоже остаются как были.</p>' +
       '<div class="wm-grid"><div class="wm-pv"><div class="pv"><canvas id="pvC" width="1200" height="900"></canvas></div><p class="note">Так знак ляжет на фото. На видео - так же, в каждом кадре.</p></div><div>' +
