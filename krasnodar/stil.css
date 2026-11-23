@@ -1,0 +1,56 @@
+/* Общий стиль закрытой витрины Краснодара - один источник для всех служебных экранов:
+   окно пин-кода (zamok.js), вход мастера (master-vhod.js), Мастерская (masterskaya/), вопросы и правки (master/).
+   Цвета и шрифты - как у клиентской версии (вариант 13 "Просто", тема "Кино" в vitrina/dizajn2/d2.css):
+   тёмный фон, тонкие светлые надписи, капслок с разрядкой у мелких подписей, кнопки - тонкая рамка без заливки,
+   главная кнопка - светлая рамка, без ярких цветов. Меняете стиль - меняйте здесь, а не на каждой странице.
+
+   Переменные --kr-* можно брать где угодно (с запасным значением: var(--kr-bg, #121211)).
+   Готовые элементы: .kr-btn (.kr-btn.p - главная), .kr-in (поле), .kr-card, .kr-cap (мелкая подпись капслоком),
+   .kr-h (заголовок Playfair). Страницы целиком в этом стиле ставят body class="krs" - тогда .btn, input, textarea
+   и select внутри тоже получают этот вид. */
+@font-face{font-family:"Jost";src:url(../vitrina/dizajn2/fonts/jost-300-normal-cyrillic.woff2) format("woff2");font-weight:300;font-display:swap;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Jost";src:url(../vitrina/dizajn2/fonts/jost-300-normal-latin.woff2) format("woff2");font-weight:300;font-display:swap;unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:"Jost";src:url(../vitrina/dizajn2/fonts/jost-400-normal-cyrillic.woff2) format("woff2");font-weight:400;font-display:swap;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Jost";src:url(../vitrina/dizajn2/fonts/jost-400-normal-latin.woff2) format("woff2");font-weight:400;font-display:swap;unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:"Jost";src:url(../vitrina/dizajn2/fonts/jost-500-normal-cyrillic.woff2) format("woff2");font-weight:500 700;font-display:swap;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Jost";src:url(../vitrina/dizajn2/fonts/jost-500-normal-latin.woff2) format("woff2");font-weight:500 700;font-display:swap;unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:"Playfair";src:url(../vitrina/dizajn2/fonts/playfair-display-400-normal-cyrillic.woff2) format("woff2");font-weight:400 700;font-display:swap;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Playfair";src:url(../vitrina/dizajn2/fonts/playfair-display-400-normal-latin.woff2) format("woff2");font-weight:400 700;font-display:swap;unicode-range:U+0000-00FF,U+2000-206F}
+
+:root{
+  --kr-bg:#121211;--kr-bg2:#181817;--kr-card:#1C1B1A;--kr-line:#34322F;--kr-line2:#4A4743;
+  --kr-ink:#F1EEE8;--kr-muted:#A6A198;--kr-faint:#77726B;
+  --kr-ok:#9CC3A6;--kr-err:#E3A08F;
+  --kr-serif:"Playfair",Georgia,"Times New Roman",serif;--kr-sans:"Jost",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --kr-ease:cubic-bezier(.22,1,.36,1)
+}
+
+.kr-h{font-family:var(--kr-serif);font-weight:400;line-height:1.08;letter-spacing:.005em}
+.kr-cap{font-family:var(--kr-sans);font-weight:500;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--kr-muted)}
+.kr-card{background:var(--kr-card);border:1px solid var(--kr-line);padding:clamp(16px,2.6vw,26px)}
+
+.kr-btn,.krs .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 22px;border:1px solid var(--kr-line2);border-radius:0;background:transparent;color:var(--kr-ink);
+  font-family:var(--kr-sans);font-weight:500;font-size:11px;letter-spacing:.2em;text-transform:uppercase;text-decoration:none;white-space:nowrap;cursor:pointer;
+  transition:border-color .3s var(--kr-ease),background-color .3s var(--kr-ease),color .3s var(--kr-ease),opacity .2s}
+.kr-btn.p,.krs .btn.p{border-color:var(--kr-ink)}
+.kr-btn:disabled,.krs .btn:disabled{opacity:.35;cursor:default}
+@media (hover:hover){
+  .kr-btn:not(:disabled):hover,.krs .btn:not(:disabled):hover{border-color:var(--kr-ink)}
+  .kr-btn.p:not(:disabled):hover,.krs .btn.p:not(:disabled):hover{background:var(--kr-ink);color:var(--kr-bg)}
+}
+.kr-btn:focus-visible,.krs .btn:focus-visible{outline:1px solid var(--kr-ink);outline-offset:3px}
+
+.kr-in,.krs input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),.krs textarea,.krs select{
+  width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--kr-line);border-radius:0;background:var(--kr-bg2);color:var(--kr-ink);
+  font-family:var(--kr-sans);font-weight:300;font-size:16px;-webkit-appearance:none;appearance:none;outline:none;transition:border-color .25s}
+.kr-in:focus,.krs input:focus,.krs textarea:focus,.krs select:focus{border-color:var(--kr-ink)}
+.kr-in::placeholder,.krs input::placeholder,.krs textarea::placeholder{color:var(--kr-faint)}
+.krs select{background-image:linear-gradient(45deg,transparent 50%,var(--kr-muted) 50%),linear-gradient(135deg,var(--kr-muted) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
+.krs input[type=checkbox],.krs input[type=range]{accent-color:var(--kr-ink)}
+.krs{background:var(--kr-bg);color:var(--kr-ink);font-family:var(--kr-sans);font-weight:300;-webkit-font-smoothing:antialiased}
+.krs a{color:inherit}
+
+/* "← назад" из общей навигации сайта (site.js) - в том же виде: без скруглений и заливки */
+html body .ms-prod a{border-radius:0;background:none;border-color:var(--kr-line2);font-family:var(--kr-sans);font-weight:500;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;padding:5px 13px 5px 10px}
+@media (hover:hover){html body .ms-prod a:hover{background:none;border-color:currentColor}}

@@ -350,7 +350,8 @@
       requestAnimationFrame(function () { requestAnimationFrame(function () { H.classList.remove("d2-wait"); H.classList.add("d2-in"); setTimeout(function () { H.classList.remove("d2-in"); }, 1200); if (home.classList.contains("enter")) startIntro(); }); });
     });
   }
-  function startIntro() { if (Q === 0) { kick(); return; } intro = { t0: performance.now(), dur: 2300 }; frames = 0; slow = 0; cur = { ry: -58, rx: -14, tz: -240 }; apply(); kick(); }
+  // "Просто": дом сразу в своей проекции, без разворота (Александр: "резко, как лаг")
+  function startIntro() { if (Q === 0 || PROSTO) { kick(); return; } intro = { t0: performance.now(), dur: 2300 }; frames = 0; slow = 0; cur = { ry: -58, rx: -14, tz: -240 }; apply(); kick(); }
   // puteshestvie.js добавляет #home.enter при входе на главную (после дверей или по прямой ссылке)
   new MutationObserver(function () { if (home.classList.contains("enter") && !home.d2in) { home.d2in = 1; enterGate(); } if (!home.classList.contains("enter")) home.d2in = 0; })
     .observe(home, { attributes: true, attributeFilter: ["class"] });
@@ -412,6 +413,26 @@
       var kh = function () { if (hero0) layer.style.height = Math.max(innerHeight, hero0.offsetTop + hero0.offsetHeight) + "px"; };
       kh(); addEventListener("resize", kh);
       if (window.ResizeObserver && hero0) new ResizeObserver(kh).observe(hero0);
+      // дом ниже: при входе на экране только чердак, над ним видно фон. Дом рисуется выше и плавно опускается
+      // (обёртка .d2-hw: на ней сдвиг и перспектива, поворот остаётся на самом доме)
+      var hw = el("div", "d2-hw"); house.parentNode.insertBefore(hw, house); hw.appendChild(house);
+      var drop = function () {
+        hw.style.marginTop = "0px";
+        var top = house.offsetTop + roof.offsetTop; // от верха страницы (#home), без учёта сдвигов и прокрутки
+        for (var op = hw; op && op !== home; op = op.offsetParent) top += op.offsetTop;
+        var want = innerHeight * (NARROW.matches ? .75 : .72), d = Math.max(0, Math.round(want - top));
+        hw.style.marginTop = d + "px"; hw.style.setProperty("--hd", d + "px");
+      };
+      drop(); addEventListener("resize", drop); if (document.fonts && document.fonts.ready) document.fonts.ready.then(drop);
+      new MutationObserver(drop).observe(hero0.querySelector(".hero-t") || hero0, { childList: true, subtree: true, characterData: true });
+      // чем ближе к дому, тем спокойнее фон: поверх видео темнеет слой (только прозрачность - дёшево и на слабых)
+      var calm = el("i", "d2-calm"); layer.appendChild(calm);
+      var calmT = 0, calmF = function () {
+        calmT = 0;
+        var hd = parseFloat(hw.style.marginTop) || innerHeight * .5, k = Math.max(0, Math.min(1, home.scrollTop / Math.max(120, hd * .9)));
+        calm.style.opacity = (k * .62).toFixed(3);
+      };
+      home.addEventListener("scroll", function () { if (!calmT) calmT = requestAnimationFrame(calmF); }, { passive: true });
       if (reels) {
         reels.classList.add("d2-low");
         var low = el("div", "d2-lbg", '<i class="d2-lglow"></i><i class="d2-lveil"></i>'); low.setAttribute("aria-hidden", "true");

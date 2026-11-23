@@ -5,24 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
 <meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#ECEAE5">
+<meta name="theme-color" content="#121211">
 <title>Закрытая витрина - Мастерская</title>
+<link rel="stylesheet" href="../stil.css">
 <style>
 /* Мастерская закрытой витрины: правка данных мастера, новые фото и видео в ленту с водяным знаком.
    Сайт статический: всё делается в браузере мастера. Если Александр включил публикацию (publik.js, код мастера),
    правки уходят на сайт кнопкой "Опубликовать"; иначе - пакетом (ZIP), который кладут в репозиторий.
    Логика - masterskaya.js. Вход - тот же пин-код (zamok.js). */
-@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-300-normal-cyrillic.woff2) format("woff2");font-weight:300;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
-@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-300-normal-latin.woff2) format("woff2");font-weight:300;unicode-range:U+0000-00FF,U+2000-206F}
-@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-400-normal-cyrillic.woff2) format("woff2");font-weight:400;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
-@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-400-normal-latin.woff2) format("woff2");font-weight:400;unicode-range:U+0000-00FF,U+2000-206F}
-@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-500-normal-cyrillic.woff2) format("woff2");font-weight:500 700;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
-@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-500-normal-latin.woff2) format("woff2");font-weight:500 700;unicode-range:U+0000-00FF,U+2000-206F}
-@font-face{font-family:"Playfair";src:url(../../vitrina/dizajn2/fonts/playfair-display-400-normal-cyrillic.woff2) format("woff2");font-weight:400 700;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
-@font-face{font-family:"Playfair";src:url(../../vitrina/dizajn2/fonts/playfair-display-400-normal-latin.woff2) format("woff2");font-weight:400 700;unicode-range:U+0000-00FF,U+2000-206F}
-:root{--bg:#ECEAE5;--bg2:#F4F2EE;--card:#FBFAF8;--line:#D3CFC6;--ink:#1D1C1A;--muted:#6E6A63;--ok:#2F6B45;--err:#9B3A2C;--serif:"Playfair",Georgia,serif;--sans:"Jost",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--ease:cubic-bezier(.22,1,.36,1);--pad:clamp(16px,4vw,48px);--sb:env(safe-area-inset-bottom,0px)}
+:root{--bg:var(--kr-bg);--bg2:var(--kr-bg2);--card:var(--kr-card);--line:var(--kr-line);--ink:var(--kr-ink);--muted:var(--kr-muted);--ok:var(--kr-ok);--err:var(--kr-err);--serif:var(--kr-serif);--sans:var(--kr-sans);--ease:var(--kr-ease);--pad:clamp(16px,4vw,48px);--sb:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:var(--bg);color:var(--ink)}
+.lead,.f small,.note{font-weight:300}
 body{font-family:var(--sans);font-weight:300;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:calc(40px + var(--sb))}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:0}
@@ -55,17 +49,14 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
 .f{display:flex;flex-direction:column;gap:6px;min-width:0}
 .f.w{grid-column:1/-1}
 .f label{font-weight:500;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-.f input,.f select,.f textarea{width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--line);background:var(--card);border-radius:0;font-size:16px;font-weight:400;-webkit-appearance:none;appearance:none}
 .f textarea{min-height:110px;resize:vertical;line-height:1.5}
-.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--ink)}
 .f small{font-size:12.5px;color:var(--muted)}
 .f .was{font-size:12px;color:var(--muted)}
 .card{background:var(--card);border:1px solid var(--line);padding:clamp(16px,2.6vw,26px);margin-bottom:16px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 22px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font-weight:500;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;text-decoration:none;white-space:nowrap;transition:opacity .2s}
-.btn.l{background:none;color:var(--ink);border-color:var(--line)}
+/* кнопки - из stil.css (.krs .btn); здесь только: без .l - главная (светлая рамка), .sm - поменьше */
+.btn:not(.l){border-color:var(--ink)}
+@media (hover:hover){.btn:not(.l):not(:disabled):hover{background:var(--ink);color:var(--bg)}}
 .btn.sm{min-height:38px;padding:0 14px;font-size:10.5px}
-.btn:disabled{opacity:.4;cursor:default}
-@media (hover:hover){.btn:not(:disabled):hover{opacity:.85}.btn.l:not(:disabled):hover{border-color:var(--ink);opacity:1}}
 .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .file{position:relative;overflow:hidden}
 .file input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
@@ -82,7 +73,7 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
 .m .bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .3s}
 .m .st{position:absolute;left:0;right:0;bottom:3px;padding:6px 8px;font-size:11.5px;line-height:1.3;color:#fff;background:linear-gradient(180deg,transparent,rgba(0,0,0,.7))}
 .m.err{border-color:var(--err)}
-.m.err .st{background:var(--err)}
+.m.err .st{background:rgba(120,40,30,.85)}
 .list{display:grid;gap:10px}
 .row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
 .row b{font-weight:500}
@@ -93,10 +84,10 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
 .pv{position:relative;background:#222;aspect-ratio:4/3;overflow:hidden}
 .pv canvas{width:100%;height:100%;display:block;object-fit:contain}
 .seg{display:flex;flex-wrap:wrap;gap:6px}
-.seg button{min-height:40px;padding:0 14px;border:1px solid var(--line);background:var(--card);font-weight:500;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
-.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.seg button{min-height:40px;padding:0 14px;border:1px solid var(--line);background:transparent;font-weight:500;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.seg button{color:var(--muted)}.seg button[aria-pressed=true]{color:var(--ink);border-color:var(--ink)}
 .pos{display:grid;grid-template-columns:repeat(3,44px);gap:6px}
-.pos button{width:44px;height:44px;border:1px solid var(--line);background:var(--card);position:relative}
+.pos button{width:44px;height:44px;border:1px solid var(--line);background:transparent;position:relative}
 .pos button::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px;background:var(--line)}
 .pos button[aria-pressed=true]{border-color:var(--ink)}
 .pos button[aria-pressed=true]::after{background:var(--ink)}
@@ -105,10 +96,10 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
 .rng output{min-width:46px;text-align:right;font-variant-numeric:tabular-nums;font-size:14px}
 .note{font-size:13.5px;color:var(--muted);border-left:1px solid var(--ink);padding:4px 0 4px 14px;margin:16px 0}
 .note b{color:var(--ink)}
-.toast{position:fixed;left:50%;bottom:calc(20px + var(--sb));z-index:50;transform:translate(-50%,20px);opacity:0;padding:12px 18px;background:var(--ink);color:var(--bg);font-weight:500;font-size:13px;letter-spacing:.03em;transition:opacity .3s,transform .3s var(--ease);pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(20px + var(--sb));z-index:50;transform:translate(-50%,20px);opacity:0;padding:12px 18px;background:var(--card);color:var(--ink);border:1px solid var(--kr-line2);font-weight:500;font-size:13px;letter-spacing:.03em;transition:opacity .3s,transform .3s var(--ease);pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .save{font-size:12px;color:var(--muted)}
-.busy{position:fixed;inset:0;z-index:40;background:rgba(236,234,229,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+.busy{position:fixed;inset:0;z-index:40;background:rgba(18,18,17,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
 .busy b{font-family:var(--serif);font-weight:400;font-size:26px}
 .busy .pb{width:min(360px,80vw);height:2px;background:var(--line)}
 .busy .pb i{display:block;height:100%;width:0;background:var(--ink)}
@@ -117,9 +108,9 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
 .brand nav.kn{margin-left:auto;color:var(--ink);flex-wrap:nowrap;flex:none}
 /* голос и вставка у полей */
 .vt{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
-.vt button{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 12px;border:1px solid var(--line);background:var(--card);font-weight:500;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.vt button{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 12px;border:1px solid var(--line);background:transparent;font-weight:500;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
 .vt button svg{width:15px;height:15px;flex:none}
-.vt button.on{background:var(--err);border-color:var(--err);color:#fff}
+.vt button.on{border-color:var(--err);color:var(--err)}
 .vt button.on svg{animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.35}}
 .vt .live{flex-basis:100%;font-size:13px;color:var(--muted);min-height:0}
@@ -137,7 +128,7 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
-<body>
+<body class="krs">
 <header class="top">
   <div class="top-in">
     <div class="brand"><i id="logoTop" hidden></i><b id="nmTop">Мастерская</b><nav class="kn" data-variants></nav></div>

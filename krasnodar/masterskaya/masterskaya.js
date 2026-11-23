@@ -514,7 +514,7 @@
     var list = any ? '<div class="list">' + L.map(function (t) { return '<div class="row"><span class="sp">' + esc(t) + "</span></div>"; }).join("") + "</div>" :
       '<p style="margin:0;color:var(--muted)">Пока нечего публиковать: правок и новых файлов нет.</p>';
     var h = '<section role="tabpanel"><h1>Опубликовать</h1>';
-    if (done) h += '<div class="card pub-ok"><h2>Опубликовано</h2><p>Клиенты увидят правки на витрине через 1-2 минуты - столько сайт обновляется. Черновик очищен, можно добавлять следующее.</p><div class="btns"><a class="btn" href="../">Открыть витрину</a></div></div>';
+    if (done) h += '<div class="card pub-ok"><h2>Опубликовано</h2><p>Клиенты увидят правки на витрине через 1-2 минуты - столько сайт обновляется. Черновик очищен, можно добавлять следующее.</p><div class="btns"><a class="btn" href="../klient/">Открыть витрину</a></div></div>';
     if (PJ && PB) {
       h += '<p class="lead">Правки уходят прямо на витрину - без файлов и пересылки.</p><div class="card">' + list +
         '<div class="btns"><button type="button" class="btn" id="pGo"' + (any ? "" : " disabled") + ">Опубликовать на сайт</button></div></div>";
@@ -748,6 +748,8 @@
   // ---------- старт ----------
   // незаконченные записи (закрыли страницу посреди обработки) - помечаем ошибкой
   S.novye.concat(S.k).forEach(function (w) { (w.media || []).forEach(function (m) { if (m.st === "work") { m.st = "err"; m.err = "Обработка прервалась - добавьте файл ещё раз"; } }); });
+  // мастер пришёл из клиентской версии (вход удержанием знака) - "назад" ведёт туда, а не на черновик
+  try { if (sessionStorage.getItem("kr-iz-klienta")) setTimeout(function () { [].forEach.call(document.querySelectorAll("nav.kn a"), function (a) { if (/krasnodar\/?$/.test(a.pathname)) a.href = "../klient/"; }); }, 0); } catch (e) {}
   loadLogo().then(function () { counts(); banner(); go(/^#(opublikovat|paket)$/.test(location.hash) ? "paket" : /^#nastrojka$/.test(location.hash) ? "paket" : "master"); if (location.hash === "#nastrojka") pubState().then(vSetup, vSetup); });
   addEventListener("beforeunload", function (e) { if (REC) { e.preventDefault(); e.returnValue = ""; } });
 })();

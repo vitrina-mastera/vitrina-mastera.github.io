@@ -81,33 +81,39 @@
 
   // ---------- окно входа ----------
   var CSS = [
-    "#krLock{position:fixed;inset:0;z-index:2147483000;background:#1f1b18;color:#f3ede6;display:flex;align-items:center;justify-content:center;padding:20px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}",
-    "#krLock .box{width:100%;max-width:360px;text-align:center}",
-    "#krLock .ic{width:64px;height:64px;border-radius:20px;background:#2c2622;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px}",
-    "#krLock h1{font-size:22px;margin:0 0 6px;font-weight:700}",
-    "#krLock p{margin:0 0 18px;color:#c9bdb0;font-size:15px;line-height:1.45}",
-    "#krLock input{width:100%;box-sizing:border-box;font:inherit;font-size:28px;letter-spacing:.35em;text-align:center;padding:12px 10px;border-radius:14px;border:1px solid #4a4038;background:#2a2420;color:#fff;outline:none}",
-    "#krLock input:focus{border-color:#d9a566;box-shadow:0 0 0 3px rgba(217,165,102,.25)}",
-    "#krLock button{margin-top:12px;width:100%;font:inherit;font-weight:700;font-size:17px;padding:14px;border-radius:14px;border:0;background:#d9a566;color:#1f1b18;cursor:pointer}",
-    "#krLock button:disabled{opacity:.6;cursor:default}",
-    "#krLock .msg{min-height:22px;margin-top:12px;font-size:14px;color:#f0b4a0}",
-    "#krLock .msg.ok{color:#c9bdb0}",
-    "#krLock .foot{margin-top:26px;font-size:12px;color:#8a7d70}",
-    "#krBack{position:fixed;right:10px;top:calc(10px + env(safe-area-inset-top));z-index:2147482000;display:inline-flex;align-items:center;gap:6px;background:rgba(31,27,24,.9);color:#f3ede6;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:7px 12px;font:600 13px system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.25);backdrop-filter:blur(6px)}",
+    // цвета и шрифты - из общего stil.css (--kr-*), запасные значения на случай, если он ещё не загрузился
+    "#krLock{position:fixed;inset:0;z-index:2147483000;background:var(--kr-bg,#121211);color:var(--kr-ink,#F1EEE8);display:flex;align-items:center;justify-content:center;padding:24px;font-family:var(--kr-sans,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif);font-weight:300;-webkit-font-smoothing:antialiased}",
+    "#krLock .box{width:100%;max-width:340px;text-align:center}",
+    "#krLock .ic{width:44px;height:44px;border:1px solid var(--kr-line2,#4A4743);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:22px}",
+    "#krLock h1{font-family:var(--kr-serif,Georgia,serif);font-size:30px;line-height:1.1;margin:0 0 10px;font-weight:400}",
+    "#krLock p{margin:0 0 26px;color:var(--kr-muted,#A6A198);font-size:14.5px;line-height:1.55}",
+    "#krLock input{width:100%;box-sizing:border-box;font:inherit;font-weight:300;font-size:24px;letter-spacing:.4em;text-indent:.4em;text-align:center;padding:12px 10px;border:0;border-bottom:1px solid var(--kr-line2,#4A4743);border-radius:0;background:transparent;color:var(--kr-ink,#F1EEE8);outline:none;transition:border-color .3s}",
+    "#krLock input:focus{border-bottom-color:var(--kr-ink,#F1EEE8)}",
+    "#krLock input::placeholder{color:var(--kr-faint,#77726B)}",
+    "#krLock button{margin-top:26px;width:100%;font:inherit;font-weight:500;font-size:11px;letter-spacing:.24em;text-transform:uppercase;min-height:48px;border:1px solid var(--kr-ink,#F1EEE8);border-radius:0;background:transparent;color:var(--kr-ink,#F1EEE8);cursor:pointer;transition:background-color .3s,color .3s}",
+    "@media (hover:hover){#krLock button:not(:disabled):hover{background:var(--kr-ink,#F1EEE8);color:var(--kr-bg,#121211)}}",
+    "#krLock button:disabled{opacity:.4;cursor:default}",
+    "#krLock .msg{min-height:22px;margin-top:14px;font-size:13.5px;color:var(--kr-err,#E3A08F)}",
+    "#krLock .msg.ok{color:var(--kr-muted,#A6A198)}",
+    "#krLock .foot{margin-top:34px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--kr-faint,#77726B)}",
+    "#krBack{position:fixed;right:10px;top:calc(10px + env(safe-area-inset-top));z-index:2147482000;display:inline-flex;align-items:center;gap:6px;background:rgba(18,18,17,.85);color:var(--kr-ink,#F1EEE8);border:1px solid rgba(255,255,255,.18);border-radius:0;padding:8px 14px;font:500 10.5px var(--kr-sans,system-ui,sans-serif);letter-spacing:.2em;text-transform:uppercase;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.25);backdrop-filter:blur(6px)}",
     "#krBack.bl{top:auto;right:auto;left:12px;bottom:calc(14px + env(safe-area-inset-bottom))}",
     // путешествие по дому: кнопка видна только на экране дома, в комнате и работе есть свои "назад" - ничего не налезает
     "#krBack{transition:opacity .4s cubic-bezier(.22,1,.36,1),transform .5s cubic-bezier(.22,1,.36,1),visibility 0s}",
     "body[data-vp]:not([data-vp=home]) #krBack{opacity:0;transform:translateY(-16px) scale(.9);pointer-events:none;visibility:hidden;transition:opacity .3s,transform .4s,visibility 0s linear .4s}",
     "@media (prefers-reduced-motion:reduce){#krBack{transition:none!important}}"
   ].join("\n");
-  function style() { if (document.getElementById("krCss")) return; var s = document.createElement("style"); s.id = "krCss"; s.textContent = CSS; document.head.appendChild(s); }
+  function style() {
+    if (document.getElementById("krCss")) return;
+    if (!document.getElementById("krStil")) { var l = document.createElement("link"); l.id = "krStil"; l.rel = "stylesheet"; l.href = BASE + "stil.css"; document.head.appendChild(l); } // общий стиль
+    var s = document.createElement("style"); s.id = "krCss"; s.textContent = CSS; document.head.appendChild(s); }
   function lockScreen() {
     style();
     var el = document.getElementById("krLock");
     if (el) return el;
     el = document.createElement("div"); el.id = "krLock";
     el.innerHTML = '<form class="box" autocomplete="off">' +
-      '<div class="ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#d9a566" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>' +
+      '<div class="ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>' +
       "<h1>Закрытая витрина</h1><p>Вход только по пин-коду. Его выдаёт тот, кто прислал вам эту ссылку.</p>" +
       '<input id="krPin" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="16" placeholder="••••••••" aria-label="Пин-код">' +
       '<button type="submit" id="krGo">Войти</button><div class="msg" id="krMsg" role="status" aria-live="polite"></div>' +
