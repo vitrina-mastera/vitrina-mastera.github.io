@@ -235,7 +235,9 @@
   function go(t) {
     TAB = t;
     [].forEach.call(document.querySelectorAll(".tabs button"), function (b) { b.setAttribute("aria-selected", b.getAttribute("data-t") === t); });
-    ({ master: vMaster, lenta: vLenta, znak: vZnak, fon: vFon, paket: vPaket })[t]();
+    var nav = document.querySelector(".tabs"), sb = nav && nav.querySelector('[aria-selected="true"]'); // на телефоне вкладки не влезают - показать выбранную
+    if (sb && (sb.offsetLeft < nav.scrollLeft || sb.offsetLeft + sb.offsetWidth > nav.scrollLeft + nav.clientWidth)) nav.scrollLeft = sb.offsetLeft - 16;
+    ({ master: vMaster, lenta: vLenta, znak: vZnak, fon: vFon, paket: vPaket, pomosh: vPomosh })[t]();
     scrollTo(0, 0);
   }
   function counts() {
@@ -247,7 +249,7 @@
 
   // ---------- О мастере ----------
   function vMaster() {
-    $("main").innerHTML = '<section role="tabpanel"><h1>О мастере</h1><p class="lead">Что видит клиент на витрине: название, кто вы, чем занимаетесь, контакты и знак. Меняйте прямо здесь - всё сохраняется в этом браузере, пока вы не нажмёте «Опубликовать». Текст можно надиктовать кнопкой под полем или вставить готовый - например, продиктованный в WhatsApp или заметках.</p>' +
+    $("main").innerHTML = '<section role="tabpanel"><h1>О мастере</h1><p class="lead">Что видит клиент на витрине: название, кто вы, чем занимаетесь, контакты и знак. Меняйте прямо здесь - всё сохраняется в этом браузере, пока вы не нажмёте «Опубликовать». Текст можно надиктовать кнопкой под полем или вставить готовый - например, продиктованный в WhatsApp или заметках.</p><p class="note" style="margin-top:-6px"><a href="#" id="toHelp">Впервые здесь? Как пользоваться Мастерской</a></p>' +
       '<div class="eyebrow">Знак</div><div class="card"><div class="logo-row"><div class="logo-box" id="lgBox"></div><div><p style="margin-bottom:10px;max-width:420px">Лучше SVG (чёткий при любом размере). Подойдёт и PNG с прозрачным фоном. Знак стоит в шапке витрины и в водяном знаке.</p>' +
       '<div class="btns" style="margin-top:0"><span class="btn l sm file">Загрузить знак<input type="file" id="lgIn" accept=".svg,image/svg+xml,image/png"></span>' + (S.logo ? '<button type="button" class="btn l sm" id="lgDel">Вернуть прежний</button>' : "") + "</div></div></div></div>" +
       '<div class="eyebrow">Мастерская</div><div class="card g2">' +
@@ -261,6 +263,7 @@
       fld("kontakty", "max", "Max (ссылка)", { ph: "max.ru/...", hint: "В приложении Max: профиль - поделиться - скопировать ссылку" }) +
       fld("kontakty", "telefon", "Телефон для звонка", { mode: "tel" }) + fld("kontakty", "vk", "ВКонтакте", { ph: "vk.ru/..." }) +
       fld("kontakty", "adres", "Адрес или район") + fld("kontakty", "chasy", "Часы работы", { ph: "Пн-Сб 9-19" }) + "</div></section>";
+    $("toHelp").onclick = function (e) { e.preventDefault(); go("pomosh"); };
     var box = $("lgBox"); box.innerHTML = LOGO_SVG || (LOGO_RASTER ? "" : '<span style="color:var(--muted);font-size:12px">нет</span>');
     if (!LOGO_SVG && LOGO_RASTER) { var im = new Image(); im.src = URL.createObjectURL(LOGO_RASTER); box.appendChild(im); }
     $("lgIn").onchange = function () {
@@ -514,6 +517,13 @@
         else loop();
       }).catch(function (e) { fin(e); });
     };
+  }
+  // ---------- помощь: как пользоваться (текст - pomosh.js) ----------
+  function vPomosh() {
+    var P = window.KrPomosh;
+    $("main").innerHTML = '<section role="tabpanel" class="hp"><h1>Как пользоваться</h1><p class="lead">Семь шагов: от входа до того, как правка появится на сайте. Возвращайтесь сюда, когда нужно.</p>' +
+      (P ? P.html() : '<p class="note">Инструкция не загрузилась. Обновите страницу.</p>') + "</section>";
+    [].forEach.call(document.querySelectorAll(".hp-toc a"), function (a) { a.onclick = function (e) { e.preventDefault(); var t = document.querySelector(a.getAttribute("href")); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }; });
   }
   function vFon() {
     var C = fonCur(), F = S.fon || { tip: C.tip }, tip = F.tip, DF = D.fon || {};

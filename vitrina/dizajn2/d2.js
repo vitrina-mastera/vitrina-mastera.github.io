@@ -589,7 +589,12 @@
   function vgoLater() { if (VGO || vgoT) return; vgoT = setTimeout(function () { VGO = true; loopCheck(); }, Q === 0 || mqR.matches ? 600 : 5600); }
   function video(on) {
     if (!KV || !KV.v) return;
-    if (on && KV.ok && VGO) { var p = KV.v.play(); if (p && p.catch) p.catch(function () {}); }
+    if (on && KV.ok && VGO) { var p = KV.v.play(); if (p && p.catch) p.catch(function () {
+      // встроенный браузер мессенджера может не дать играть само - запускаем при первом касании
+      if (KV.retry) return; KV.retry = 1;
+      var f = function () { removeEventListener("touchend", f, true); removeEventListener("click", f, true); if (live && VGO) { var q = KV.v.play(); if (q && q.catch) q.catch(function () {}); } };
+      addEventListener("touchend", f, true); addEventListener("click", f, true);
+    }); }
     else if (!on) KV.v.pause();
   }
   if (tema === "kino") {
@@ -658,13 +663,16 @@
       if (kadr) bg.style.backgroundImage = 'url("' + kadr.replace(/"/g, "%22") + '")';
       whenReady(function () { bg.classList.add("rdy"); });
       // видео (1-1,6 МБ) качаем после входа, чтобы оно не отнимало канал и процессор у фото комнат
-      if (Q > 0) whenReady(function () { setTimeout(function () {
+      // видео-фон и на "слабом" уровне: его декодирует сам телефон, это дёшево; без видео только при экономии трафика
+      // или просьбе системы меньше движения (раньше Q=0 выключал видео - на части айфонов фон стоял картинкой)
+      if (!mqR.matches && !cn.saveData) whenReady(function () { setTimeout(function () {
         var v = el("video"); v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.setAttribute("playsinline", ""); v.setAttribute("muted", ""); v.preload = "auto";
         if (kadr) v.poster = kadr;
         KV = { v: v, ok: false };
         // закрытая витрина отдаёт файлы через служебный работник без "кусочных" ответов - Safari такое видео не играет.
         // Поэтому скачиваем целиком (1-1,6 МБ) и играем из памяти.
-        fetch(vsrc).then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(function (buf) {
+        // без служебного работника видео расшифровывается в фоне - ждём, когда будет готово (KrZamok.when)
+        (window.KrZamok && KrZamok.when ? KrZamok.when(vsrc) : Promise.resolve(vsrc)).then(function (u) { return fetch(u); }).then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(function (buf) {
           // своё видео мастера из Мастерской может быть записано в WebM (Chrome на Android) - тип по первым байтам
           var u8 = new Uint8Array(buf, 0, Math.min(4, buf.byteLength)), webm = u8[0] === 0x1A && u8[1] === 0x45 && u8[2] === 0xDF && u8[3] === 0xA3;
           v.src = URL.createObjectURL(new Blob([buf], { type: webm ? "video/webm" : "video/mp4" }));

@@ -152,6 +152,21 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
 .more[open] summary::after{transform:rotate(-135deg)}
 .more .mi{padding:14px 0;border-top:1px solid var(--line)}
 .more .mi b{font-weight:500}.more .mi p{color:var(--muted);font-size:14px;margin:4px 0 0;max-width:560px}.more .mi .btns{margin-top:10px}
+/* помощь: как пользоваться (pomosh.js) */
+.hp-toc{list-style:none;counter-reset:t;margin:6px 0 34px;padding:0;border-top:1px solid var(--line)}
+.hp-toc li{counter-increment:t;border-bottom:1px solid var(--line)}
+.hp-toc a{display:flex;gap:16px;align-items:baseline;padding:13px 0;text-decoration:none;color:var(--ink);font-size:15.5px}
+.hp-toc a::before{content:counter(t);font-family:var(--kr-serif);font-size:15px;color:var(--muted);min-width:14px}
+@media (hover:hover){.hp-toc a:hover{color:var(--muted)}}
+.hp-s{display:grid;grid-template-columns:44px 1fr;gap:6px 14px;padding:26px 0 8px;border-top:1px solid var(--line);scroll-margin-top:calc(var(--hh,120px) + 12px)}
+.hp-n{font-family:var(--kr-serif);font-size:34px;line-height:1;color:var(--muted)}
+.hp-s h2{font-family:var(--kr-serif);font-weight:400;font-size:24px;line-height:1.15;margin:2px 0 12px}
+.hp-s p,.hp-s li{font-size:15.5px;line-height:1.6;max-width:620px}
+.hp-s p{margin:0 0 12px}.hp-s ol,.hp-s ul{margin:0 0 14px;padding-left:20px}.hp-s li{margin:0 0 8px}.hp-s li::marker{color:var(--muted)}
+.hp-s b{font-weight:500}
+.hp-s .adr{font-size:16px;word-break:break-all}.hp-s .adr a{color:var(--ink);text-underline-offset:4px;text-decoration-color:var(--kr-line2)}
+.hp-s .vazh{border-left:1px solid var(--ink);padding-left:14px;color:var(--ink)}
+@media (max-width:520px){.hp-s{grid-template-columns:1fr}.hp-n{font-size:28px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -165,6 +180,7 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
       <button type="button" role="tab" aria-selected="false" data-t="znak">Знак</button>
       <button type="button" role="tab" aria-selected="false" data-t="fon">Фон</button>
       <button type="button" role="tab" aria-selected="false" data-t="paket">Опубликовать<i id="cntP"></i></button>
+      <button type="button" role="tab" aria-selected="false" data-t="pomosh">Помощь</button>
     </nav>
   </div>
 </header>
@@ -175,6 +191,6 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
 <script>window.MEBEL_TOOL = "kr-masterskaya";</script>
 <script src="../../shared/site.js"></script>
 <script src="../zamok.js"></script>
-<script>KrZamok.page({ scripts: ["publik.js", "masterskaya.js"], back: "none" });</script>
+<script>KrZamok.page({ scripts: ["publik.js", "pomosh.js", "masterskaya.js"], back: "none" });</script>
 </body>
 </html>

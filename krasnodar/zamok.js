@@ -175,26 +175,80 @@
       });
     }).catch(function () { return false; });
   }
+  // первое нужное на экране: картинка фона и знак, затем обложки комнат (первое фото первой работы в каждой комнате).
+  // Видео фона и остальные фото - сразу следом, уже после показа.
+  function prio(data, all) {
+    var V = data.vitrina || {}, F = V.fon || {}, out = [], seen = {}, rooms = {};
+    function add(x) { Object.keys(ids(x, {})).forEach(function (id) { if (!seen[id] && all.indexOf(id) >= 0) { seen[id] = 1; out.push(id); } }); }
+    add([F.kadr, F.kadr_tel]); add(V.master && V.master.logo);
+    (V.raboty || []).forEach(function (w) { if (!rooms[w.komnata]) { rooms[w.komnata] = 1; add((w.foto || [])[0]); } });
+    return out;
+  }
+  function soon(data, all) { var F = (data.vitrina || {}).fon || {}; return Object.keys(ids([F.video, F.video_tel], {})).filter(function (id) { return all.indexOf(id) >= 0; }); }
+  var WAIT = {};
+  // адрес фото, когда оно готово (для видео фона, которое скачивается целиком)
+  function when(u) {
+    var m = /#kr=([0-9a-f]{8,})$/.exec(String(u || ""));
+    if (!m) return Promise.resolve(u);
+    if (MAPREF && MAPREF[m[1]]) return Promise.resolve(MAPREF[m[1]]);
+    return new Promise(function (ok) { (WAIT[m[1]] = WAIT[m[1]] || []).push(ok); });
+  }
+  var PH = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", SWT = 0, SWO = null;
+  var SEL = '[src*="#kr="],[poster*="#kr="],[style*="#kr="],[href*="#kr="]', RX = /data:image\/gif;base64,[A-Za-z0-9+\/=]+#kr=([0-9a-f]{8,})/g;
+  var MAPREF = null;
+  function swapSoon() { if (!SWT) SWT = setTimeout(swapNow, 120); }
+  function swapNow() {
+    SWT = 0; if (!MAPREF) return;
+    [].forEach.call(document.querySelectorAll(SEL), function (el) {
+      ["src", "poster", "style", "href"].forEach(function (a) {
+        var v = el.getAttribute(a); if (!v || v.indexOf("#kr=") < 0) return;
+        var n = v.replace(RX, function (m, id) { return MAPREF[id] || m; });
+        if (n !== v) el.setAttribute(a, n); // меняем только то, что уже готово - без бесконечного круга
+      });
+    });
+  }
+  function watchSwap() {
+    if (SWO || !window.MutationObserver) return;
+    SWO = new MutationObserver(function (ms) { for (var i = 0; i < ms.length; i++) { if (ms[i].type === "childList" ? ms[i].addedNodes.length : true) { swapSoon(); return; } } });
+    SWO.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["src", "poster", "style", "href"] });
+  }
   function photoMap(key, data, progress) {
     var all = Object.keys(ids(data, {}));
-    var map = {};
+    var map = {}, lazy = false; MAPREF = map;
     if (!all.length) return Promise.resolve(function (r) { return r; });
     return swReady().then(function (sw) {
       if (sw) {
         all.forEach(function (id) { map[id] = BASE + "f/" + id + ".jpg"; });
         return;
       }
-      // запасной путь: расшифровать все фото сразу, по 4 параллельно
-      var i = 0, done = 0;
+      // запасной путь (нет служебного работника: встроенный браузер WhatsApp/Telegram, старый браузер).
+      // Раньше здесь до показа расшифровывались ВСЕ фото (14 МБ) - на мобильном это полминуты и больше.
+      // Теперь до показа - только первое нужное (фон, знак, первые фото работ), остальное в фоне по 6 сразу.
+      // Пока фото не готово, в данных стоит прозрачная заглушка с меткой "#kr=<id>"; когда фото готово,
+      // заглушка меняется на настоящий адрес во всех элементах страницы (и в тех, что появятся позже).
+      lazy = true;
+      var first = prio(data, all), sn = soon(data, all), head = first.concat(sn.filter(function (id) { return first.indexOf(id) < 0; })), queue = head.concat(all.filter(function (id) { return head.indexOf(id) < 0; }));
+      var need = {}; first.forEach(function (id) { need[id] = 1; });
+      var left = first.length, done = 0, gate;
+      var gateP = new Promise(function (ok) { gate = ok; if (!left) ok(); setTimeout(ok, 15000); });
+      var qi = 0;
       function next() {
-        if (i >= all.length) return Promise.resolve();
-        var id = all[i++];
+        if (qi >= queue.length) return Promise.resolve();
+        var id = queue[qi++];
         return fetchBin(id + ".bin").then(function (buf) { return open(key, buf); }).then(function (p) {
           map[id] = URL.createObjectURL(new Blob([p], { type: mime(p) }));
-        }).catch(function () {}).then(function () { done++; if (progress) progress(done, all.length); return next(); });
+          (WAIT[id] || []).forEach(function (f) { f(map[id]); }); delete WAIT[id];
+          swapSoon();
+        }).catch(function () {}).then(function () {
+          if (need[id]) { done++; if (progress) progress(done, first.length); if (--left <= 0) gate(); }
+          return next();
+        });
       }
-      return Promise.all([next(), next(), next(), next()]);
+      for (var w = 0; w < 6; w++) next();
+      watchSwap();
+      return gateP;
     }).then(function () {
+      if (lazy) return function (ref) { if (typeof ref !== "string" || ref.charAt(0) !== "@") return ref; var id = ref.slice(1); return map[id] || PH + "#kr=" + id; };
       return function (ref) { return typeof ref === "string" && ref.charAt(0) === "@" ? (map[ref.slice(1)] || "") : ref; };
     });
   }
@@ -287,5 +341,5 @@
     });
   }
 
-  window.KrZamok = { unlock: unlock, page: page, logout: logout, base: BASE, idb: idb, b64: b64, fetchBin: fetchBin, mime: mime };
+  window.KrZamok = { when: when, unlock: unlock, page: page, logout: logout, base: BASE, idb: idb, b64: b64, fetchBin: fetchBin, mime: mime };
 })();
