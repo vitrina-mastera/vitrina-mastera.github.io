@@ -1,0 +1,50 @@
+# Автообновление сайта витрин из основного репозитория (копия этого файла лежит в основном репо: site/pereezd/obnovlenie-vitrin.yml).
+# Каждые 10 минут смотрит, появился ли новый коммит в основном репо; если да - собирает витрины
+# скриптом site/tools/vitriny-vynos.py и публикует. Запустить сразу: Actions - "Обновление витрин" - Run workflow.
+name: Обновление витрин
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: obnovlenie-vitrin
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: sajt
+      - uses: actions/checkout@v4
+        with:
+          repository: glebbelov85-tech/mebel
+          ref: main
+          path: ishodniki
+          fetch-depth: 1
+      - name: Есть ли новые правки
+        id: check
+        run: |
+          SRC=$(git -C ishodniki rev-parse --short=12 HEAD)
+          echo "src=$SRC" >> "$GITHUB_OUTPUT"
+          if grep -q "^Коммит: $SRC$" sajt/ISTOCHNIK.txt 2>/dev/null && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "new=0" >> "$GITHUB_OUTPUT"; echo "Без изменений ($SRC)"
+          else
+            echo "new=1" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Сборка витрин
+        if: steps.check.outputs.new == '1'
+        run: python3 ishodniki/site/tools/vitriny-vynos.py "$GITHUB_WORKSPACE/sajt"
+      - name: Публикация
+        if: steps.check.outputs.new == '1'
+        working-directory: sajt
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "Нечего публиковать"; exit 0; fi
+          git commit -q -m "Обновление витрин (${{ steps.check.outputs.src }})"
+          git push
