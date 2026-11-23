@@ -220,7 +220,7 @@
   document.addEventListener("input", function (e) {
     var t = e.target, sec = t.getAttribute && t.getAttribute("data-s"); if (!sec) return;
     var k = t.getAttribute("data-k"), base = ((sec === "master" ? M0 : K0)[k] || "");
-    if (t.value === base) delete S[sec][k]; else S[sec][k] = t.value;
+    if (t.value.trim() === String(base).trim()) delete S[sec][k]; else S[sec][k] = t.value; // лишний пробел - не правка
     if (k === "imya") drawTop();
     if (k === "znak" && sec === "master") { S.znak.tekst = t.value; }
     save();
@@ -271,6 +271,10 @@
   }
 
   // ---------- Лента ----------
+  // поля описания работы: клиент видит их чипами под названием и по нажатию на фото во весь экран (пустые не показываются)
+  var WF = [["material", "Материал", "ЛДСП Egger, МДФ эмаль"], ["cvet", "Цвет и отделка", "Тёмно-синий матовый, дуб"], ["razmery", "Размеры", "3,2 x 2,4 м"], ["god", "Год", "2025"]];
+  function wfHas(w) { return WF.some(function (f) { return w[f[0]] != null && String(w[f[0]]).trim(); }); }
+  function wfInputs(w, base) { return '<div class="g2">' + WF.map(function (f) { var v = w[f[0]] != null ? w[f[0]] : (base && base[f[0]]) || ""; return '<div class="f"><label>' + f[1] + '</label><input data-w="' + f[0] + '" value="' + esc(v) + '" placeholder="' + f[2] + '"></div>'; }).join("") + "</div>"; }
   function ordRooms() { return (D.komnaty || []).slice(); }
   function workById(id) { return (D.raboty || []).filter(function (r) { return r.id === id; })[0] || null; }
   function workCard(w, isNew, i) {
@@ -279,10 +283,10 @@
     if (isNew) {
       h += '<div class="g2"><div class="f"><label>Название работы</label><input data-w="nazvanie" data-voice value="' + esc(w.nazvanie || "") + '" placeholder="Кухня с островом в ЖК ..."></div>' +
         '<div class="f"><label>Комната на витрине</label><select data-w="komnata">' + rs.map(function (k) { return '<option value="' + esc(k.id) + '"' + (w.komnata === k.id ? " selected" : "") + ">" + esc(k.nazvanie) + "</option>"; }).join("") + "</select></div>" +
-        '<div class="f w"><label>Рассказ о работе</label><textarea data-w="rasskaz" rows="3" placeholder="Что хотел заказчик, что придумали, сроки, материалы">' + esc(w.rasskaz || "") + "</textarea></div></div>";
+        '<div class="f w"><label>Рассказ о работе</label><textarea data-w="rasskaz" rows="3" placeholder="Что хотел заказчик, что придумали, сроки, материалы">' + esc(w.rasskaz || "") + "</textarea></div></div>" + wfInputs(w, null);
     } else {
       h += '<div class="g2"><div class="f w"><label>Название работы</label><input data-w="nazvanie" data-voice value="' + esc(w.nazvanie != null ? w.nazvanie : base.nazvanie || "") + '"></div>' +
-        '<div class="f w"><label>Рассказ о работе</label><textarea data-w="rasskaz" rows="3" placeholder="Что хотел заказчик, что придумали, сроки, материалы">' + esc(w.rasskaz != null ? w.rasskaz : base.rasskaz || "") + "</textarea></div></div>" +
+        '<div class="f w"><label>Рассказ о работе</label><textarea data-w="rasskaz" rows="3" placeholder="Что хотел заказчик, что придумали, сроки, материалы">' + esc(w.rasskaz != null ? w.rasskaz : base.rasskaz || "") + "</textarea></div></div>" + wfInputs(w, base) +
         '<label class="chk"><input type="checkbox" data-skryt' + (w.skryt ? " checked" : "") + "> Скрыть эту работу с витрины (потом можно вернуть)</label>";
     }
     h += '<div class="media"></div><div class="btns"><span class="btn sm file">Добавить фото и видео<input type="file" accept="image/*,video/*" multiple data-add></span>' +
@@ -319,7 +323,7 @@
     var base = isNew ? null : (workById(w.rabota) || {});
     [].forEach.call(card.querySelectorAll("[data-w]"), function (e) { e.addEventListener(e.tagName === "SELECT" ? "change" : "input", function () {
       var k = e.getAttribute("data-w");
-      if (!isNew && e.value === (base[k] || "")) delete w[k]; else w[k] = e.value; // у готовой работы храним только изменённое
+      if (!isNew && e.value.trim() === String(base[k] || "").trim()) delete w[k]; else w[k] = e.value; // у готовой работы храним только изменённое
       save();
     }); });
     var sk = card.querySelector("[data-skryt]");
@@ -362,8 +366,8 @@
   }
   function vZnak() {
     var Z = S.znak, POS = [["vl", "вверху слева"], ["vc", "вверху"], ["vp", "вверху справа"], ["cl", "слева"], ["cc", "в центре"], ["cp", "справа"], ["nl", "внизу слева"], ["nc", "внизу"], ["np", "внизу справа"]];
-    $("main").innerHTML = '<section role="tabpanel"><h1>Водяной знак</h1><p class="lead">Ставится на все новые фото и видео сам. Защищает от того, чтобы ваши работы выдавали за свои.</p>' +
-      '<div class="wm-grid"><div><div class="pv"><canvas id="pvC" width="1200" height="900"></canvas></div><p class="note">Так знак ляжет на фото. На видео - так же, в каждом кадре.</p></div><div>' +
+    $("main").innerHTML = '<section role="tabpanel"><h1>Водяной знак</h1><p class="lead">Впечатывается в новые фото и видео, которые вы добавляете во вкладке «Работы». Защищает от того, чтобы ваши работы выдавали за свои.</p><p class="note">Название на витрине здесь не меняется - оно во вкладке «О мастере», поле «Название». Уже выложенные фото тоже остаются как были.</p>' +
+      '<div class="wm-grid"><div class="wm-pv"><div class="pv"><canvas id="pvC" width="1200" height="900"></canvas></div><p class="note">Так знак ляжет на фото. На видео - так же, в каждом кадре.</p></div><div>' +
       '<div class="eyebrow" style="margin-top:0">Что ставить</div><div class="seg" id="zChto">' + [["oba", "Знак и надпись"], ["logo", "Только знак"], ["tekst", "Только надпись"]].map(function (o) { return '<button type="button" data-v="' + o[0] + '" aria-pressed="' + (Z.chto === o[0]) + '">' + o[1] + "</button>"; }).join("") + "</div>" +
       '<div class="f" style="margin-top:12px"><label>Надпись</label><input id="zTekst" value="' + esc(Z.tekst) + '"></div>' +
       '<div class="eyebrow">Где</div><div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap"><div class="pos" id="zPos">' + POS.map(function (p) { return '<button type="button" data-v="' + p[0] + '" aria-label="' + p[1] + '" aria-pressed="' + (Z.pos === p[0]) + '"></button>'; }).join("") + "</div>" +
@@ -482,8 +486,8 @@
     var nm = 0, nv = 0;
     S.novye.concat(S.k).forEach(function (w) { (w.media || []).forEach(function (m) { if (m.st !== "ok") return; if (m.tip === "video") nv++; else nm++; }); });
     return { m: Object.keys(S.master).length, k: Object.keys(S.kontakty).length, logo: !!S.logo, foto: nm, video: nv,
-      raboty: S.novye.filter(function (w) { return (w.media || []).some(function (m) { return m.st === "ok"; }) || w.nazvanie || w.rasskaz; }).length,
-      pravka: S.k.filter(function (w) { return w.nazvanie != null || w.rasskaz != null; }).length,
+      raboty: S.novye.filter(function (w) { return (w.media || []).some(function (m) { return m.st === "ok"; }) || w.nazvanie || w.rasskaz || wfHas(w); }).length,
+      pravka: S.k.filter(function (w) { return w.nazvanie != null || w.rasskaz != null || WF.some(function (f) { return w[f[0]] != null; }); }).length,
       skryt: S.k.filter(function (w) { return w.skryt; }).length, vernut: (S.vernut || []).length };
   }
   function changeLines(c) {
@@ -505,35 +509,47 @@
     return KrPub.cfg().then(function (pj) { PJ = pj; return pj ? KrPub.saved(pj) : null; }).then(function (b) { PB = b; });
   }
   function vPaket() {
-    $("main").innerHTML = '<section role="tabpanel"><h1>Опубликовать</h1><p class="lead">Проверяю…</p></section>';
-    pubState().then(drawPaket, drawPaket);
+    // без промежуточного экрана "Проверяю": он и давал мигание. Состояние публикации грузится при старте.
+    if (PJ !== undefined) return drawPaket();
+    $("main").innerHTML = "";
+    pubState().then(function () { drawPaket(); }, function () { drawPaket(); });
   }
-  function drawPaket(done) {
+  // настройку публикации видит только Александр: браузер с отметкой "свой" (заходил на главную сайта) или ссылка #nastrojka
+  function owner() { try { if (localStorage.getItem("mebel-site-staff")) return true; } catch (e) {} return location.hash === "#nastrojka" || /[?&]vladelec\b/.test(location.search); }
+  function drawPaket(done, still) {
     if (TAB !== "paket") return;
-    var c = changes(), L = changeLines(c), any = L.length > 0, share = !!(navigator.canShare && navigator.share);
+    var c = changes(), L = changeLines(c), any = L.length > 0, share = !!(navigator.canShare && navigator.share), on = !!(PJ && PB);
     var list = any ? '<div class="list">' + L.map(function (t) { return '<div class="row"><span class="sp">' + esc(t) + "</span></div>"; }).join("") + "</div>" :
-      '<p style="margin:0;color:var(--muted)">Пока нечего публиковать: правок и новых файлов нет.</p>';
-    var h = '<section role="tabpanel"><h1>Опубликовать</h1>';
-    if (done) h += '<div class="card pub-ok"><h2>Опубликовано</h2><p>Клиенты увидят правки на витрине через 1-2 минуты - столько сайт обновляется. Черновик очищен, можно добавлять следующее.</p><div class="btns"><a class="btn" href="../klient/">Открыть витрину</a></div></div>';
-    if (PJ && PB) {
-      h += '<p class="lead">Правки уходят прямо на витрину - без файлов и пересылки.</p><div class="card">' + list +
+      '<p style="margin:0;color:var(--muted)">Пока нечего публиковать: вы ничего не меняли.</p>';
+    var wait = KrPub.zhdat(PB);
+    var h = '<section role="tabpanel"' + (still ? ' class="still"' : "") + "><h1>Опубликовать</h1>";
+    if (done) h += '<div class="card pub-ok"><h2>Опубликовано</h2><p>Правки ушли на сайт. Клиенты увидят их через ' + esc(wait) + ' - столько сайт обновляется. Если откроете витрину раньше и не увидите правок - просто обновите страницу чуть позже.</p><div class="btns"><a class="btn" href="../klient/">Открыть витрину</a></div></div>';
+    if (on) {
+      h += '<p class="lead">Всё, что вы поменяли в Мастерской, уходит на витрину одной кнопкой.</p><div class="card"><div class="eyebrow" style="margin-top:0">Что изменится</div>' + list +
         '<div class="btns"><button type="button" class="btn" id="pGo"' + (any ? "" : " disabled") + ">Опубликовать на сайт</button></div></div>";
     } else if (PJ) {
-      h += '<p class="lead">Чтобы публиковать прямо на сайт, введите код мастера - 12 цифр, его дал Александр. На этом устройстве это нужно сделать один раз.</p>' +
-        '<div class="card">' + list + "</div>" +
-        '<div class="card"><div class="f"><label for="pCode">Код мастера</label><input id="pCode" inputmode="numeric" autocomplete="off" placeholder="0000-0000-0000" maxlength="20"></div>' +
+      h += '<p class="lead">Один раз на этом телефоне введите код мастера - 12 цифр, его дал Александр. Потом публикация - одной кнопкой.</p>' +
+        '<div class="card"><div class="f"><label for="pCode">Код мастера</label><input id="pCode" inputmode="numeric" enterkeyhint="go" autocomplete="off" placeholder="0000-0000-0000" maxlength="20"></div>' +
         '<label class="chk"><input type="checkbox" id="pRem" checked> Запомнить на этом устройстве (на чужом телефоне снимите галочку)</label>' +
-        '<div class="btns"><button type="button" class="btn" id="pUn">Включить публикацию</button></div><p class="save" id="pMsg" role="status"></p></div>';
+        '<div class="btns"><button type="button" class="btn" id="pUn">Включить публикацию</button></div><p class="save" id="pMsg" role="status"></p></div>' +
+        '<div class="card"><div class="eyebrow" style="margin-top:0">Что изменится</div>' + list + "</div>";
     } else {
-      h += '<p class="lead">Публикация прямо на сайт пока не включена. Соберите правки в файл и отправьте его Александру - он выложит их на витрину.</p><div class="card">' + list + "</div>";
+      h += '<p class="lead">Публикация прямо на сайт пока не включена - её включает Александр. А пока правки можно отправить ему файлом: «Дополнительно» внизу.</p><div class="card"><div class="eyebrow" style="margin-top:0">Что изменится</div>' + list + "</div>";
     }
-    h += '<div class="eyebrow">' + (PJ && PB ? "Другой способ - файлом" : "Файлом") + '</div><div class="card"><p style="margin-bottom:4px">Файл <b style="font-weight:500">pravki-…zip</b>: внутри правки и фото/видео уже со знаком. Отправьте его Александру в WhatsApp или Telegram.</p>' +
-      '<div class="btns"><button type="button" class="btn' + (PJ && PB ? " l" : "") + '" id="pDl"' + (any ? "" : " disabled") + ">Скачать файл</button>" + (share ? '<button type="button" class="btn l" id="pSh"' + (any ? "" : " disabled") + ">Отправить файлом</button>" : "") + "</div></div>" +
-      '<div class="eyebrow">Черновик</div><div class="card"><p style="margin-bottom:10px">Неопубликованное хранится только в этом браузере на этом устройстве. Если почистить браузер - черновик пропадёт.</p><button type="button" class="btn l sm" id="pClr">Очистить черновик</button></div>' +
-      '<div class="btns" style="justify-content:space-between">' + (PB ? '<button type="button" class="small-link" id="pOff">Отключить публикацию на этом устройстве</button>' : "<span></span>") +
-      '<button type="button" class="small-link" id="pSet">Настройка публикации (для Александра)</button></div></section>';
+    h += '<div class="eyebrow">Как это работает</div><ol class="how">' +
+      (PJ && !PB ? "<li>Введите код мастера выше. Это нужно один раз на этом телефоне.</li>" : "") +
+      "<li>Поменяйте, что нужно, во вкладках «О мастере», «Работы» и «Знак». Всё сохраняется само, даже если закрыть страницу.</li>" +
+      "<li>Вернитесь сюда и нажмите «Опубликовать на сайт». Дождитесь надписи «Опубликовано».</li>" +
+      "<li>Через " + esc(wait) + " откройте витрину и проверьте. Не видно правок - обновите страницу.</li></ol>";
+    h += '<details class="more"' + (!PJ ? " open" : "") + "><summary>Дополнительно</summary>" +
+      '<div class="mi"><b>Отправить правки файлом</b><p>Если публикация не работает: файл с правками, фото и видео уже со знаком. Отправьте его Александру в WhatsApp или Telegram.</p>' +
+      '<div class="btns"><button type="button" class="btn l sm" id="pDl"' + (any ? "" : " disabled") + ">Скачать файл</button>" + (share ? '<button type="button" class="btn l sm" id="pSh"' + (any ? "" : " disabled") + ">Отправить файлом</button>" : "") + "</div></div>" +
+      '<div class="mi"><b>Очистить черновик</b><p>Стереть всё, что вы поменяли, но ещё не опубликовали. Опубликованное на сайте останется.</p><div class="btns"><button type="button" class="btn l sm" id="pClr">Очистить черновик</button></div></div>' +
+      (PB ? '<div class="mi"><b>Чужой телефон?</b><p>Забыть код мастера на этом устройстве.</p><div class="btns"><button type="button" class="btn l sm" id="pOff">Отключить публикацию здесь</button></div></div>' : "") +
+      (owner() ? '<div class="mi"><b>Для Александра</b><p>Ключ GitHub, репозиторий и код мастера.</p><div class="btns"><button type="button" class="btn l sm" id="pSet">Настройка публикации</button></div></div>' : "") +
+      "</details></section>";
     $("main").innerHTML = h;
-    if ($("pGo")) $("pGo").onclick = function () { publish().then(function () { drawPaket(true); }, err); };
+    if ($("pGo")) $("pGo").onclick = function () { publish().then(function () { drawPaket(true, true); scrollTo(0, 0); }, err); };
     if ($("pUn")) {
       var inp = $("pCode");
       inp.oninput = function () { var d = KrPub.digits(inp.value).slice(0, 12); var f = KrPub.fmtCode(d); if (f !== inp.value) inp.value = f; };
@@ -541,7 +557,7 @@
         var code = KrPub.digits(inp.value);
         if (code.length !== 12) { $("pMsg").textContent = "В коде 12 цифр"; return; }
         $("pUn").disabled = true; $("pMsg").textContent = "Проверяю код…";
-        KrPub.unlock(code, PJ, $("pRem").checked).then(function (b) { PB = b; toast("Публикация включена"); drawPaket(); },
+        KrPub.unlock(code, PJ, $("pRem").checked).then(function (b) { PB = b; toast("Публикация включена"); drawPaket(false, true); },
           function (e) { $("pUn").disabled = false; $("pMsg").textContent = e.message || String(e); });
       };
       inp.onkeydown = function (e) { if (e.key === "Enter") $("pUn").click(); };
@@ -558,8 +574,8 @@
       if (!confirm("Стереть все неопубликованные правки и файлы из этого браузера?")) return;
       clearDraft(); toast("Черновик очищен"); go("paket");
     };
-    if ($("pOff")) $("pOff").onclick = function () { KrPub.forget().then(function () { PB = null; toast("На этом устройстве публикация отключена"); drawPaket(); }); };
-    $("pSet").onclick = vSetup;
+    if ($("pOff")) $("pOff").onclick = function () { KrPub.forget().then(function () { PB = null; toast("На этом устройстве публикация отключена"); drawPaket(false, true); }); };
+    if ($("pSet")) $("pSet").onclick = vSetup;
   }
   function clearDraft() {
     S.novye.concat(S.k).forEach(function (w) { (w.media || []).forEach(function (m) { del("m:" + m.id); del("o:" + m.id); del("k:" + m.id); }); });
@@ -604,26 +620,29 @@
     }).then(function (cur) {
       L = cur || {};
       L.v = 1; L.master = L.master || {}; L.kontakty = L.kontakty || {}; L.novye_raboty = L.novye_raboty || []; L.k_rabotam = L.k_rabotam || []; L.skryt = L.skryt || []; L.imena = L.imena || {};
-      Object.keys(S.master).forEach(function (k) { L.master[k] = S.master[k]; });
-      Object.keys(S.kontakty).forEach(function (k) { L.kontakty[k] = S.kontakty[k]; });
+      Object.keys(S.master).forEach(function (k) { L.master[k] = String(S.master[k]).trim(); });
+      Object.keys(S.kontakty).forEach(function (k) { L.kontakty[k] = String(S.kontakty[k]).trim(); });
       L.znak = S.znak;
       var chain = S.logo ? enc("logo").then(function (r) { if (r) L.logo = r; }) : Promise.resolve(), neu = [];
       S.novye.forEach(function (w) {
         chain = chain.then(function () { return media(w.media || []); }).then(function (md) {
-          if (!md.foto.length && !md.video.length && !w.nazvanie && !w.rasskaz) return;
-          neu.push({ id: w.id, nazvanie: w.nazvanie || "Новая работа", komnata: w.komnata, rasskaz: w.rasskaz || "", foto: md.foto, video: md.video });
+          if (!md.foto.length && !md.video.length && !w.nazvanie && !w.rasskaz && !wfHas(w)) return;
+          var nw = { id: w.id, nazvanie: w.nazvanie || "Новая работа", komnata: w.komnata, rasskaz: w.rasskaz || "", foto: md.foto, video: md.video };
+          WF.forEach(function (f) { if (w[f[0]] && String(w[f[0]]).trim()) nw[f[0]] = String(w[f[0]]).trim(); });
+          neu.push(nw);
         });
       });
       chain = chain.then(function () { L.novye_raboty = neu.concat(L.novye_raboty); });
       S.k.forEach(function (w) {
         chain = chain.then(function () { return media(w.media || []); }).then(function (md) {
-          var txt = (w.nazvanie != null && w.nazvanie.trim()) || (w.rasskaz != null && w.rasskaz.trim());
+          var txt = (w.nazvanie != null && w.nazvanie.trim()) || (w.rasskaz != null && w.rasskaz.trim()) || WF.some(function (f) { return w[f[0]] != null; });
           if (txt || md.foto.length || md.video.length) {
             // своя опубликованная работа - правим её запись, чужая (из исходных данных) - запись в k_rabotam
             var t = L.novye_raboty.filter(function (x) { return x.id === w.rabota; })[0] || L.k_rabotam.filter(function (x) { return x.rabota === w.rabota; })[0];
             if (!t) { t = { rabota: w.rabota, foto: [], video: [] }; L.k_rabotam.push(t); }
             if (w.nazvanie != null && w.nazvanie.trim()) t.nazvanie = w.nazvanie.trim();
             if (w.rasskaz != null && w.rasskaz.trim()) t.rasskaz = w.rasskaz.trim();
+            WF.forEach(function (f) { if (w[f[0]] != null) t[f[0]] = String(w[f[0]]).trim(); }); // пустое значение - стереть поле
             t.foto = (t.foto || []).concat(md.foto); t.video = (t.video || []).concat(md.video);
           }
           if (w.skryt && L.skryt.indexOf(w.rabota) < 0) { L.skryt.push(w.rabota); L.imena[w.rabota] = (w.nazvanie && w.nazvanie.trim()) || wTitle(w.rabota) || "Работа"; }
@@ -644,13 +663,13 @@
       $("busy").hidden = true; $("busyX").hidden = false;
     });
   }
-  // сайт обновится через 1-2 минуты, а Мастерская должна сразу показывать опубликованное как "было"
+  // сайт обновится не сразу (1-2 или 10-20 минут, см. KrPub.zhdat), а Мастерская должна сразу показывать опубликованное как "было"
   function afterPublish(L) {
     Object.keys(S.master).forEach(function (k) { if (S.master[k].trim()) M0[k] = S.master[k].trim(); });
     Object.keys(S.kontakty).forEach(function (k) { if (S.kontakty[k].trim()) K0[k] = S.kontakty[k].trim(); });
     D.raboty = D.raboty || [];
-    S.novye.forEach(function (w) { if (w.nazvanie || w.rasskaz || (w.media || []).length) D.raboty.unshift({ id: w.id, komnata: w.komnata, nazvanie: w.nazvanie || "Новая работа", rasskaz: w.rasskaz || "", foto: [] }); });
-    S.k.forEach(function (w) { var x = workById(w.rabota); if (!x) return; if (w.nazvanie && w.nazvanie.trim()) x.nazvanie = w.nazvanie.trim(); if (w.rasskaz && w.rasskaz.trim()) x.rasskaz = w.rasskaz.trim(); });
+    S.novye.forEach(function (w) { if (w.nazvanie || w.rasskaz || wfHas(w) || (w.media || []).length) { var x = { id: w.id, komnata: w.komnata, nazvanie: w.nazvanie || "Новая работа", rasskaz: w.rasskaz || "", foto: [] }; WF.forEach(function (f) { if (w[f[0]]) x[f[0]] = String(w[f[0]]).trim(); }); D.raboty.unshift(x); } });
+    S.k.forEach(function (w) { var x = workById(w.rabota); if (!x) return; if (w.nazvanie && w.nazvanie.trim()) x.nazvanie = w.nazvanie.trim(); if (w.rasskaz && w.rasskaz.trim()) x.rasskaz = w.rasskaz.trim(); WF.forEach(function (f) { if (w[f[0]] != null) x[f[0]] = String(w[f[0]]).trim(); }); });
     D.raboty = D.raboty.filter(function (x) { return L.skryt.indexOf(x.id) < 0; });
     window.KR_SLOJ = L;
     clearDraft(); banner();
@@ -659,9 +678,9 @@
     var b = $("banner"), P = null;
     try { P = JSON.parse(localStorage.getItem("kr-ms-pub") || "null"); } catch (e) {}
     var SL = window.KR_SLOJ || {};
-    var wait = P && Date.now() - P.at < 15 * 60000 && String(SL.sobrano || "") < String(P.sobrano || "");
+    var wait = P && Date.now() - P.at < 40 * 60000 && String(SL.sobrano || "") < String(P.sobrano || "");
     b.hidden = !wait;
-    if (wait) b.textContent = "Последняя публикация ещё появляется на витрине - обычно это 1-2 минуты. Если здесь не видно новых правок, обновите страницу чуть позже.";
+    if (wait) b.textContent = "Последняя публикация ещё появляется на витрине - обычно это " + KrPub.zhdat(PB) + ". Если здесь не видно новых правок, обновите страницу чуть позже.";
   }
 
   // ---------- Настройка публикации (Александр) ----------
@@ -689,7 +708,7 @@
         PJ = r.pj; PB = $("sRem").checked ? r.B : null;
         $("sOut").innerHTML = '<div class="card pub-ok"><h2>Готово</h2><p>Код мастера:</p><div class="code" id="sCode">' + esc(r.code) + "</div>" +
           '<div class="btns"><button type="button" class="btn l sm" id="sCopy">Скопировать код</button></div>' +
-          '<p class="note">Передайте код мастеру лично или в личном сообщении. Он вводит его в Мастерской во вкладке «Опубликовать» один раз на своём телефоне. Код больше нигде не показывается - сохраните его. Потеряли - пройдите настройку заново. Сайт подхватит настройку через 1-2 минуты.</p></div>';
+          '<p class="note">Передайте код мастеру лично или в личном сообщении. Он вводит его в Мастерской во вкладке «Опубликовать» один раз на своём телефоне. Код больше нигде не показывается - сохраните его. Потеряли - пройдите настройку заново. Сайт подхватит настройку через ' + esc(KrPub.zhdat(r.B)) + '.</p></div>';
         $("sCopy").onclick = function () { (navigator.clipboard ? navigator.clipboard.writeText(r.code) : Promise.reject()).then(function () { toast("Код скопирован"); }, function () { toast("Выделите код и скопируйте вручную"); }); };
         $("sGo").disabled = false;
       }, function (e) { $("sGo").disabled = false; $("sMsg").textContent = e.message || String(e); });
@@ -709,11 +728,12 @@
       });
       return out;
     }
-    S.novye.forEach(function (w) { var md = media(w.media || []); if (!md.foto.length && !md.video.length && !w.nazvanie && !w.rasskaz) return; P.novye_raboty.push({ id: w.id, nazvanie: w.nazvanie || "Новая работа", komnata: w.komnata, rasskaz: w.rasskaz || "", foto: md.foto, video: md.video }); });
+    S.novye.forEach(function (w) { var md = media(w.media || []); if (!md.foto.length && !md.video.length && !w.nazvanie && !w.rasskaz && !wfHas(w)) return; var nw = { id: w.id, nazvanie: w.nazvanie || "Новая работа", komnata: w.komnata, rasskaz: w.rasskaz || "", foto: md.foto, video: md.video }; WF.forEach(function (f) { if (w[f[0]] && String(w[f[0]]).trim()) nw[f[0]] = String(w[f[0]]).trim(); }); P.novye_raboty.push(nw); });
     S.k.forEach(function (w) {
       var md = media(w.media || []), e = { rabota: w.rabota, foto: md.foto, video: md.video };
       if (w.nazvanie != null) e.nazvanie = w.nazvanie; if (w.rasskaz != null) e.rasskaz = w.rasskaz;
-      if (md.foto.length || md.video.length || e.nazvanie != null || e.rasskaz != null) P.k_rabotam.push(e);
+      var wf = false; WF.forEach(function (f) { if (w[f[0]] != null) { e[f[0]] = String(w[f[0]]).trim(); wf = true; } });
+      if (md.foto.length || md.video.length || e.nazvanie != null || e.rasskaz != null || wf) P.k_rabotam.push(e);
       if (w.skryt) P.skryt.push(w.rabota);
     });
     var lg = S.logo ? get("logo").then(function (b) { if (b) { var n = "foto/logo-" + (S.logoV || 1) + (/svg/.test(S.logo.type) ? ".svg" : ".png"); P.logo = n; files.push([n, "logo"]); } }) : Promise.resolve();
@@ -750,6 +770,9 @@
   S.novye.concat(S.k).forEach(function (w) { (w.media || []).forEach(function (m) { if (m.st === "work") { m.st = "err"; m.err = "Обработка прервалась - добавьте файл ещё раз"; } }); });
   // мастер пришёл из клиентской версии (вход удержанием знака) - "назад" ведёт туда, а не на черновик
   try { if (sessionStorage.getItem("kr-iz-klienta")) setTimeout(function () { [].forEach.call(document.querySelectorAll("nav.kn a"), function (a) { if (/krasnodar\/?$/.test(a.pathname)) a.href = "../klient/"; }); }, 0); } catch (e) {}
+  function hh() { var t = document.querySelector(".top"); if (t) document.documentElement.style.setProperty("--hh", t.offsetHeight + "px"); }
+  hh(); addEventListener("resize", hh);
+  pubState().catch(function () {}); // заранее: вкладка "Опубликовать" откроется сразу, без мигания
   loadLogo().then(function () { counts(); banner(); go(/^#(opublikovat|paket)$/.test(location.hash) ? "paket" : /^#nastrojka$/.test(location.hash) ? "paket" : "master"); if (location.hash === "#nastrojka") pubState().then(vSetup, vSetup); });
   addEventListener("beforeunload", function (e) { if (REC) { e.preventDefault(); e.returnValue = ""; } });
 })();

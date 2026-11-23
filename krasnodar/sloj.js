@@ -7,6 +7,7 @@
      logo              - знак мастера (путь foto/... или "@id" зашифрованного файла);
      novye_raboty      - [{ id, nazvanie, komnata, rasskaz, foto: [{src}], video: [{fajl, oblozhka}] }] - в начало списка;
      k_rabotam         - [{ rabota, nazvanie?, rasskaz?, foto: [...], video: [...] }] - правка готовой работы и новые фото к ней;
+                         у обеих ещё поля описания material, cvet, razmery, god (строки; пустая в k_rabotam - стереть);
      skryt             - [id работы, ...] - убрать работы с витрины (вместе с их видео).
    Функция меняет V на месте и возвращает счётчики. */
 (function (root) {
@@ -36,6 +37,7 @@
       var foto = (r.foto || []).filter(function (f) { return f && f.src; }).map(function (f) { return { src: f.src, znak: true }; });
       if (!foto.length) foto = (r.video || []).filter(function (v) { return v && v.oblozhka; }).slice(0, 1).map(function (v) { return { src: v.oblozhka, znak: true }; });
       var w = { id: r.id, komnata: komnata, vid: room ? room.nazvanie : "", nazvanie: r.nazvanie || "Новая работа", gde: "", kogda: "", srok: "", material: "", cena: "", rasskaz: r.rasskaz || "", foto: foto };
+      ["material", "cvet", "razmery", "god"].forEach(function (k) { if (typeof r[k] === "string" && r[k].trim()) w[k] = r[k].trim(); });
       var i = -1; V.raboty.forEach(function (x, j) { if (x.id === r.id) i = j; });
       if (i >= 0) V.raboty[i] = Object.assign(V.raboty[i], w); else { V.raboty.unshift(w); cnt.raboty++; }
       cnt.foto += foto.length; cnt.video += (r.video || []).length; addVideo(r.video, w);
@@ -45,6 +47,7 @@
       if (!w) { if (warn) warn("нет работы " + r.rabota + " - пропускаю"); return; }
       if (typeof r.nazvanie === "string" && r.nazvanie.trim()) w.nazvanie = r.nazvanie.trim();
       if (typeof r.rasskaz === "string" && r.rasskaz.trim()) w.rasskaz = r.rasskaz.trim();
+      ["material", "cvet", "razmery", "god"].forEach(function (k) { if (typeof r[k] === "string") { if (r[k].trim()) w[k] = r[k].trim(); else delete w[k]; } });
       w.foto = w.foto || [];
       var have = {}; w.foto.forEach(function (f) { have[f.src] = 1; });
       (r.foto || []).forEach(function (f) { if (f && f.src && !have[f.src]) { have[f.src] = 1; w.foto.push({ src: f.src, znak: true }); cnt.foto++; } });

@@ -177,7 +177,7 @@
     var m = D.master || {};
     var role = [m.rol, m.gorod].filter(Boolean).join(", ");
     $("dName").textContent = m.imya || "Мастер";
-    $("dRole").textContent = role.toLowerCase();
+    $("dRole").textContent = (window.VP_ZAST_ROL ? (m.rol || "") : role).toLowerCase(); // слой может оставить на заставке только род занятий
     $("hName").textContent = m.imya || "Мастер";
     $("hRole").textContent = role;
     var av = $("hAv");
@@ -240,7 +240,8 @@
 
   // ---------- 0. двери ----------
   var SEEN = "vp-byl";
-  function seen() { try { return localStorage.getItem(SEEN) === "1"; } catch (e) { return false; } }
+  // window.VP_ZASTAVKA (krasnodar/klient/): заставка при каждом открытии страницы, а не только в первый раз
+  function seen() { if (window.VP_ZASTAVKA) return false; try { return localStorage.getItem(SEEN) === "1"; } catch (e) { return false; } }
   function markSeen() { try { localStorage.setItem(SEEN, "1"); } catch (e) {} }
   function openDoors() {
     var d = $("doors");
@@ -268,6 +269,8 @@
         '<div class="t"><b>' + esc(k.nazvanie) + "</b><span>" + esc(ws.length ? (k.hint || "") : "скоро здесь появятся работы") + "</span></div>";
       b.setAttribute("aria-label", k.nazvanie + (ws.length ? ", " + ws.length + " " + plural(ws.length, ["работа", "работы", "работ"]) : ", пока пусто"));
       b.onclick = function () { if (!ws.length) { toast("В этой комнате работы появятся позже"); return; } nav({ s: "room", k: k }); };
+      // для слоя оформления (d2.js, дом с поворотом): другие фото этой комнаты и переход прямо к работе
+      b.vpN = ws.length; b.vpCover = function (j) { return ws[j] ? cover(ws[j]) : ""; }; b.vpGo = function (j) { if (ws[j]) nav({ s: "work", w: ws[j] }); };
       b.style.setProperty("--i", (k.row - 1) * 3 + k.col - 1);
       if (k.span === 1 && String(k.nazvanie || "").length > 16) b.classList.add("long"); // на телефоне - мельче, чтобы не налезало
       f.appendChild(b); TILES[k.id] = b;
@@ -865,8 +868,8 @@
   function folio(i) { return '<div class="fol"><span>' + esc(S.room.nazvanie) + "</span><span>" + (i + 1) + " / " + S.room.works.length + "</span></div>"; }
   function pim(w, i) { return '<div class="pim" data-open="' + i + '"><img src="' + esc(cover(w)) + '" alt="" draggable="false" decoding="async">' + wmHTML(fotos(w)[0]) + "</div>"; }
   function jText(w) {
-    var t = w.rasskaz || (w.resheniya || []).join(". "), ov = otzyvy(w)[0];
-    return '<h3 class="ttl">' + esc(w.nazvanie) + '</h3><div class="mt">' + [w.gde, w.material, w.srok ? "Срок: " + w.srok : ""].filter(Boolean).map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("") + "</div>" +
+    var t = chist(w.rasskaz) || (w.resheniya || []).join(". "), ov = otzyvy(w)[0];
+    return '<h3 class="ttl">' + esc(w.nazvanie) + '</h3><div class="mt">' + [w.gde, w.material, w.cvet, w.srok ? "Срок: " + w.srok : ""].filter(Boolean).map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("") + "</div>" +
       '<div class="txt">' + esc(t) + (ov ? "<q>" + esc(ov.tekst) + "</q>" : "") + "</div>";
   }
   function jGo(i) { return '<button type="button" class="jgo" data-open="' + i + '">Смотреть работу' + ARR + "</button>"; }
@@ -924,7 +927,7 @@
   var ZAPI = {
     turn: function (dir) { turn(dir); },
     open: function (i) { var w = S.room && S.room.works[i]; if (w) { JP = i; S.ri = i; nav({ s: "work", w: w }); } },
-    cover: cover, fotos: fotos, src: srcOf, wm: wmHTML, otzyvy: otzyvy, esc: esc,
+    cover: cover, fotos: fotos, src: srcOf, wm: wmHTML, otzyvy: otzyvy, esc: esc, chist: chist,
     lite: function () { return LITE || reduce; }
   };
   function buildBook(idx, anim) {
@@ -1220,13 +1223,21 @@
     $("sDetWrap").hidden = !P.length;
     sp.classList.toggle("off", pano);
   }
+  // служебные пометки из черновика ("Название рабочее, уточнить у мастера", "дополнит мастер" и т.п.) клиенту не показываем:
+  // такие предложения убираются только при показе, в данных у мастера они остаются
+  var SLUZH = /(уточнить у мастера|дополнит мастер|заполнит мастер|название рабочее|из альбома мастера|фото из альбома|уточнить название)/i;
+  function chist(t) {
+    t = String(t || "").trim(); if (!t) return "";
+    return (t.match(/[^.!?]+[.!?]*/g) || [t]).filter(function (x) { return x.trim() && !SLUZH.test(x); }).join("").trim();
+  }
   function renderSheet(w) {
     $("sheetSc").scrollTop = 0;
     $("sVid").textContent = w._k.nazvanie;
     $("sTitle").textContent = w.nazvanie;
-    $("sChips").innerHTML = [w.gde, w.material, w.srok ? "Срок: " + w.srok : ""].filter(Boolean).map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("");
+    $("sChips").innerHTML = [w.gde, w.material, w.cvet, w.razmery, w.god ? String(w.god) + (/^\d{4}$/.test(String(w.god).trim()) ? " год" : "") : "", w.srok ? "Срок: " + w.srok : ""].filter(Boolean).map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("");
     $("sChips").hidden = !$("sChips").innerHTML;
-    $("sStory").textContent = w.rasskaz || ""; $("sStoryWrap").hidden = !w.rasskaz;
+    var rk = chist(w.rasskaz);
+    $("sStory").textContent = rk; $("sStoryWrap").hidden = !rk;
     var rs = w.resheniya || [];
     $("sSol").innerHTML = rs.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join(""); $("sSolWrap").hidden = !rs.length;
     var ov = otzyvy(w);
@@ -1448,6 +1459,9 @@
   $("sheetHead").addEventListener("click", function (e) {
     if (hd === "swipe") { hd = null; return; }
     if (e.target.closest("button")) return;
+    // слой оформления (window.VP_RUCHKA, "Просто" на телефоне): у панели одна ручка - нажатие разворачивает и сворачивает,
+    // убрать панель совсем - смахнуть вниз
+    if (window.VP_RUCHKA && !wide() && !$("sheetMore").hidden) { setSheet(sheetMode === "open" ? "compact" : "open"); return; }
     setSheet(sheetMode === "open" ? "compact" : "hidden");
   });
 
@@ -1456,7 +1470,7 @@
     if (cur !== "work") { pano = false; $("work").classList.remove("pano"); panoHint(false); } // в обзоре листаем работы, не выходя из него
     $("note").classList.remove("on");
     renderSheet(w); renderSpots(); crumbs($("crumbsW"), 2); mini($("miniW"));
-    $("wantBtn").textContent = "Хочу так же";
+    $("wantBtn").textContent = window.VP_HOCHU || "Хочу так же";
   }
   // панели выезжают каждая со своего края
   function chromeIn(delay) {

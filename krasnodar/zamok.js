@@ -84,6 +84,8 @@
     // цвета и шрифты - из общего stil.css (--kr-*), запасные значения на случай, если он ещё не загрузился
     "#krLock{position:fixed;inset:0;z-index:2147483000;background:var(--kr-bg,#121211);color:var(--kr-ink,#F1EEE8);display:flex;align-items:center;justify-content:center;padding:24px;font-family:var(--kr-sans,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif);font-weight:300;-webkit-font-smoothing:antialiased}",
     "#krLock .box{width:100%;max-width:340px;text-align:center}",
+    // телефон: форма ближе к верху и в видимой части над клавиатурой (см. fitVV)
+    "@media (max-height:760px),(pointer:coarse){#krLock{align-items:flex-start;padding-top:max(28px,9vh);overflow-y:auto}#krLock .ic{margin-bottom:16px}}",
     "#krLock .ic{width:44px;height:44px;border:1px solid var(--kr-line2,#4A4743);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:22px}",
     "#krLock h1{font-family:var(--kr-serif,Georgia,serif);font-size:30px;line-height:1.1;margin:0 0 10px;font-weight:400}",
     "#krLock p{margin:0 0 26px;color:var(--kr-muted,#A6A198);font-size:14.5px;line-height:1.55}",
@@ -115,10 +117,12 @@
     el.innerHTML = '<form class="box" autocomplete="off">' +
       '<div class="ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>' +
       "<h1>Закрытая витрина</h1><p>Вход только по пин-коду. Его выдаёт тот, кто прислал вам эту ссылку.</p>" +
-      '<input id="krPin" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="16" placeholder="••••••••" aria-label="Пин-код">' +
+      '<input id="krPin" type="password" inputmode="numeric" enterkeyhint="go" pattern="[0-9]*" autocomplete="one-time-code" maxlength="16" placeholder="••••••••" aria-label="Пин-код">' +
       '<button type="submit" id="krGo">Войти</button><div class="msg" id="krMsg" role="status" aria-live="polite"></div>' +
-      '<div class="foot">Разработка в тестовом режиме. Все права защищены.</div></form>';
+      (window.MEBEL_TOOL === "kr-klient" ? "" : '<div class="foot">Разработка в тестовом режиме. Все права защищены.</div>') + "</form>"; // клиенту пометка о тесте не нужна
     (document.body || document.documentElement).appendChild(el);
+    var vv = window.visualViewport;
+    if (vv) { var f = function () { if (!el.isConnected) { vv.removeEventListener("resize", f); vv.removeEventListener("scroll", f); return; } el.style.top = vv.offsetTop + "px"; el.style.height = vv.height + "px"; el.style.bottom = "auto"; }; vv.addEventListener("resize", f); vv.addEventListener("scroll", f); f(); }
     return el;
   }
   function msg(t, ok) { var m = document.getElementById("krMsg"); if (m) { m.textContent = t || ""; m.className = "msg" + (ok ? " ok" : ""); } }

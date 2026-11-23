@@ -22,7 +22,7 @@
     "#krMv button{flex:1;font:inherit;font-weight:500;font-size:11px;letter-spacing:.22em;text-transform:uppercase;min-height:48px;border:1px solid var(--kr-ink,#F1EEE8);border-radius:0;background:transparent;color:var(--kr-ink,#F1EEE8);cursor:pointer;transition:background-color .3s,color .3s,border-color .3s}" +
     "#krMv button.l{border-color:var(--kr-line2,#4A4743);color:var(--kr-muted,#A6A198)}" +
     "@media (hover:hover){#krMv button:not(.l):not(:disabled):hover{background:var(--kr-ink,#F1EEE8);color:var(--kr-bg,#121211)}#krMv button.l:hover{border-color:var(--kr-ink,#F1EEE8);color:var(--kr-ink,#F1EEE8)}}" +
-    "#krMv button:disabled{opacity:.4}#krMv .m{min-height:20px;margin-top:14px;font-size:13.5px;color:var(--kr-err,#E3A08F)}";
+    "@media (max-height:760px),(pointer:coarse){#krMv{align-items:flex-start;padding-top:max(28px,9vh);overflow-y:auto}}#krMv button:disabled{opacity:.4}#krMv .m{min-height:20px;margin-top:14px;font-size:13.5px;color:var(--kr-err,#E3A08F)}";
   document.head.appendChild(st);
 
   var pubP = null;
@@ -32,6 +32,12 @@
     return pubP;
   }
   function goMs() { try { sessionStorage.setItem("kr-iz-klienta", "1"); } catch (e) {} location.href = BASE + "masterskaya/"; } // "назад" из Мастерской - сюда же
+  // телефон: окно занимает только видимую часть над клавиатурой, кнопка "Войти" не прячется под ней
+  function fitVV(el) {
+    var vv = window.visualViewport; if (!vv) return;
+    function f() { if (!el.isConnected) { vv.removeEventListener("resize", f); vv.removeEventListener("scroll", f); return; } el.style.top = vv.offsetTop + "px"; el.style.height = vv.height + "px"; el.style.bottom = "auto"; }
+    vv.addEventListener("resize", f); vv.addEventListener("scroll", f); f();
+  }
   function close() { var e = document.getElementById("krMv"); if (e) e.remove(); }
   function open() {
     if (document.getElementById("krMv")) return;
@@ -43,13 +49,14 @@
       if (B) return goMs(); // код уже на этом устройстве
       var el = document.createElement("div"); el.id = "krMv"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
       el.innerHTML = PJ ? '<form autocomplete="off"><div class="c">Для мастера</div><h2>Вход в Мастерскую</h2><p>Код мастера - 12 цифр.</p>' +
-        '<input id="krMvC" type="password" inputmode="numeric" maxlength="20" placeholder="0000-0000-0000" aria-label="Код мастера">' +
+        '<input id="krMvC" type="password" inputmode="numeric" enterkeyhint="go" maxlength="20" placeholder="0000-0000-0000" aria-label="Код мастера">' +
         '<div class="b"><button type="button" class="l" id="krMvX">Отмена</button><button type="submit" id="krMvGo">Войти</button></div><div class="m" id="krMvM" role="status"></div></form>' :
         '<form><div class="c">Для мастера</div><h2>Вход в Мастерскую</h2><p>Вход для мастера ещё не настроен.</p><div class="b"><button type="button" class="l" id="krMvX">Понятно</button></div></form>';
       document.body.appendChild(el);
       el.querySelector("#krMvX").onclick = close;
       el.addEventListener("click", function (e) { if (e.target === el) close(); });
       document.addEventListener("keydown", function k(e) { if (e.key === "Escape") { close(); document.removeEventListener("keydown", k); } });
+      fitVV(el);
       var inp = el.querySelector("#krMvC"); if (!inp) return;
       setTimeout(function () { inp.focus(); }, 30);
       el.querySelector("form").onsubmit = function (e) {
