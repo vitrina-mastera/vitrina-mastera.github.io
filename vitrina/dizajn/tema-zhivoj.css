@@ -1,0 +1,141 @@
+/* Вариант 4 - "Живой дом" (яркая иллюстрация). Небо и свет - по настоящему времени суток (утро, день, вечер, ночь),
+   кнопкой над заголовком можно сменить. Деревья и частицы - по сезону: осенью летят листья, зимой снег,
+   весной лепестки, ночью светлячки. Облака плывут, птицы летят, деревья качаются, из трубы идёт дым.
+   Дом - домик с черепичной крышей, окна в белых рамах, забор и цветы. */
+html[data-tema=zhivoj]{--serif:Nunito,Manrope,system-ui,sans-serif;
+  --s1:#7EC8EE;--s2:#BFE6F7;--s3:#EAF6F4;--m1:#A9C9DD;--m2:#93C08A;--g1:#9CCB6E;--cl:#FFFFFF;--clo:.95;--sto:0;--ox:70vw;--oy:9vh;--sun:#FFE08A;--sunO:1;--moonO:0;--wall:#FFF1DC;--night:0;
+  --c0:#7DBE5A;--c1:#5EA84A;--c2:#93CC6A;--hi:#B6E08C;--trunk:#8A5A3C}
+/* светлое время */
+html[data-tema=zhivoj][data-svet=light]{--bg:#FFF8EE;--bg2:#FFFDF8;--card:#FFFFFF;--line:#EADFCF;--ink:#2B2A3A;--muted:#6B6878;--acc:#EC7547;--acc-ink:#FFFFFF;--dzb:rgba(255,255,255,.72)}
+/* тёмное время */
+html[data-tema=zhivoj][data-svet=dark]{--bg:#1A1733;--bg2:#221E40;--card:#2A2550;--line:#3B3566;--ink:#F7F1FF;--muted:#BDB6D6;--acc:#FFB35C;--acc-ink:#2A1A08;--dzb:rgba(255,255,255,.08)}
+html[data-tema=zhivoj][data-svet=dark] .htop{background:rgba(26,23,51,.6)}
+html[data-tema=zhivoj][data-tod=utro]{--s1:#A6C8EA;--s2:#F5D2C6;--s3:#FCE6C4;--m1:#C7B7D6;--m2:#A9C498;--cl:#FFEDE6;--ox:12vw;--oy:30vh;--sun:#FFC59A}
+html[data-tema=zhivoj][data-tod=vecher]{--s1:#2E2B5F;--s2:#8E4F7F;--s3:#F2915A;--m1:#5E4A78;--m2:#4E5A6E;--cl:#F7B08A;--clo:.7;--ox:78vw;--oy:44vh;--sun:#FF8A55;--wall:#F6DCC0;--night:.35;--sto:.5}
+html[data-tema=zhivoj][data-tod=noch]{--s1:#070D26;--s2:#142048;--s3:#27365F;--m1:#1D2850;--m2:#18233F;--cl:#36416C;--clo:.55;--ox:72vw;--oy:10vh;--sunO:0;--moonO:1;--wall:#E9D8C3;--night:.6;--sto:1}
+/* сезон: кроны и трава */
+html[data-tema=zhivoj][data-sezon=osen]{--c0:#E9A23B;--c1:#D9622B;--c2:#C2452F;--hi:#F4C46A;--g1:#C2B46A}
+html[data-tema=zhivoj][data-sezon=zima]{--c0:#E9F0F4;--c1:#D6E2EA;--c2:#C6D5DF;--hi:#FFFFFF;--g1:#EEF3F6;--trunk:#6E5444}
+html[data-tema=zhivoj][data-sezon=vesna]{--c0:#9ED37A;--c1:#F4B6C8;--c2:#7CC46A;--hi:#FFD9E4;--g1:#A6D57C}
+html[data-tema=zhivoj] .home h1{font-weight:900;letter-spacing:-.02em;font-size:clamp(30px,4.4vw,56px)}
+html[data-tema=zhivoj] .room-head h2,html[data-tema=zhivoj] .pn-head h2,html[data-tema=zhivoj] .reels h2,html[data-tema=zhivoj] .mbox h3,html[data-tema=zhivoj] .sheet h3,html[data-tema=zhivoj] .room .t b,html[data-tema=zhivoj] .wcard .meta b,html[data-tema=zhivoj] .rcard .rm b{font-weight:800}
+html[data-tema=zhivoj] .btn{border-radius:16px}
+html[data-tema=zhivoj] .btn.main{box-shadow:0 6px 0 color-mix(in srgb,var(--acc) 70%,#000),0 14px 24px rgba(0,0,0,.18);transform:translateY(-2px)}
+html[data-tema=zhivoj] .btn.main:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--acc) 70%,#000)}
+
+/* небо */
+.sc-zhivoj .sky{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%);transition:background 1s}
+.sc-zhivoj .stars{opacity:var(--sto);transition:opacity 1s}
+.sc-zhivoj .stars i{position:absolute;left:0;top:0;width:1.6px;height:1.6px;border-radius:50%}
+html:not([data-q="0"]) .sc-zhivoj .stars{animation:zjTw 4s ease-in-out infinite alternate}
+@keyframes zjTw{from{opacity:var(--sto)}to{opacity:calc(var(--sto) * .4)}}
+.sc-zhivoj .orb{position:absolute;left:var(--ox);top:var(--oy);width:clamp(64px,8vw,112px);aspect-ratio:1;transition:left 1.2s cubic-bezier(.65,0,.35,1),top 1.2s cubic-bezier(.65,0,.35,1)}
+.sc-zhivoj .orb b{position:absolute;inset:0;border-radius:50%;transition:opacity .8s}
+.sc-zhivoj .orb .sun{background:var(--sun);opacity:var(--sunO);box-shadow:0 0 0 14px color-mix(in srgb,var(--sun) 30%,transparent),0 0 0 32px color-mix(in srgb,var(--sun) 14%,transparent),0 0 90px 30px color-mix(in srgb,var(--sun) 40%,transparent)}
+html[data-q="2"] .sc-zhivoj .orb .sun{animation:zjPulse 5s ease-in-out infinite alternate}
+@keyframes zjPulse{to{transform:scale(1.06)}}
+.sc-zhivoj .orb .moon{opacity:var(--moonO);inset:12%;background:radial-gradient(circle at 66% 62%,rgba(170,160,120,.35) 0 10%,transparent 11%),radial-gradient(circle at 36% 40%,rgba(170,160,120,.3) 0 8%,transparent 9%),#F4EBC8;box-shadow:0 0 40px 12px rgba(244,235,200,.3)}
+.sc-zhivoj .cl{position:absolute;color:var(--cl);opacity:var(--clo);transition:color 1s,opacity 1s}
+.sc-zhivoj .cl.a{top:12vh;transform:translateX(20vw)}.sc-zhivoj .cl.b{top:26vh;transform:translateX(64vw)}.sc-zhivoj .cl.c{top:20vh;transform:translateX(40vw)}
+html:not([data-q="0"]) .sc-zhivoj .cl{animation:zjCloud 110s linear infinite}
+html:not([data-q="0"]) .sc-zhivoj .cl.a{animation-delay:-30s}
+html:not([data-q="0"]) .sc-zhivoj .cl.b{animation-duration:150s;animation-delay:-90s}
+html:not([data-q="0"]) .sc-zhivoj .cl.c{animation-duration:80s;animation-delay:-50s}
+@keyframes zjCloud{from{transform:translateX(-300px)}to{transform:translateX(calc(100vw + 40px))}}
+/* птицы - днём и утром */
+.sc-zhivoj .bd{position:absolute;left:0;width:22px;height:10px;opacity:0}
+.sc-zhivoj .bd::before,.sc-zhivoj .bd::after{content:"";position:absolute;top:0;width:12px;height:8px;border-top:2.5px solid #3A3F5C;border-radius:60% 60% 0 0}
+.sc-zhivoj .bd::before{left:0;transform-origin:100% 100%}.sc-zhivoj .bd::after{right:0;transform-origin:0 100%}
+.sc-zhivoj .bd.b1{top:18vh}.sc-zhivoj .bd.b2{top:21vh;scale:.75}.sc-zhivoj .bd.b3{top:16vh;scale:.6}
+html[data-q="2"][data-tod=den] .sc-zhivoj .bd,html[data-q="2"][data-tod=utro] .sc-zhivoj .bd{animation:zjFly 34s linear infinite;opacity:1}
+html[data-q="2"] .sc-zhivoj .bd.b2{animation-delay:-1.2s!important}html[data-q="2"] .sc-zhivoj .bd.b3{animation-delay:-2.1s!important}
+html[data-q="2"] .sc-zhivoj .bd::before{animation:zjFlapL .5s ease-in-out infinite alternate}
+html[data-q="2"] .sc-zhivoj .bd::after{animation:zjFlapR .5s ease-in-out infinite alternate}
+@keyframes zjFly{from{transform:translate(-40px,0)}50%{transform:translate(50vw,-4vh)}to{transform:translate(calc(100vw + 40px),2vh)}}
+@keyframes zjFlapL{from{transform:rotate(14deg)}to{transform:rotate(-16deg)}}
+@keyframes zjFlapR{from{transform:rotate(-14deg)}to{transform:rotate(16deg)}}
+.sc-zhivoj .far svg{height:38vh}
+.sc-zhivoj .far .m1{fill:var(--m1);transition:fill 1s}
+.sc-zhivoj .far .m2{fill:var(--m2);transition:fill 1s}
+.sc-zhivoj .mid svg{height:30vh}
+.sc-zhivoj .mid .g1{fill:color-mix(in srgb,var(--g1),#0B1030 calc(var(--night) * 100%))}
+.sc-zhivoj .crown.c0{fill:color-mix(in srgb,var(--c0),#0B1030 calc(var(--night) * 100%))}
+.sc-zhivoj .crown.c1{fill:color-mix(in srgb,var(--c1),#0B1030 calc(var(--night) * 100%))}
+.sc-zhivoj .crown.c2{fill:color-mix(in srgb,var(--c2),#0B1030 calc(var(--night) * 100%))}
+.sc-zhivoj .crown.hi{fill:color-mix(in srgb,var(--hi),#0B1030 calc(var(--night) * 100%));opacity:.7}
+.sc-zhivoj .trunk{fill:color-mix(in srgb,var(--trunk),#0B1030 calc(var(--night) * 100%))}
+.sc-zhivoj .tr{transform-box:fill-box;transform-origin:50% 100%}
+html:not([data-q="0"]) .sc-zhivoj .tr{animation:zjSway 6s ease-in-out infinite alternate}
+@keyframes zjSway{from{transform:rotate(-1.6deg)}to{transform:rotate(1.8deg)}}
+
+/* домик */
+html[data-tema=zhivoj] .roof{margin:0 2%;background:radial-gradient(circle at 50% 0,transparent 0 8px,rgba(120,40,20,.28) 9px 10.5px,transparent 11.5px) 0 0/22px 13px,linear-gradient(180deg,#E8805A,#C85F3D)}
+html[data-tema=zhivoj] .roof span{color:#FFF6E6;font-family:Nunito,var(--sans);font-weight:900;text-shadow:0 2px 0 rgba(120,40,20,.35)}
+html[data-tema=zhivoj] .floors{background:color-mix(in srgb,var(--wall),#1A1733 calc(var(--night) * 60%));padding:9px;gap:9px;border-radius:0 0 14px 14px;box-shadow:0 30px 60px rgba(30,20,60,.28),inset 0 -8px 0 rgba(0,0,0,.06)}
+html[data-tema=zhivoj] .room{border-radius:12px}
+html[data-tema=zhivoj] .room::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;border:3px solid rgba(255,250,240,.95);box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+html[data-tema=zhivoj] .room .dark{background:#1B1440;opacity:calc(.12 + var(--night) * .7)}
+html[data-tema=zhivoj] .room .lamp{background:radial-gradient(50% 60% at 50% 0%,rgba(255,206,120,.6),transparent 70%)}
+html[data-tema=zhivoj][data-tod=noch] .room:not(.empty) .lamp,html[data-tema=zhivoj][data-tod=vecher] .room:not(.empty) .lamp{opacity:.45}
+html[data-tema=zhivoj] .room.glim .dark{opacity:.08}
+html[data-tema=zhivoj] .room.glim .lamp{opacity:1}
+html[data-tema=zhivoj] .room.empty .ph{background:repeating-linear-gradient(135deg,rgba(255,255,255,.5) 0 10px,rgba(255,255,255,.3) 10px 20px)}
+html[data-tema=zhivoj][data-svet=dark] .room.empty{color:#4A4458}
+html[data-tema=zhivoj] .room .tags span{background:rgba(255,255,255,.92);color:#D9623A;border-color:transparent}
+html[data-tema=zhivoj] .dz-deco.chim{left:68%}
+html[data-tema=zhivoj] .dz-deco.chim i{background:repeating-linear-gradient(180deg,#B5523A 0 8px,#9E4430 8px 10px);border-top:7px solid #6E2F22;border-radius:3px 3px 0 0}
+html[data-tema=zhivoj] .dz-deco.chim b{background:radial-gradient(closest-side,rgba(255,255,255,.75),transparent)}
+html[data-tema=zhivoj][data-svet=dark] .dz-deco.chim b{background:radial-gradient(closest-side,rgba(200,200,230,.35),transparent)}
+/* земля: трава, забор, тропинка, цветы, почтовый ящик */
+html[data-tema=zhivoj] .dz-deco.ground{left:-8%;right:-8%;top:calc(100% - 6px);height:46px;z-index:-1;border-radius:0 0 50% 50%/0 0 100% 100%;background:color-mix(in srgb,var(--g1),#0B1030 calc(var(--night) * 100%))}
+.dz-deco.ground .fence{position:absolute;left:3%;right:3%;bottom:16px;height:26px;background:linear-gradient(transparent 8px,rgba(255,250,240,.9) 8px 12px,transparent 12px 18px,rgba(255,250,240,.9) 18px 22px,transparent 22px),repeating-linear-gradient(90deg,rgba(255,250,240,.95) 0 7px,transparent 7px 20px);
+  -webkit-mask-image:linear-gradient(90deg,#000 38%,transparent 38% 62%,#000 62%);mask-image:linear-gradient(90deg,#000 38%,transparent 38% 62%,#000 62%);opacity:calc(1 - var(--night) * .5)}
+.dz-deco.ground .path{position:absolute;left:43%;right:43%;top:4px;bottom:0;background:color-mix(in srgb,#E6CFA8,#0B1030 calc(var(--night) * 100%));clip-path:polygon(30% 0,70% 0,100% 100%,0 100%)}
+.dz-deco.ground .fl{position:absolute;bottom:8px;width:12px;height:12px;border-radius:50%;background:#FF6F91;box-shadow:16px 4px 0 -2px #FFD23F,-14px 6px 0 -3px #8E7CFF;transform-origin:50% 100%}
+.dz-deco.ground .fl::after{content:"";position:absolute;left:5px;top:10px;width:2px;height:10px;background:#5E9E4A}
+.dz-deco.ground .f1{left:8%}.dz-deco.ground .f2{left:30%}.dz-deco.ground .f3{right:30%}.dz-deco.ground .f4{right:9%}
+html:not([data-q="0"]) .dz-deco.ground .fl{animation:zjSway 3.2s ease-in-out infinite alternate}
+.dz-deco.ground .f2,.dz-deco.ground .f4{animation-delay:-1.6s!important}
+html[data-sezon=zima] .dz-deco.ground .fl{display:none}
+.dz-deco.ground .mail{position:absolute;right:37%;bottom:14px;width:16px;height:12px;border-radius:6px 6px 2px 2px;background:#3E7CB1}
+.dz-deco.ground .mail::after{content:"";position:absolute;left:7px;top:12px;width:2px;height:12px;background:#6E4B33}
+@media (max-width:600px){.dz-deco.ground .mail{display:none}.dz-deco.ground .fl{transform:scale(.8)}}
+/* вход в дом: домик "выпрыгивает", окна - по одному */
+html[data-tema=zhivoj] #home.enter .house{animation:zjPop 1s cubic-bezier(.34,1.56,.64,1) .25s both;transform-origin:50% 100%}
+@keyframes zjPop{from{opacity:0;transform:scale(.86) translateY(30px)}to{opacity:1;transform:none}}
+html[data-tema=zhivoj] #home.enter .roof{animation:zjRoof .8s cubic-bezier(.34,1.56,.64,1) .55s both}
+@keyframes zjRoof{from{transform:translateY(-40px);opacity:0}to{transform:none;opacity:1}}
+html[data-tema=zhivoj] #home.enter .room{animation:zjRoom .7s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(.75s + var(--i,0) * .07s)}
+@keyframes zjRoom{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+html[data-tema=zhivoj] #home.enter .hero-acts{animation-delay:1.3s}
+html[data-tema=zhivoj] #home.enter h1 .w{animation-name:zjWord;animation-timing-function:cubic-bezier(.34,1.56,.64,1)}
+@keyframes zjWord{from{opacity:0;transform:translateY(.6em) scale(.8)}to{opacity:1;transform:none}}
+
+/* вход: небо, облака-ворота расходятся */
+html[data-tema=zhivoj] #doors{background:transparent}
+.dz-deco.sky{background:linear-gradient(180deg,var(--s1),var(--s2) 60%,var(--s3))}
+/* створка-облако: сплошная часть у края экрана и пухлые круги у середины */
+html[data-tema=zhivoj] .door{background:
+  radial-gradient(circle 70px at 56% 4%,#fff 97%,transparent),radial-gradient(circle 58px at 64% 18%,#fff 97%,transparent),
+  radial-gradient(circle 76px at 55% 33%,#fff 97%,transparent),radial-gradient(circle 60px at 66% 48%,#fff 97%,transparent),
+  radial-gradient(circle 72px at 56% 63%,#fff 97%,transparent),radial-gradient(circle 62px at 65% 78%,#fff 97%,transparent),
+  radial-gradient(circle 74px at 55% 94%,#fff 97%,transparent),linear-gradient(#fff,#fff) 0 0/56% 100% no-repeat;
+  box-shadow:none;border:0!important;transition:transform 1.5s cubic-bezier(.65,0,.35,1),opacity 1.5s}
+html[data-tema=zhivoj] .door{transform-origin:50% 50%}
+html[data-tema=zhivoj] .door.r{transform:scaleX(-1)}
+html[data-tema=zhivoj][data-svet=dark] .door{opacity:.92;filter:none}
+html[data-tema=zhivoj] .door::before,html[data-tema=zhivoj] .door::after,html[data-tema=zhivoj] .door i{display:none}
+html[data-tema=zhivoj] #doors.open .door.l{transform:translateX(-115%) scale(1.2)}
+html[data-tema=zhivoj] #doors.open .door.r{transform:translateX(115%) scale(-1.2,1.2)}
+html[data-tema=zhivoj] #doors::before{display:none}
+.dz-deco.sky{inset:0;z-index:-1}
+.dz-deco.sky .dc{position:absolute;color:#fff;opacity:.9}
+.dz-deco.sky .dc.a{top:8vh;left:-60px}.dz-deco.sky .dc.b{bottom:10vh;right:-40px}
+.dz-deco.sky .dsun{position:absolute;left:50%;top:14vh;width:90px;height:90px;margin-left:-45px;border-radius:50%;background:var(--sun);box-shadow:0 0 0 16px color-mix(in srgb,var(--sun) 30%,transparent),0 0 80px 30px color-mix(in srgb,var(--sun) 40%,transparent);opacity:var(--sunO)}
+html[data-tema=zhivoj] #doors.open .dz-deco.sky{opacity:0;transition:opacity 1s}
+html[data-tema=zhivoj] .plate{background:#FFFFFF;border:0;border-radius:22px;box-shadow:0 18px 40px rgba(30,20,60,.18);color:#2B2A3A}
+html[data-tema=zhivoj] .plate b{font-family:Nunito,var(--sans);font-weight:900;color:#2B2A3A}
+html[data-tema=zhivoj] .plate span{color:#6B6878}
+html[data-tema=zhivoj] #enterBtn{background:#EC7547;color:#fff;border-radius:16px;box-shadow:0 6px 0 #B9512B}
+/* ночью и вечером крыша и труба темнее - как в сумерках */
+html[data-tema=zhivoj][data-svet=dark] .roof{background:radial-gradient(circle at 50% 0,transparent 0 8px,rgba(40,10,10,.3) 9px 10.5px,transparent 11.5px) 0 0/22px 13px,linear-gradient(180deg,color-mix(in srgb,#E8805A,#1A1733 calc(var(--night) * 70%)),color-mix(in srgb,#C85F3D,#1A1733 calc(var(--night) * 70%)))}

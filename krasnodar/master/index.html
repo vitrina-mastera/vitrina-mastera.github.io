@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#1f1b18">
+<title>Для мастера - закрытая витрина</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231f1b18'/%3E%3Cpath fill='none' stroke='%23d9a566' stroke-width='2' d='M7 11V8a5 5 0 0 1 10 0v3M5 11h14v9H5z'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../../shared/site.css">
+<style>
+:root{--bg:#f6f2ec;--card:#fffdf9;--ink:#26211d;--muted:#73685e;--line:#e6dccf;--dark:#1f1b18;--acc:#b9783b;--acc-l:#f6e8d8;--ok:#2f6f5e;--ok-l:#e3f0ec;--wa:#1faa54}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+body.locked main,body.locked .tabs,body.locked header,body.locked .send{visibility:hidden}
+a{color:var(--acc)}
+button{font:inherit}
+.in{max-width:760px;margin:0 auto;padding:0 14px}
+header{background:var(--dark);color:#f3ede6;padding:14px 0 18px}
+header .row{display:flex;align-items:center;gap:10px}
+header .lk{width:34px;height:34px;border-radius:10px;background:#2c2622;display:flex;align-items:center;justify-content:center;flex:none}
+header .t{flex:1;min-width:0}
+header h1{margin:0;font-size:20px;line-height:1.2}
+header .sub{color:#c9bdb0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .out{background:transparent;color:#c9bdb0;border:1px solid #4a4038;border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;text-decoration:none;white-space:nowrap}
+header .out.home{background:#d9a566;border-color:#d9a566;color:#1f1b18;font-weight:700}
+@media(max-width:420px){header .row{flex-wrap:wrap}header .t{flex:1 1 60%}}
+header .staff{margin:0 0 12px;color:#f3ede6}
+header .staff[hidden]{display:none}
+.tabs{position:sticky;top:0;z-index:5;background:var(--dark);border-top:1px solid #2c2622}
+.tabs .in{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding-top:6px;padding-bottom:8px}
+.tabs .in::-webkit-scrollbar{display:none}
+.tabs a{flex:none;color:#c9bdb0;text-decoration:none;padding:8px 14px;border-radius:999px;font-weight:600;font-size:15px;white-space:nowrap}
+.tabs a.on{background:#f3ede6;color:var(--dark)}
+.tabs a i{font-style:normal;font-size:12px;margin-left:6px;background:rgba(255,255,255,.14);padding:1px 7px;border-radius:999px}
+@media(max-width:420px){.tabs a{padding:8px 10px;font-size:14.5px}.tabs a i{margin-left:4px}}
+.tabs a.on i{background:var(--acc-l);color:var(--acc)}
+main{padding:16px 0 30px}
+section[hidden]{display:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.hello{font-size:16.5px}
+.hello p{margin:0}
+h2{font-size:19px;margin:22px 0 10px}
+h2:first-child{margin-top:4px}
+.lead{color:var(--muted);margin:-4px 0 12px;font-size:15px}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+@media(max-width:560px){.views{grid-template-columns:minmax(0,1fr)}}
+.views.one{grid-template-columns:minmax(0,1fr)}
+.view{display:block;border-radius:18px;overflow:hidden;background:var(--dark);color:#fff;text-decoration:none;position:relative;min-height:170px}
+.view .bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.6}
+.view .tx{position:relative;padding:16px;display:flex;flex-direction:column;justify-content:flex-end;min-height:170px;background:linear-gradient(transparent 30%,rgba(0,0,0,.65))}
+.view b{font-size:19px}
+.view span{font-size:14px;opacity:.9}
+.steps{display:grid;gap:8px}
+.step{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;text-decoration:none;color:var(--ink)}
+.step .n{width:34px;height:34px;border-radius:50%;background:var(--acc-l);color:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.step.done .n{background:var(--ok-l);color:var(--ok)}
+.step div{flex:1;min-width:0}
+.step small{display:block;color:var(--muted);font-size:13.5px}
+.step .go{color:var(--muted);font-size:20px}
+/* работы */
+.work{padding:0;overflow:hidden}
+.work .pics{display:flex;gap:4px;overflow-x:auto;scroll-snap-type:x mandatory;background:#ece4d8}
+.work .pics img{height:220px;width:auto;max-width:88%;object-fit:cover;scroll-snap-align:start;flex:none;display:block;cursor:zoom-in}
+.work .pics img:only-child{max-width:100%;width:100%}
+.work .bd{padding:14px 16px 16px}
+.work h3{margin:0 0 2px;font-size:18px}
+.work .meta{color:var(--muted);font-size:14px;margin-bottom:8px}
+.work .story{margin:0 0 8px}
+.work ul{margin:0 0 10px;padding-left:20px;color:var(--muted);font-size:14.5px}
+.work .cap{font-size:13.5px;color:var(--muted);margin:0 0 10px}
+.work .cap b{color:var(--ink);font-weight:600}
+.verdict{display:flex;gap:8px;flex-wrap:wrap}
+.verdict button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;font-weight:600;cursor:pointer;color:var(--ink)}
+.verdict button.on[data-v="ok"]{background:var(--ok-l);border-color:var(--ok);color:var(--ok)}
+.verdict button.on[data-v="fix"]{background:var(--acc-l);border-color:var(--acc);color:var(--acc)}
+.fixbox{margin-top:10px}
+.fixbox[hidden]{display:none}
+/* вопросы */
+.grp{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px;font-weight:700}
+.q h3{margin:0 0 2px;font-size:16px}
+.q .h{margin:0 0 10px;color:var(--muted);font-size:14px}
+.q.done{border-color:#cfe2da}
+.q.done h3::after{content:" ✓";color:var(--ok)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.chips button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 13px;font-size:14.5px;cursor:pointer;color:var(--ink)}
+.chips button.on{background:var(--acc-l);border-color:var(--acc);color:var(--acc);font-weight:600}
+.mrow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mrow[hidden],.mosn[hidden]{display:none}
+.mrow span{flex:0 0 84px;font-weight:600;font-size:14.5px}
+.mrow input{flex:1;min-width:0;padding:10px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:16px;background:#fff;color:var(--ink)}
+.mrow input:focus{outline:2px solid var(--acc);border-color:transparent}
+.mosn .h{margin:2px 0 6px}
+.ta{position:relative}
+textarea{width:100%;min-height:80px;padding:10px 48px 10px 10px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:16px;background:#fff;color:var(--ink);resize:vertical;display:block}
+textarea:focus{outline:2px solid var(--acc);border-color:transparent}
+.mic{position:absolute;right:6px;top:6px;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.mic.on{background:#d9534f;border-color:#d9534f;color:#fff;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(217,83,79,.2)}}
+.stars{display:flex;gap:6px;margin-bottom:8px}
+.stars button{flex:1;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 0;font-size:20px;cursor:pointer;color:#cbbfb2}
+.stars button.on{color:#e0a43a;border-color:#e8c98f;background:#fff8ea}
+/* отправка */
+.send{position:sticky;bottom:0;z-index:4;background:linear-gradient(rgba(246,242,236,0),var(--bg) 30%);padding:14px 0 calc(10px + env(safe-area-inset-bottom))}
+.send[hidden]{display:none}
+.send .btns{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:14px;padding:12px 14px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn.wa{background:var(--wa);border-color:var(--wa);color:#fff;flex:1;min-width:0}
+.btn.wa span{overflow:hidden;text-overflow:ellipsis}
+.send .note{font-size:12.5px;color:var(--muted);margin:6px 2px 0;text-align:center}
+.parts{display:grid;gap:8px;margin-top:8px}
+.parts[hidden]{display:none}
+#zoom{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:10px}
+#zoom[hidden]{display:none}
+#zoom img{max-width:100%;max-height:100%;object-fit:contain}
+#zoom button{position:absolute;top:calc(10px + env(safe-area-inset-top));right:10px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:22px;cursor:pointer}
+footer{padding:10px 0 30px;text-align:center;color:var(--muted);font-size:12.5px}
+#toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#1d2321;color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:60;max-width:92%;text-align:center}
+#toast.on{opacity:1}
+</style>
+</head>
+<body class="locked">
+<header><div class="in">
+  <div class="staff" id="staff"><nav data-variants></nav></div>
+  <div class="row">
+    <div class="lk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d9a566" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+    <div class="t"><h1 id="ttl">Закрытая витрина</h1><div class="sub" id="sub"></div></div>
+    <button type="button" class="out" id="out">Выйти</button>
+  </div>
+</div></header>
+<nav class="tabs"><div class="in" id="tabs">
+  <a href="#" data-tab="glav">Начало</a>
+  <a href="#raboty" data-tab="raboty">Подписи <i id="cR"></i></a>
+  <a href="#voprosy" data-tab="voprosy">Вопросы <i id="cQ"></i></a>
+  <a href="#otzyv" data-tab="otzyv">Ваш отзыв</a>
+</div></nav>
+
+<main><div class="in">
+  <section id="s-glav">
+    <div class="card hello"><p id="privet"></p></div>
+    <h2>Ваша витрина</h2>
+    <p class="lead">Так её увидят клиенты: дом с комнатами, в каждой - ваши работы.</p>
+    <div class="views one">
+      <a class="view" href="../"><div class="bg" id="bg1"></div><div class="tx"><b>Открыть витрину</b><span>Путешествие по дому, все работы, видео, контакты</span></div></a>
+    </div>
+    <h2>Что нужно от вас</h2>
+    <div class="steps">
+      <a class="step" href="#raboty" id="st1"><span class="n">1</span><div><b>Проверить подписи работ</b><small id="st1s"></small></div><span class="go">›</span></a>
+      <a class="step" href="#voprosy" id="st2"><span class="n">2</span><div><b>Ответить на вопросы</b><small id="st2s"></small></div><span class="go">›</span></a>
+      <a class="step" href="#otzyv" id="st3"><span class="n">3</span><div><b>Оставить отзыв и пожелания</b><small id="st3s"></small></div><span class="go">›</span></a>
+    </div>
+  </section>
+
+  <section id="s-raboty" hidden>
+    <h2>Проверьте подписи работ</h2>
+    <p class="lead">Мы взяли тексты из ваших постов в ВК и сократили. Если что-то не так или можно добавить (сроки, материалы, район) - нажмите «Есть правка» и напишите или скажите голосом.</p>
+    <div id="works"></div>
+  </section>
+
+  <section id="s-voprosy" hidden>
+    <h2>Вопросы</h2>
+    <p class="lead">Отвечайте на те, на которые хочется. Можно коротко или голосом. Ответы сохраняются на этом устройстве, можно вернуться позже.</p>
+    <div id="qs"></div>
+  </section>
+
+  <section id="s-otzyv" hidden>
+    <h2>Отзыв и обратная связь</h2>
+    <p class="lead">Что думаете о витрине? Что понравилось, что поменять, чего не хватает. Любое поле можно оставить пустым.</p>
+    <div id="rev"></div>
+  </section>
+</div></main>
+
+<div class="send" id="send" hidden><div class="in">
+  <div class="btns">
+    <a class="btn wa" id="wa" href="#" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg><span id="waT">Отправить</span></a>
+    <button type="button" class="btn" id="copy" title="Скопировать текст">Копировать</button>
+    <button type="button" class="btn" id="file" title="Скачать файлом">Файл</button>
+  </div>
+  <div class="parts" id="parts" hidden></div>
+  <p class="note" id="sendNote"></p>
+</div></div>
+
+<footer><div class="in"><span data-sign>Разработка в тестовом режиме. Все права защищены. <button type="button" class="ms-tlink" data-terms>Условия использования</button></span></div></footer>
+<div id="zoom" hidden><img alt=""><button type="button" aria-label="Закрыть">×</button></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>window.MEBEL_TOOL = "krasnodar";</script>
+<script src="../../shared/site.js"></script>
+<script src="../zamok.js"></script>
+<script src="../krasnodar.js"></script>
+</body>
+</html>

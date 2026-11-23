@@ -1,0 +1,107 @@
+/* Общая полоска сайта и меню "Передать заказ". Префикс ms- чтобы не задеть стили инструментов. */
+#msBar{display:flex;align-items:center;gap:10px;padding:6px 12px;background:#24302c;color:#e9efec;font:14px/1.3 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;position:relative;z-index:50}
+#msBar a,#msBar button{color:inherit;font:inherit}
+#msBar .ms-home{display:flex;align-items:center;gap:6px;text-decoration:none;padding:6px 8px;border-radius:8px;white-space:nowrap}
+#msBar .ms-home:hover{background:rgba(255,255,255,.1)}
+#msBar .ms-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.75}
+#msBar .ms-send{display:flex;align-items:center;gap:4px;background:#3d8a73;border:0;border-radius:8px;padding:7px 10px 7px 12px;cursor:pointer;font-weight:600;white-space:nowrap;width:auto;margin:0}
+#msBar .ms-send:hover{background:#4a9b83}
+@media(max-width:560px){#msBar .ms-home span{display:none}#msBar{gap:6px;padding:5px 8px}}
+#msBar .ms-ic{display:none}
+/* конфигуратор во весь экран: кнопки встают в его шапку, без отдельной полоски */
+#msBar.inline{background:#24302c;border-radius:10px;padding:3px;gap:2px;flex:none;order:-1}
+#msBar.inline .ms-name{display:none}
+#msBar.inline .ms-home{padding:6px}
+#msBar.inline .ms-home span{display:none}
+#msBar.inline .ms-send{padding:6px 8px;font-size:13px}
+@media(max-width:560px){#msBar.inline .ms-send span,#msBar.inline .ms-send svg:last-child{display:none}#msBar.inline .ms-ic{display:block}}
+#msMenu{position:fixed;inset:0;background:rgba(20,26,24,.45);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:56px 12px 12px;font:15px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#1d2321}
+#msMenu .ms-card{background:#fff;border-radius:16px;max-width:460px;width:100%;max-height:100%;overflow:auto;padding:14px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+@media(max-width:560px){#msMenu{align-items:flex-end;padding:0}#msMenu .ms-card{border-radius:16px 16px 0 0;max-height:88vh;padding-bottom:calc(14px + env(safe-area-inset-bottom))}}
+#msMenu .ms-head{display:flex;align-items:center;justify-content:space-between;font-size:17px}
+#msMenu .ms-x{background:none;border:0;font-size:26px;line-height:1;cursor:pointer;color:#68716d;padding:0 4px;width:auto}
+#msMenu .ms-note{margin:4px 0 10px;color:#68716d;font-size:13px}
+#msMenu .ms-list{display:grid;gap:8px}
+#msMenu .ms-list button{display:block;text-align:left;width:100%;background:#f3f6f4;border:1px solid #dfe3e0;border-radius:12px;padding:10px 12px;cursor:pointer;font:inherit;color:inherit}
+#msMenu .ms-list button:hover{border-color:#3d8a73;background:#e8f2ee}
+#msMenu .ms-list b{display:block;font-size:15px}
+#msMenu .ms-list span{display:block;font-size:12.5px;color:#68716d;margin-top:2px}
+#msMenu .ms-more{display:grid;gap:4px;margin-top:12px;border-top:1px solid #e6e9e7;padding-top:8px}
+#msMenu .ms-more button{background:none;border:0;text-align:left;padding:8px 4px;color:#1f6b57;cursor:pointer;font:inherit;font-size:14px;width:100%}
+#msMenu .ms-more button:hover,#msMenu .ms-fb:hover{text-decoration:underline}
+#msMenu .ms-fb{display:block;padding:8px 4px;color:#8a5f35;font-size:14px;text-decoration:none}
+#msToast{position:fixed;left:50%;top:14px;transform:translate(-50%,-20px);background:#1d2321;color:#fff;padding:10px 16px;border-radius:12px;font:600 14px/1.3 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:1100;max-width:92%;text-align:center}
+#msToast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ===== Единый вид всех инструментов: одна палитра, один шрифт, одинаковые кнопки и поля. =====
+   Инструменты держат цвета в переменных :root - здесь они переопределяются (html:root сильнее, чем :root). */
+html:root{
+  color-scheme:light;
+  --bg:#f6f2ec; --panel:#fffdf9; --card:#fffdf9; --field:#ffffff; --ink:#2b2622; --muted:#7a7068; --line:#e4dbd0;
+  --accent:#2f6f5e; --accent-ink:#ffffff; --accent-soft:#e3f0ec; --accent-l:#e3f0ec;
+  --warn:#b5651d; --warn-soft:#fdf0e2; --warn-l:#fdf0e2; --wood:#b98a5a; --wood-d:#8a5f35;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --display:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+html[data-tool="raskroy"] button{border-radius:10px}
+html[data-tool="raskroy"] input,html[data-tool="raskroy"] select,html[data-tool="raskroy"] textarea,
+html[data-tool="kp"] input,html[data-tool="kp"] select,html[data-tool="kp"] textarea{border-radius:9px}
+/* голосовой помощник сайта */
+#msVoice{position:fixed;right:16px;bottom:16px;z-index:990;font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#2b2622;max-width:calc(100vw - 24px)}
+#msVoice .msv-pill{border:0;border-radius:999px;padding:12px 18px;background:#2f6f5e;color:#fff;font:600 14px system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.18);cursor:pointer;display:flex;gap:6px;align-items:center}
+#msVoice .msv-panel{width:400px;max-width:100%;background:#fffdf9;border:1px solid #e4dbd0;border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:10px 12px}
+#msVoice .msv-top{display:flex;gap:8px;align-items:center}#msVoice .msv-top b{flex:1}
+#msVoice #msvSt{color:#c0392b;font-size:12px}
+#msVoice .msv-x{background:none;border:0;font-size:24px;line-height:1;cursor:pointer;color:#7a7068;width:auto;padding:0 4px}
+#msVoice .msv-log{max-height:170px;overflow:auto;margin:6px 0;font-size:13px}
+#msVoice .msv-log div{padding:4px 8px;border-radius:8px;margin:3px 0}
+#msVoice .msv-q{color:#7a7068;font-style:italic}#msVoice .msv-ok{background:#e3f0ec;color:#2f6f5e}#msVoice .msv-err{background:#fdf0e2;color:#b5651d}#msVoice .msv-info{color:#7a7068}
+#msVoice .msv-live{border:1px dashed #e4dbd0;border-radius:8px;padding:4px 8px;color:#7a7068;font-style:italic;margin-bottom:6px}
+#msVoice .msv-row{display:flex;gap:6px}
+#msVoice input{flex:1;min-width:0;padding:8px 10px;border:1px solid #e4dbd0;border-radius:10px;font:inherit}
+#msVoice .msv-mic,#msVoice .msv-go{border:0;border-radius:10px;padding:8px 12px;background:#2f6f5e;color:#fff;cursor:pointer;font:600 14px system-ui,sans-serif;width:auto}
+#msVoice .msv-mic{display:flex;align-items:center;gap:4px}
+#msVoice .msv-mic.on{background:#d63c2f;animation:msvRing 1.4s infinite}
+@keyframes msvRing{0%{box-shadow:0 0 0 0 rgba(214,60,47,.55)}70%{box-shadow:0 0 0 10px rgba(214,60,47,0)}100%{box-shadow:0 0 0 0 rgba(214,60,47,0)}}
+#msVoice .msv-wait{color:#d63c2f;font-weight:600}
+#msVoice .msv-wait::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#d63c2f;margin-right:6px;animation:msvBlink 1s infinite}
+@keyframes msvBlink{50%{opacity:.25}}
+@media(max-width:600px){#msVoice{left:8px;right:8px;display:flex;justify-content:flex-end}#msVoice .msv-panel{width:100%}}
+#msVoice .msv-set{background:none;border:0;font-size:12px;color:#7a7068;text-decoration:underline;cursor:pointer;width:auto;padding:0 4px;margin-left:auto}
+#msVoice .msv-tts,.ed-tts{font-size:12px;padding:6px 10px;border-bottom:1px solid #e8e2da;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+#msVoice .msv-tts[hidden],.ed-tts[hidden]{display:none}
+#msVoice .msv-tts select,.ed-tts select{max-width:220px;font-size:12px;padding:2px 4px;width:auto}
+#msVoice .msv-tts input[type=range],.ed-tts input[type=range]{width:90px;vertical-align:middle}
+#msVoice .msv-tts button,.ed-tts button{font-size:12px;padding:3px 10px;width:auto}
+.mv-tip{flex-basis:100%;color:#7a7068}
+
+/* подсказка "Доступно обновление" - сверху по центру, поверх всего */
+#msNew{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:1200;display:flex;align-items:center;gap:10px;width:max-content;max-width:calc(100vw - 20px);box-sizing:border-box;background:#24302c;color:#fff;padding:10px 10px 10px 16px;border-radius:14px;box-shadow:0 6px 22px rgba(0,0,0,.25);font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#msNew .msn-t{min-width:0}
+#msNew .msn-t span{display:block;font-size:13px;opacity:.8;margin-top:2px}
+#msNew button{font:inherit;cursor:pointer;width:auto;margin:0}
+#msNew .msn-go{background:#3d8a73;color:#fff;border:0;border-radius:10px;padding:9px 14px;font-weight:600;white-space:nowrap}
+#msNew .msn-go:hover{background:#4a9b83}
+#msNew .msn-x{background:none;border:0;color:#fff;opacity:.7;font-size:22px;line-height:1;padding:0 4px}
+#msMenu .ms-ver{margin:8px 0 0;font-size:12px;color:#7a7068}
+
+/* тихая подпись внизу и окно "Условия использования" */
+.ms-tlink,#msMenu .ms-more .ms-tlink{display:inline;background:none;border:0;border-radius:0;box-shadow:none;padding:0;margin:0;min-height:0;width:auto;font:inherit;color:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.ms-tlink:hover{opacity:.8}
+#msMenu .ms-author{margin:10px 0 0;font-size:11px;color:#a39a92}
+.ms-tlink,#msMenu .ms-more .ms-tlink{text-decoration-color:rgba(0,0,0,.2)}
+#msSign{margin:0;padding:18px 16px 130px;text-align:left;font:11px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#a39a92;opacity:.85}
+#msTerms{position:fixed;inset:0;background:rgba(20,26,24,.5);z-index:1300;display:flex;align-items:center;justify-content:center;padding:12px;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#2b2622}
+#msTerms .ms-card{background:#fffdf9;border-radius:16px;max-width:520px;width:100%;max-height:100%;overflow:auto;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3);box-sizing:border-box}
+#msTerms .ms-head{display:flex;align-items:center;justify-content:space-between;font-size:18px;gap:10px}
+#msTerms .ms-x{background:none;border:0;font-size:26px;line-height:1;cursor:pointer;color:#7a7068;padding:0 4px;width:auto;margin:0;min-height:0}
+#msTerms ul{margin:10px 0 0;padding:0 0 0 20px}
+#msTerms li{margin:0 0 8px}
+#msTerms a{color:#2f6f5e}
+#msTerms .ms-copy{margin:10px 0 14px;font-size:12px;color:#a39a92}
+#msTerms .ms-ok{display:block;width:100%;margin:0;border:1px solid #e3dcd3;border-radius:12px;padding:11px;background:#f4efe8;color:#2b2622;font:500 15px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;cursor:pointer}
+#msTerms .ms-ok:hover{background:#ece5dc}
+@media(max-width:560px){#msTerms{align-items:flex-end;padding:0}#msTerms .ms-card{border-radius:16px 16px 0 0;max-height:92vh;font-size:14.5px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}}
+
+/* ===== Кнопка "На главную" внутри продукта (site.js заполняет <nav data-variants>), в тёмной шапке =====
+   Переходов между продуктами внутри нет: только назад к выбору на стартовой странице
+   (у витрин ещё "Все витрины" - к выбору витрины). */

@@ -1,0 +1,741 @@
+/* Новые пробные дизайны "Путешествия по дому" (варианты 5-8): строгий минимализм по мотивам сайтов
+   мебельных фабрик (Gruppo Euromobil, Walter Knoll, Rolf Benz, OKA, Mara, CanCan).
+   Слой оформления поверх puteshestvie/index.html: логику витрины не меняет, только вид.
+   <html data-d2 data-d2t="galereya|kino|grafit|liniya" data-d2q="2|1|0">
+   Приёмы образцов: много воздуха, тонкий шрифт, мелкие подписи прописными с разрядкой, ссылки "линия + слово",
+   крупные фото без рамок и скруглений, меню на весь экран, фото проявляются шторкой при прокрутке, видео на фоне.
+   Анимируем только transform, opacity и clip-path. Шрифты лежат рядом (fonts/), без внешних запросов. */
+
+@font-face{font-family:"Jost";src:url(fonts/jost-300-normal-cyrillic.woff2) format("woff2");font-weight:300;font-display:swap;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Jost";src:url(fonts/jost-300-normal-latin.woff2) format("woff2");font-weight:300;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Jost";src:url(fonts/jost-400-normal-cyrillic.woff2) format("woff2");font-weight:400;font-display:swap;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Jost";src:url(fonts/jost-400-normal-latin.woff2) format("woff2");font-weight:400;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Jost";src:url(fonts/jost-500-normal-cyrillic.woff2) format("woff2");font-weight:500 800;font-display:swap;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Jost";src:url(fonts/jost-500-normal-latin.woff2) format("woff2");font-weight:500 800;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Playfair";src:url(fonts/playfair-display-400-normal-cyrillic.woff2) format("woff2");font-weight:400 800;font-display:swap;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Playfair";src:url(fonts/playfair-display-400-normal-latin.woff2) format("woff2");font-weight:400 800;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Playfair";src:url(fonts/playfair-display-400-italic-cyrillic.woff2) format("woff2");font-weight:400 800;font-style:italic;font-display:swap;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Playfair";src:url(fonts/playfair-display-400-italic-latin.woff2) format("woff2");font-weight:400 800;font-style:italic;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Cormorant";src:url(fonts/cormorant-300-normal-cyrillic.woff2) format("woff2");font-weight:300 800;font-display:swap;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Cormorant";src:url(fonts/cormorant-300-normal-latin.woff2) format("woff2");font-weight:300 800;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Cormorant";src:url(fonts/cormorant-400-italic-cyrillic.woff2) format("woff2");font-weight:300 800;font-style:italic;font-display:swap;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Cormorant";src:url(fonts/cormorant-400-italic-latin.woff2) format("woff2");font-weight:300 800;font-style:italic;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+/* ---------- цвета: тёмная основа (комната, работа, окна) ---------- */
+html[data-d2]:root{
+  --bg:#121211;--bg2:#181817;--card:#1F1E1C;--line:#34322F;--ink:#F1EEE8;--muted:#A6A198;--acc:#E9E3D8;--acc-ink:#121211;
+  --serif:"Playfair",Georgia,"Times New Roman",serif;--sans:"Jost",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --ease:cubic-bezier(.22,1,.36,1);--swift:cubic-bezier(.76,0,.24,1);--soft:cubic-bezier(.33,0,.15,1);
+  --pad:clamp(18px,4.2vw,64px);--hair:1px solid var(--line);
+  --face-l:#2C2B29;--face-r:#3A3835;--roof:#232220;--seam:rgba(255,255,255,.07);--frame:#2A2927;--ground:rgba(0,0,0,.55)
+}
+html[data-d2t=grafit]:root{--serif:"Cormorant",Georgia,serif;--bg:#0E0E0D;--bg2:#141413;--card:#1B1A19;--acc:#C9A979;--acc-ink:#0E0E0D;--face-l:#1F1E1C;--face-r:#2C2A26;--roof:#0B0B0A;--frame:#191817}
+/* светлые места: главная и разделы в "Галерее" и "Линии", разделы в "Кино" */
+html[data-d2t=galereya] #home,html[data-d2t=galereya] #panel,html[data-d2t=galereya] #doors,
+html[data-d2t=liniya] #home,html[data-d2t=liniya] #panel,html[data-d2t=liniya] #doors,
+html[data-d2t=kino] #panel,html[data-d2t=kino] .d2-light{
+  --bg:#ECEAE5;--bg2:#F2F0EB;--card:#E3E0D9;--line:#D2CEC5;--ink:#1D1C1A;--muted:#6E6A63;--acc:#1D1C1A;--acc-ink:#F2F0EB;
+  --face-l:#CFCAC0;--face-r:#DDD9D0;--roof:#2B2A28;--seam:rgba(255,255,255,.08);--frame:#2B2A28;--ground:rgba(40,34,26,.28)
+}
+html[data-d2t=liniya] #home,html[data-d2t=liniya] #panel,html[data-d2t=liniya] #doors{--bg:#F6F5F2;--bg2:#FAF9F7;--frame:#1D1C1A}
+
+html[data-d2],html[data-d2] body{background:var(--bg)}
+html[data-d2] body{font-family:var(--sans);font-weight:300;letter-spacing:.01em;color:var(--ink)}
+html[data-d2] b,html[data-d2] strong{font-weight:500}
+html[data-d2] :focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:0}
+html[data-d2] .eyebrow{font-weight:500;font-size:11px;letter-spacing:.24em;color:var(--muted)}
+
+/* кнопки: прямоугольные, мелкий шрифт прописными */
+html[data-d2] .btn{border-radius:0;min-height:48px;padding:0 26px;font-weight:500;font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;gap:12px}
+html[data-d2] .btn.main{background:var(--ink);color:var(--bg)}
+html[data-d2] .btn.ghost{background:transparent;border:1px solid color-mix(in srgb,var(--ink) 35%,transparent);-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--ink)}
+html[data-d2] .btn.wa{background:#1f7a4a}
+html[data-d2] .btn svg{width:17px;height:17px}
+html[data-d2] .ic{width:44px;height:44px;background:rgba(18,18,17,.42);border:1px solid rgba(241,238,232,.28);-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-d2] .ic svg{width:18px;height:18px;stroke-width:1.5}
+html[data-d2] .ic.lbl{width:auto;border-radius:0;gap:6px;font-weight:500;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;padding:0 16px 0 10px}
+@media (hover:hover){html[data-d2] .btn:hover{transform:none}html[data-d2] .btn.main:hover{opacity:.86}html[data-d2] .btn.ghost:hover{border-color:var(--ink)}html[data-d2] .ic:hover{transform:none;background:rgba(18,18,17,.7)}}
+/* ссылка "линия + слово" (как "—— Scopri" у Euromobil) */
+.d2-ln,html[data-d2] .hero-acts .btn{display:inline-flex;align-items:center;gap:14px;min-height:44px;padding:0;border:0;background:none;color:inherit;font:500 11.5px/1 var(--sans);letter-spacing:.22em;text-transform:uppercase;text-decoration:none;cursor:pointer;white-space:nowrap}
+.d2-ln::before,html[data-d2] .hero-acts .btn::before{content:"";flex:none;width:34px;height:1px;background:currentColor;opacity:.7;transform-origin:0 50%;transition:transform .6s var(--ease),opacity .3s}
+@media (hover:hover){.d2-ln:hover::before,html[data-d2] .hero-acts .btn:hover::before{transform:scaleX(1.7);opacity:1}}
+
+/* ---------- 0. вход: знак, название, тонкая линия ---------- */
+html[data-d2] #doors{background:var(--bg);perspective:none;color:var(--ink)}
+html[data-d2] #doors .door,html[data-d2] #doors::before{display:none}
+html[data-d2] #doors.open{background:var(--bg);clip-path:inset(0 0 100% 0);transition:clip-path 1.25s var(--swift) .3s}
+html[data-d2] .door-ui{gap:0}
+html[data-d2] .plate{background:none;border:0;box-shadow:none;padding:0;text-align:center}
+.d2-dmark{width:clamp(64px,9vw,88px);height:clamp(64px,9vw,88px);margin:0 auto 26px;color:var(--ink);animation:d2mark 1.6s var(--ease) both}
+.d2-dmark svg{width:100%;height:100%;display:block}
+@keyframes d2mark{from{opacity:0;clip-path:circle(0 at 50% 50%);transform:rotate(-30deg)}to{opacity:1;clip-path:circle(75% at 50% 50%);transform:none}}
+html[data-d2] .plate b{font-family:var(--serif);font-weight:400;font-size:clamp(38px,6.6vw,78px);line-height:1.05;letter-spacing:-.005em;animation:d2wipe 1.4s var(--swift) .35s both}
+html[data-d2t=grafit] .plate b{font-weight:300;font-size:clamp(44px,7.4vw,92px)}
+html[data-d2] .plate span{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:18px;font-weight:500;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);animation:d2fade 1.2s var(--ease) .9s both}
+html[data-d2] .plate span::before,html[data-d2] .plate span::after{content:"";width:28px;height:1px;background:currentColor;opacity:.6}
+html[data-d2] #enterBtn{margin-top:46px;background:none;color:var(--ink);min-height:48px;padding:0 4px;font-weight:500;font-size:11.5px;letter-spacing:.3em;position:relative;animation:d2fade 1s var(--ease) 1.3s both}
+html[data-d2] #enterBtn::after{content:"";position:absolute;left:0;right:0;bottom:8px;height:1px;background:currentColor;transform-origin:0 50%;animation:d2line 1.1s var(--swift) 1.6s both}
+@media (hover:hover){html[data-d2] #enterBtn:hover::after{transform:scaleX(.4)}}
+@keyframes d2wipe{from{clip-path:inset(0 0 100% 0);transform:translateY(40%)}to{clip-path:inset(-10% -5% -20% -5%);transform:none}}
+@keyframes d2fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes d2line{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* ---------- 1. главная ---------- */
+html[data-d2] #home{background:var(--bg);color:var(--ink)}
+html[data-d2] .htop{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:1px solid transparent;transition:background-color .5s var(--ease),border-color .5s,color .4s}
+html[data-d2] #home.d2-sc .htop{background:var(--bg);border-bottom-color:var(--line)}
+html[data-d2] .htop-in{max-width:none;padding:16px var(--pad);gap:clamp(14px,2.4vw,40px)}
+html[data-d2] .who{display:none}
+.d2-brand{display:flex;align-items:center;gap:12px;min-width:0;color:inherit;text-decoration:none;background:none;border:0;padding:4px 0;cursor:pointer;text-align:left}
+.d2-brand i{flex:none;width:34px;height:34px;display:block;color:inherit}
+.d2-brand i svg{width:100%;height:100%;display:block}
+.d2-brand b{font-family:var(--serif);font-weight:400;font-size:clamp(19px,1.7vw,23px);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.005em}
+html[data-d2t=grafit] .d2-brand b{font-weight:400;font-size:clamp(22px,2vw,27px)}
+html[data-d2] .tnav{gap:clamp(6px,1.4vw,22px)}
+html[data-d2] .tnav button,html[data-d2] .tnav a{padding:12px 2px;border-radius:0;font-weight:500;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:inherit;opacity:.82}
+html[data-d2] .tnav button::after{left:2px;right:2px;bottom:6px;height:1px;background:currentColor;transform-origin:0 50%}
+html[data-d2] .tnav button.on{color:inherit;opacity:1}
+@media (hover:hover){html[data-d2] .tnav button:hover{opacity:1;color:inherit}}
+html[data-d2] #writeBtn{background:none;color:inherit;border:1px solid color-mix(in srgb,currentColor 38%,transparent);min-height:40px;padding:0 18px;font-size:11px;letter-spacing:.22em}
+html[data-d2] #writeBtn svg{display:none}
+@media (hover:hover){html[data-d2] #writeBtn:hover{border-color:currentColor;opacity:1}}
+.d2-burger{flex:none;width:44px;height:44px;display:grid;place-items:center;background:none;border:0;color:inherit;cursor:pointer;margin-right:-10px}
+.d2-burger i{display:block;width:24px;height:9px;border-top:1px solid currentColor;border-bottom:1px solid currentColor;transition:width .4s var(--ease)}
+@media (hover:hover){.d2-burger:hover i{width:18px}}
+
+html[data-d2] .hero{max-width:1240px;padding:clamp(8px,2.4vh,34px) var(--pad) 0;perspective:2600px;perspective-origin:50% 22%}
+html[data-d2] .hero-t{margin-bottom:clamp(18px,3.2vh,40px)}
+.d2-eye{display:block;font-weight:500;font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+html[data-d2] .home h1{font-family:var(--serif);font-weight:400;font-size:clamp(30px,3.6vw,52px);line-height:1.06;letter-spacing:-.01em;margin:0 0 12px}
+html[data-d2t=grafit] .home h1{font-weight:300;font-size:clamp(36px,4.4vw,64px)}
+html[data-d2] .home .lead{font-size:clamp(14px,1.2vw,16px);color:var(--muted);max-width:460px}
+html[data-d2] .hero-acts{gap:clamp(22px,4vw,56px);margin-top:clamp(26px,4.6vh,54px)}
+html[data-d2] .hero-acts .btn svg{display:none}
+html[data-d2] .btn .cnt{background:none;color:inherit;opacity:.6;padding:0;font-weight:400;font-size:10px;letter-spacing:.1em;margin-left:-4px;transform:translateY(-5px)}
+
+/* дом: объёмный (CSS 3D). Фасад - комнаты, боковые стены и скаты крыши уходят вглубь. Поворот задаёт d2.js */
+html[data-d2] .house{filter:none;width:100%;max-width:780px;margin:0 auto;transform-style:preserve-3d;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(0);will-change:transform}
+html[data-d2] .roof{margin:0;background:var(--roof);height:clamp(70px,9.5vw,132px);transform-style:preserve-3d}
+html[data-d2] .floors{grid-auto-rows:clamp(100px,min(12vw,(100vh - 500px)/3),160px)}
+html[data-d2] .floors.r4{grid-auto-rows:clamp(80px,min(9.5vw,(100vh - 500px)/4),128px)}
+html[data-d2] .roof span{font-family:var(--sans);font-weight:500;color:#EDE8DF;letter-spacing:.24em;text-transform:uppercase;font-size:calc(var(--rf,15px) * .6);opacity:.85}
+html[data-d2t=grafit] .roof span{color:var(--acc)}
+html[data-d2] .floors{gap:4px;padding:4px;background:var(--frame);border-radius:0}
+.d2-f{position:absolute;left:0;top:0;pointer-events:none;-webkit-backface-visibility:hidden;backface-visibility:hidden;transform-origin:0 0}
+.d2-f.wl,.d2-f.wr{background:var(--face-l)}
+.d2-f.wr{background:var(--face-r)}
+/* линии перекрытий на боковых стенах - продолжают этажи фасада */
+.d2-f.wl::after,.d2-f.wr::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,transparent 0 calc(var(--rh,140px) - 1px),rgba(0,0,0,.14) calc(var(--rh,140px) - 1px) var(--rh,140px));background-position:0 4px}
+.d2-f.sl,.d2-f.sr{background:var(--roof);background-image:repeating-linear-gradient(90deg,transparent 0 21px,var(--seam) 21px 22px)}
+.d2-f.sl{filter:none;background-color:color-mix(in srgb,var(--roof) 82%,#000)}
+.d2-f.gr{background:radial-gradient(closest-side,var(--ground),transparent);opacity:.9}
+/* фасад чуть светлее рядом с окнами - "свет из комнат" (без filter: он сплющил бы 3D) */
+html[data-d2] .room{border-radius:0;background:#1A1918}
+html[data-d2] .room .dark{background:#0A0A09;opacity:.38}
+html[data-d2t=galereya] .room .dark,html[data-d2t=liniya] .room .dark{opacity:.22}
+html[data-d2] .room::after{background:linear-gradient(180deg,transparent 52%,rgba(8,8,7,.72))}
+html[data-d2] .room .ph{transform:scale(1.02);transition:transform 1.4s var(--ease)}
+html[data-d2] .room .tags,html[data-d2] .room .t span{display:none}
+html[data-d2] .room .lamp{background:radial-gradient(50% 60% at 50% 0%,rgba(255,236,205,.28),transparent 70%)}
+/* подпись комнаты: тонкая линия + название прописными + номер */
+html[data-d2] .room .t{left:clamp(10px,1.4vw,18px);right:10px;bottom:clamp(9px,1.2vw,15px);display:flex;align-items:center;gap:10px;color:#F4F1EB}
+html[data-d2] .room .t::before{content:"";flex:none;width:16px;height:1px;background:currentColor;opacity:.8;transform-origin:0 50%;transition:transform .6s var(--ease)}
+html[data-d2] .room .t b{font-family:var(--sans);font-weight:500;font-size:clamp(10px,.95vw,12px);letter-spacing:.2em;text-transform:uppercase;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-d2] .room.long .t b{font-size:clamp(9.5px,.85vw,11px)}
+.d2n{flex:none;font-style:normal;font-weight:300;font-size:10px;letter-spacing:.08em;opacity:.7;transform:translateY(-4px)}
+html[data-d2] .room.empty .t{opacity:.5}
+html[data-d2] .room.empty .ph{background:repeating-linear-gradient(135deg,#1E1D1B 0 9px,#222120 9px 18px)}
+@media (hover:hover){html[data-d2] .room:not(.empty):hover .t::before{transform:scaleX(2.2)}html[data-d2] .room:not(.empty):hover .ph{transform:scale(1.07)}}
+html[data-d2] .room.lit .t::before{transform:scaleX(2.2)}
+html[data-d2] .room.lit .ph{transform:scale(1.07)}
+/* вход на главную: дом поворачивается к нам (d2.js), комнаты проявляются шторкой */
+html[data-d2] #home.enter .room{animation:d2room 1.1s var(--swift) both;animation-delay:calc(.35s + var(--i,0)*.07s)}
+html[data-d2] #home.enter .roof{animation:d2roof 1.1s var(--ease) .2s both}
+html[data-d2] #home.enter .hero-t>*{animation:d2fade 1s var(--ease) both}
+html[data-d2] #home.enter .hero-t>:nth-child(2){animation-delay:.08s}html[data-d2] #home.enter .hero-t>:nth-child(3){animation-delay:.16s}
+html[data-d2] #home.enter .hero-t{animation:none}
+@keyframes d2room{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0)}}
+@keyframes d2roof{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:none}}
+
+/* видео под домом - светлая полоса, карточки без скруглений */
+html[data-d2] .reels{max-width:1240px;padding:clamp(56px,9vh,110px) 0 18px}
+html[data-d2] .reels-h{padding:0 var(--pad);margin-bottom:26px;align-items:flex-end}
+html[data-d2] .reels h2{font-family:var(--serif);font-weight:400;font-size:clamp(28px,3.2vw,44px)}
+html[data-d2t=grafit] .reels h2{font-weight:300;font-size:clamp(34px,3.8vw,52px)}
+html[data-d2] .reels-h p{font-size:14px}
+html[data-d2] .reel-row{gap:18px;padding:4px var(--pad) 22px;scroll-padding:0 var(--pad)}
+html[data-d2] .reel{border-radius:0;border:0;background-color:var(--card)}
+html[data-d2] .reel::after{background:linear-gradient(180deg,transparent 50%,rgba(8,8,7,.78))}
+html[data-d2] .reel .pl{width:48px;height:48px;margin:-24px 0 0 -24px;background:transparent;border:1px solid rgba(255,255,255,.7);-webkit-backdrop-filter:none;backdrop-filter:none;color:#fff}
+html[data-d2] .reel .pl svg{width:16px;height:16px}
+html[data-d2] .reel .rt b{font-weight:500;font-size:13.5px;color:#fff}
+html[data-d2] .reel .rt span{color:rgba(255,255,255,.75)}
+html[data-d2] .reel.ph-empty{background:var(--card);border:1px solid var(--line)}
+html[data-d2] .reel.ph-empty .pl{border-color:var(--line);background:none;color:var(--muted)}
+html[data-d2] .reel.ph-empty .rt b{color:var(--ink)}html[data-d2] .reel.ph-empty .rt span{color:var(--muted)}
+@media (hover:hover){html[data-d2] .reel:hover{transform:translateY(-4px);border-color:transparent}html[data-d2] .reel:hover .pl{transform:scale(1.08);background:#fff;color:#111}html[data-d2] .reel.ph-empty:hover .pl{background:none;color:var(--muted)}}
+html[data-d2] .foot{max-width:none;padding:22px var(--pad) calc(26px + var(--sb));color:var(--muted);border-top:1px solid var(--line);margin-top:40px;font-size:11.5px;letter-spacing:.04em}
+
+/* ---------- меню на весь экран ---------- */
+.d2-menu{position:fixed;inset:0;z-index:80;background:#1B1A19;color:#EEE9E1;display:flex;flex-direction:column;clip-path:inset(0 0 100% 0);visibility:hidden;transition:clip-path .9s var(--swift),visibility 0s linear .9s;font-family:var(--sans)}
+.d2-menu.on{clip-path:inset(0);visibility:visible;transition:clip-path .9s var(--swift)}
+.d2-mtop{display:flex;align-items:center;gap:16px;padding:calc(16px + var(--st)) var(--pad) 16px}
+.d2-mtop .d2-brand{flex:1}
+.d2-mx{width:44px;height:44px;display:grid;place-items:center;background:none;border:0;color:inherit;cursor:pointer;margin-right:-10px}
+.d2-mx svg{width:22px;height:22px}
+.d2-mbody{flex:1;overflow-y:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-content:center;gap:40px var(--pad);padding:20px var(--pad) calc(30px + var(--sb))}
+.d2-mnav{grid-column:2;display:flex;flex-direction:column;align-items:flex-start}
+.d2-mnav button{background:none;border:0;color:inherit;font:300 clamp(32px,4.6vw,58px)/1.28 var(--sans);letter-spacing:-.005em;padding:2px 0;cursor:pointer;text-align:left;opacity:0;transform:translateY(40px);transition:opacity .5s,transform .8s var(--ease)}
+.d2-menu.on .d2-mnav button{opacity:1;transform:none;transition-delay:calc(.25s + var(--i)*.06s)}
+.d2-mnav button span{position:relative}
+.d2-mnav button span::after{content:"";position:absolute;left:0;right:0;bottom:.08em;height:1px;background:currentColor;transform:scaleX(0);transform-origin:0 50%;transition:transform .6s var(--ease)}
+@media (hover:hover){.d2-mnav button:hover span::after{transform:scaleX(1)}}
+.d2-mside{grid-column:2;display:flex;flex-wrap:wrap;gap:6px 36px;opacity:0;transition:opacity .6s .55s}
+.d2-menu.on .d2-mside{opacity:1}
+.d2-mside .d2-ln{color:rgba(238,233,225,.8);min-height:40px}
+.d2-mside .d2-ln::before{width:30px}
+.d2-mfoot{grid-column:2;font-size:12px;letter-spacing:.04em;color:rgba(238,233,225,.5);opacity:0;transition:opacity .6s .6s}
+.d2-menu.on .d2-mfoot{opacity:1}
+@media (max-width:760px){.d2-mbody{grid-template-columns:1fr;align-content:start;padding-top:8vh}.d2-mnav,.d2-mside,.d2-mfoot{grid-column:1}}
+
+/* ---------- разделы поверх дома: страница на весь экран, как у образцов ---------- */
+html[data-d2] .pn-back{background:var(--bg);opacity:0;-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-d2] .panel.on .pn-back{opacity:.6}
+html[data-d2] .pn-box,html[data-d2] .panel .pn-box{top:0;left:0;right:0;bottom:0;width:100%;height:100%;max-height:none;border:0;border-radius:0;background:var(--bg2);color:var(--ink);box-shadow:none;transform:none;clip-path:inset(0 0 100% 0);transition:clip-path .85s var(--swift)}
+html[data-d2] .panel.on .pn-box{transform:none;clip-path:inset(0)}
+html[data-d2] .pn-head{padding:calc(22px + var(--st)) var(--pad) 22px;border-bottom:1px solid var(--line);align-items:flex-end}
+html[data-d2] .pn-head .grab{display:none}
+html[data-d2] .pn-head h2{font-family:var(--serif);font-weight:400;font-size:clamp(34px,5vw,68px);line-height:1;letter-spacing:-.01em}
+html[data-d2t=grafit] .pn-head h2{font-weight:300;font-size:clamp(40px,5.6vw,80px)}
+html[data-d2] .pn-x{background:none;border:1px solid var(--line);color:var(--ink)}
+@media (hover:hover){html[data-d2] .pn-x:hover{background:none;border-color:var(--ink)}}
+html[data-d2] .pn-sc{padding:clamp(28px,5vh,64px) var(--pad) calc(60px + var(--sb))}
+html[data-d2] .pn-sc>*{max-width:1180px;margin-left:auto;margin-right:auto;animation:none}
+html[data-d2] .panel.on .pn-sc>*{animation:d2fade .9s var(--ease) .35s both}
+html[data-d2] .panel.on .pn-sc>.pgrid{animation:none}
+html[data-d2] body.pn-open #home{transform:none}
+/* все работы: ступенчатая сетка, подпись под фото, фото проявляются шторкой */
+html[data-d2] .pchips{gap:4px 26px;margin:0 auto 38px;padding:0;flex-wrap:wrap;overflow:visible}
+html[data-d2] .pchips button{min-height:40px;padding:0;border:0;border-radius:0;background:none;color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.2em;text-transform:uppercase;position:relative}
+html[data-d2] .pchips button i{font-weight:300;font-size:10px;letter-spacing:.05em;margin-left:4px;vertical-align:4px}
+html[data-d2] .pchips button::after{content:"";position:absolute;left:0;right:0;bottom:6px;height:1px;background:currentColor;transform:scaleX(0);transform-origin:0 50%;transition:transform .5s var(--ease)}
+html[data-d2] .pchips button.on{background:none;color:var(--ink)}
+html[data-d2] .pchips button.on::after{transform:scaleX(1)}
+@media (hover:hover){html[data-d2] .pchips button:hover{color:var(--ink)}}
+html[data-d2] .pgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(40px,6vh,72px) clamp(18px,3vw,44px);align-items:start}
+html[data-d2] .pw{aspect-ratio:auto;border-radius:0;background:none;overflow:visible;animation:none;isolation:auto}
+html[data-d2] .pgrid .pw:nth-child(3n+2){margin-top:clamp(40px,8vh,96px)}
+html[data-d2] .pw img{position:relative;inset:auto;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;z-index:0;background:var(--card);transition:clip-path 1.2s var(--swift),transform 1.6s var(--ease),opacity .4s}
+html[data-d2] .pw::after{display:none}
+html[data-d2] .pw .wm{inset:0 0 auto 0;aspect-ratio:4/5;z-index:1}
+html[data-d2] .pw .pt{position:static;display:block;margin-top:16px;transition:opacity .8s var(--ease) .25s,transform .9s var(--ease) .25s}
+html[data-d2] .pw .pt small{color:var(--muted);font-weight:500;font-size:10px;letter-spacing:.22em}
+html[data-d2] .pw .pt b{font-weight:400;font-size:clamp(15px,1.3vw,17px);line-height:1.35;margin-top:6px;-webkit-line-clamp:2}
+html[data-d2] .pw .pt::after{content:"Смотреть";display:inline-flex;align-items:center;margin-top:12px;font-weight:500;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;padding-left:44px;background:linear-gradient(currentColor,currentColor) 0 50%/30px 1px no-repeat;transition:background-size .6s var(--ease)}
+@media (hover:hover){html[data-d2] .pw:hover img{transform:none;opacity:.86}html[data-d2] .pw:hover .pt::after{background-size:40px 1px}}
+html[data-d2] .pw:active{transform:none}
+html[data-d2][data-d2q="2"] .pw:not(.in) img,html[data-d2][data-d2q="1"] .pw:not(.in) img{clip-path:inset(100% 0 0 0);transform:scale(1.1)}
+html[data-d2] .pw:not(.in) .pt{opacity:0;transform:translateY(14px)}
+html[data-d2][data-d2q="0"] .pw .pt{opacity:1;transform:none}
+/* отзывы: крупная цитата, тонкие линии */
+html[data-d2] .prev{background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:clamp(26px,4vh,44px) 0;margin:0 auto}
+html[data-d2] .prev .st{color:var(--muted);letter-spacing:4px;font-size:12px}
+html[data-d2] .prev p{font-family:var(--serif);font-style:italic;font-weight:400;font-size:clamp(20px,2.2vw,30px);line-height:1.38;margin:14px 0 18px;max-width:900px}
+html[data-d2t=grafit] .prev p{font-weight:300;font-size:clamp(23px,2.5vw,34px)}
+html[data-d2] .prev .by{font-size:12px;letter-spacing:.06em}
+html[data-d2] .prev .by b{font-weight:500;text-transform:uppercase;letter-spacing:.18em;font-size:11px}
+html[data-d2] .prev .ok{color:var(--muted);font-weight:400}
+html[data-d2] .prev .go{color:var(--ink);font-weight:500;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase}
+html[data-d2] .pempty{border:0;border-top:1px solid var(--line);border-radius:0;text-align:left;padding:34px 0;max-width:680px}
+html[data-d2] .pempty b{font-family:var(--serif);font-weight:400;font-size:clamp(26px,3vw,38px);margin-bottom:12px}
+/* о мастере: большой спокойный абзац, крупные цифры */
+html[data-d2] .pme{gap:22px;margin-bottom:clamp(30px,5vh,56px)}
+html[data-d2] .pme .av{width:clamp(72px,8vw,104px);height:clamp(72px,8vw,104px);background-color:var(--card);background-image:none;color:var(--ink);font-weight:400}
+html[data-d2] .pme b{font-family:var(--serif);font-weight:400;font-size:clamp(30px,3.4vw,46px)}
+html[data-d2] .pme span{font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-top:8px}
+html[data-d2] .pn-sc>.ptext{max-width:1180px;padding-right:max(0px,calc(100% - 880px))}
+html[data-d2] .ptext{font-size:clamp(19px,2vw,27px);line-height:1.5;font-weight:300;margin-bottom:clamp(36px,6vh,70px)}
+html[data-d2] .pstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0;margin-bottom:clamp(40px,6vh,72px)}
+html[data-d2] .pstats div{background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:18px 24px 0 0;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+html[data-d2] .pstats b{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5vw,64px);line-height:1;margin-bottom:10px;letter-spacing:0;text-transform:none}
+html[data-d2t=grafit] .pstats b{font-weight:300}
+html[data-d2] .ph4{display:flex;align-items:center;gap:14px;color:var(--muted);font-weight:500;font-size:10.5px;letter-spacing:.26em;margin:0 auto 22px}
+html[data-d2] .ph4::before{content:"";width:30px;height:1px;background:currentColor}
+html[data-d2] .plist{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:26px 40px;margin-bottom:clamp(40px,6vh,72px)}
+html[data-d2] .plist div{border:0;border-top:1px solid var(--line);padding:16px 0 0}
+html[data-d2] .plist b{font-weight:500;font-size:15px;margin-bottom:6px}
+html[data-d2] .plist span{font-size:14.5px;line-height:1.6}
+html[data-d2] .pcont{display:flex;flex-wrap:wrap;gap:10px 40px;align-items:center}
+html[data-d2] .pcont .btn{width:auto;min-height:44px;padding:0;background:none;border:0;color:var(--ink);gap:14px}
+html[data-d2] .pcont .btn::before{content:"";width:34px;height:1px;background:currentColor;opacity:.7;transition:transform .6s var(--ease);transform-origin:0 50%}
+@media (hover:hover){html[data-d2] .pcont .btn:hover::before{transform:scaleX(1.6)}}
+html[data-d2] .pcont .ln{flex-basis:100%;font-size:14px}
+
+/* ---------- комната и работа: та же логика, строже вид ---------- */
+html[data-d2] #room{background:#0D0D0C}
+html[data-d2] .crumbs button,html[data-d2] .crumbs span{border-radius:0;background:rgba(13,13,12,.5);border:0;-webkit-backdrop-filter:none;backdrop-filter:none;font-weight:500;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;min-height:34px;padding:6px 12px}
+html[data-d2] .crumbs span{color:var(--ink);border-bottom:1px solid var(--ink)}
+html[data-d2] .mini{border-radius:0;background:rgba(13,13,12,.5);border-color:rgba(241,238,232,.18);-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-d2] .mini button{border-radius:0}
+html[data-d2] .mini button.on{background:var(--ink)}
+html[data-d2] .room-head h2{font-family:var(--serif);font-weight:400;font-size:clamp(38px,5vw,70px);letter-spacing:-.01em}
+html[data-d2t=grafit] .room-head h2{font-weight:300;font-size:clamp(44px,5.6vw,82px)}
+html[data-d2] .room-head p{font-size:13px;letter-spacing:.06em}
+html[data-d2] .views{border-radius:0;background:none;border:0;border-bottom:1px solid rgba(241,238,232,.16);-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;gap:10px}
+html[data-d2] .views button{border-radius:0;font-weight:500;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;padding:0 8px;min-height:40px}
+html[data-d2] .views button svg{width:15px;height:15px}
+html[data-d2] .views button[aria-checked=true]{color:var(--ink)}
+html[data-d2] .vpill{top:auto;bottom:-1px;height:1px;border-radius:0;background:var(--ink);box-shadow:none}
+html[data-d2] .wcard{border-radius:0;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+html[data-d2] .wcard .meta{padding:30px 74px 18px 22px}
+html[data-d2] .wcard .meta b,html[data-d2] .rcard .rm b{font-family:var(--serif);font-weight:400}
+html[data-d2t=grafit] .wcard .meta b,html[data-d2t=grafit] .rcard .rm b{font-weight:400;font-size:clamp(25px,2.7vw,34px)}
+html[data-d2] .wcard .tag span,html[data-d2] .rcard .tag span{border-radius:0;background:rgba(13,13,12,.6);-webkit-backdrop-filter:none;backdrop-filter:none;font-weight:500;letter-spacing:.14em;text-transform:uppercase;font-size:9.5px}
+html[data-d2] .wcard .open,html[data-d2] .rcard .open{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.7)}
+html[data-d2] .rcard{border-radius:0}
+html[data-d2] .plitki .rcard{border-radius:0}
+html[data-d2] .dots i{width:18px;height:1px;border-radius:0;background:rgba(241,238,232,.3)}
+html[data-d2] .dots i.on{width:40px;background:var(--ink)}
+html[data-d2] .jgo{border-radius:0;font-weight:500;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+html[data-d2] .jtx .ttl,html[data-d2] .jph .pcap,html[data-d2] .jtx q{font-family:var(--serif)}
+html[data-d2] .sheet{border-radius:2px;background:rgba(16,16,15,.94);-webkit-backdrop-filter:none;backdrop-filter:none;border-color:rgba(241,238,232,.12)}
+html[data-d2] .sheet h3{font-family:var(--serif);font-weight:400}
+html[data-d2t=grafit] .sheet h3{font-weight:400;font-size:31px}
+html[data-d2] .more{border-radius:0;background:none;border:0;font-weight:500;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase}
+html[data-d2] .chips span{border-radius:0;font-size:11px;letter-spacing:.06em}
+html[data-d2] .sec h4{color:var(--muted);font-weight:500;font-size:10.5px;letter-spacing:.22em}
+html[data-d2] .details button{border-radius:0}
+html[data-d2] .details button i{background:var(--ink);color:var(--bg);font-weight:500}
+html[data-d2] .thumbs button{border-radius:0}
+html[data-d2] .thumbs button.on{border-color:var(--ink)}
+html[data-d2] .sol li::before{background:var(--ink);width:14px;height:1px;border-radius:0;margin-top:11px}
+html[data-d2] .review{border-radius:0;background:#EEEAE2}
+html[data-d2] .review q{font-family:var(--serif)}
+html[data-d2] .sheet-tab,html[data-d2] .note,html[data-d2] .zoom,html[data-d2] .pano-x,html[data-d2] .drag-hint,html[data-d2] .badge360,html[data-d2] .zoom-pill{border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none;background-color:rgba(16,16,15,.9)}
+html[data-d2] .sheet-tab svg{color:var(--ink)}
+html[data-d2] .note b{font-family:var(--serif);font-weight:400}
+html[data-d2] .badge360 b{color:var(--ink)}
+/* точки-детали: тонкое кольцо вместо золотого круга */
+html[data-d2] .spot i{background:rgba(16,16,15,.35);border:1.5px solid #fff;box-shadow:none;animation:d2pulse 2.6s infinite}
+html[data-d2] .spot svg{color:#fff}
+html[data-d2] .spot.on i{background:#fff}
+html[data-d2] .spot.on svg{color:#111}
+@keyframes d2pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.55)}70%{box-shadow:0 0 0 16px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+html[data-d2] .mbox{border-radius:2px;background:var(--bg2)}
+html[data-d2] .mbox h3{font-family:var(--serif);font-weight:400}
+html[data-d2] .msg{border-radius:0}
+html[data-d2] .toast{border-radius:0;font-weight:500;font-size:12px;letter-spacing:.08em}
+html[data-d2] .vp-frame{border-radius:0}
+html[data-d2] .vp-bar a{color:var(--ink)}
+
+/* ---------- переключатель вариантов (только пробные страницы): маленькая кнопка в углу ---------- */
+.d2-try{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + var(--sb));z-index:30;display:flex;align-items:center;background:rgba(20,20,19,.9);color:#EEE9E1;font:500 10.5px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;box-shadow:0 8px 24px rgba(0,0,0,.22);transition:opacity .4s,transform .5s var(--ease);white-space:nowrap}
+.d2-tt{min-height:38px;min-width:46px;padding:0 12px;background:none;border:0;color:inherit;font:inherit;letter-spacing:.1em;cursor:pointer}
+.d2-tm{display:none;align-items:center;border-left:1px solid rgba(238,233,225,.18)}
+.d2-try.open .d2-tm{display:flex}
+.d2-try a{display:inline-flex;align-items:center;min-height:38px;padding:0 11px;color:inherit;text-decoration:none;opacity:.78}
+.d2-try a b{font-weight:500}
+@media (hover:hover){.d2-try a:hover{opacity:1}}
+body:not([data-vp=home]) .d2-try,body.pn-open .d2-try{opacity:0;transform:translateY(20px);pointer-events:none}
+@media (max-width:600px){.d2-try{font-size:9.5px;letter-spacing:.1em}.d2-try a{padding:0 8px}.d2-try .lg{display:none}}
+@media (max-width:600px){html[data-d2t=kino] .d2-veil{background:linear-gradient(180deg,rgba(10,10,9,.78) 0%,rgba(10,10,9,.5) 34%,rgba(10,10,9,.4) 62%,rgba(15,15,14,.94) 92%,#0F0F0E)}}
+
+/* ---------- телефон ---------- */
+@media (max-width:900px){
+  html[data-d2] .tnav,html[data-d2] #writeBtn{display:none}
+  html[data-d2] .htop-in{flex-wrap:nowrap;padding-top:12px;padding-bottom:12px}
+  .d2-brand{flex:1}
+  html[data-d2] .pgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  html[data-d2] .pgrid .pw:nth-child(3n+2){margin-top:0}
+  html[data-d2] .pgrid .pw:nth-child(2n){margin-top:clamp(36px,7vh,64px)}
+  html[data-d2] .pn-box,html[data-d2] .panel .pn-box{top:0;height:100%;max-height:none;border-radius:0;transform:none}
+}
+@media (max-width:600px){
+  .d2-brand i{width:30px;height:30px}
+  .d2-brand b{font-size:18px}
+  html[data-d2] .hero{padding-top:6px}
+  html[data-d2] .floors{grid-auto-rows:clamp(108px,28vw,140px)}
+  html[data-d2] .floors.r4{grid-auto-rows:clamp(92px,24vw,120px)}
+  html[data-d2] .roof{height:clamp(70px,20vw,96px)}
+  html[data-d2] .home h1{font-size:clamp(28px,8vw,36px)}
+  html[data-d2] .hero-acts{gap:22px;justify-content:center}
+  html[data-d2] .hero-acts .btn{flex:none;padding:0;font-size:10.5px;letter-spacing:.18em}
+  html[data-d2] .hero-acts .btn::before{width:22px}
+  html[data-d2] .room .t{gap:7px;left:8px;bottom:8px}
+  html[data-d2] .room .t::before{width:10px}
+  html[data-d2] .room .t b{font-size:9.5px;letter-spacing:.14em;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  html[data-d2] .room.long .t b{font-size:9px}
+  .d2n{display:none}
+  html[data-d2] .pgrid{gap:34px 14px}
+  html[data-d2] .pw .pt b{font-size:14px}
+  html[data-d2] .pw .pt::after{display:none}
+  html[data-d2] .pchips{gap:2px 18px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 calc(var(--pad) * -1) 26px;padding:0 var(--pad)}
+  html[data-d2] .pchips button{flex:none}
+  html[data-d2] .crumbs span{border-bottom:0}
+}
+
+/* ---------- лёгкое качество и "без анимаций" ---------- */
+html[data-d2][data-d2q="0"] .house{will-change:auto}
+html[data-d2].vp-lite .htop,html[data-d2][data-d2q="0"] .htop{transition:none}
+@media (prefers-reduced-motion:reduce){
+  html[data-d2] .d2-menu,html[data-d2] .pn-box{transition:none!important}
+  html[data-d2] .pw:not(.in) img{clip-path:none!important;transform:none!important}
+}
+
+/* ======================= темы ======================= */
+html[data-d2] .hero,html[data-d2] .reels,html[data-d2] .foot,html[data-d2] #staff{position:relative;z-index:1}
+
+/* --- 5. Галерея: тёплый серый, как у Euromobil; по стене медленно проходит мягкий дневной свет --- */
+html[data-d2t=galereya][data-d2q="2"] #home::before{content:"";position:absolute;left:0;top:0;width:100%;height:100vh;height:100lvh;z-index:0;pointer-events:none;background:linear-gradient(112deg,transparent 28%,rgba(255,255,255,.75) 45%,rgba(255,255,255,0) 62%);opacity:.6;animation:d2sun 28s ease-in-out infinite alternate}
+@keyframes d2sun{from{transform:translateX(-30%)}to{transform:translateX(30%)}}
+
+/* --- 6. Кино: видео на первом экране, ниже - светлые разделы --- */
+html[data-d2t=kino] #home{--face-l:rgba(16,16,15,.66);--face-r:rgba(30,29,27,.62);--roof:rgba(12,12,11,.8);--frame:rgba(12,12,11,.58);--ground:rgba(0,0,0,.6);--seam:rgba(255,255,255,.09);background:#0F0F0E}
+.d2-kino{position:absolute;left:0;right:0;top:0;height:100vh;height:100lvh;z-index:0;overflow:hidden;pointer-events:none;background:#0F0F0E}
+.d2-kbg{position:absolute;inset:0;background:#141413 center/cover no-repeat}
+.d2-kbg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.8s var(--ease)}
+.d2-kino.vid video{opacity:1}
+.d2-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,9,.66) 0%,rgba(10,10,9,.3) 26%,rgba(10,10,9,.34) 62%,rgba(15,15,14,.94) 92%,#0F0F0E)}
+.d2-ks{position:absolute;inset:-3%;background:center/cover no-repeat;opacity:0;animation:d2ks 35s linear infinite;animation-delay:calc(var(--k) * 7s - 1s)}
+@keyframes d2ks{0%{opacity:0;transform:scale(1.08)}4%{opacity:1}20%{opacity:1}25%{opacity:0;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
+html[data-d2t=kino][data-d2q="0"] .d2-ks{animation:none}
+html[data-d2t=kino][data-d2q="0"] .d2-ks:first-child{opacity:1}
+html[data-d2t=kino] .hero{min-height:calc(100vh - 78px);min-height:calc(100svh - 78px);display:flex;flex-direction:column;justify-content:center;padding-bottom:clamp(20px,4vh,48px)}
+html[data-d2t=kino] .home .lead{color:rgba(241,238,232,.78)}
+html[data-d2t=kino] .d2-eye{color:rgba(241,238,232,.75)}
+html[data-d2t=kino] #home:not(.d2-sc) .htop{background:transparent;border-color:transparent}
+html[data-d2t=kino] #home.d2-sc .htop{background:rgba(15,15,14,.92)}
+html[data-d2t=kino] .d2-light{background:var(--bg);color:var(--ink)}
+html[data-d2t=kino] .reels.d2-light{max-width:none;margin:0}
+html[data-d2t=kino] .reels.d2-light>*{max-width:1240px;margin-left:auto;margin-right:auto}
+html[data-d2t=kino] .reels.d2-light .reel-row{max-width:none;padding-left:max(var(--pad),calc((100% - 1240px)/2 + var(--pad)))}
+html[data-d2t=kino] .foot.d2-light{margin-top:0;border-top-color:var(--line)}
+html[data-d2t=kino] .reels[hidden]+.foot{margin-top:0}
+
+/* --- 7. Графит: тёмный зал, свет сверху, по стеклу окон изредка проходит блик --- */
+html[data-d2t=grafit] #home{background:radial-gradient(70% 55% at 50% 30%,#1E1D1B 0%,#0E0E0D 72%) #0E0E0D}
+html[data-d2t=grafit] .d2-brand i,html[data-d2t=grafit] .d2-dmark{color:var(--acc)}
+html[data-d2t=grafit] .floors{position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(201,169,121,.22)}
+html[data-d2t=grafit][data-d2q="2"] .floors::after{content:"";position:absolute;top:0;bottom:0;left:0;width:60%;pointer-events:none;background:linear-gradient(105deg,transparent 20%,rgba(255,244,225,.09) 50%,transparent 80%);transform:translateX(-120%);animation:d2glint 11s var(--soft) 3s infinite}
+@keyframes d2glint{0%{transform:translateX(-120%)}38%,100%{transform:translateX(260%)}}
+html[data-d2t=grafit] .d2-f.wr,html[data-d2t=grafit] .d2-f.wl{box-shadow:inset 0 0 0 1px rgba(201,169,121,.14)}
+html[data-d2t=grafit] .tnav button::after,html[data-d2t=grafit] .d2-ln::before{background:var(--acc)}
+html[data-d2t=grafit] .eyebrow,html[data-d2t=grafit] .d2-eye{color:var(--acc)}
+
+/* --- 8. Линия: дом-чертёж тонкими линиями, фото в окнах проявляют цвет --- */
+html[data-d2t=liniya] .floors{background:transparent;box-shadow:inset 0 0 0 1px var(--ink);gap:8px;padding:8px}
+html[data-d2t=liniya] .roof{background:transparent;overflow:visible}
+.d2-rl{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.d2-rl polygon{fill:rgba(250,249,247,.92);stroke:var(--ink);stroke-width:1}
+html[data-d2t=liniya] .roof span{color:var(--ink);z-index:1}
+html[data-d2t=liniya] .d2-f.wl,html[data-d2t=liniya] .d2-f.wr,html[data-d2t=liniya] .d2-f.sl,html[data-d2t=liniya] .d2-f.sr{background:rgba(250,249,247,.9);background-image:none;box-shadow:inset 0 0 0 1px var(--ink)}
+html[data-d2t=liniya] .d2-f.wl::after,html[data-d2t=liniya] .d2-f.wr::after{background:repeating-linear-gradient(180deg,transparent 0 calc(var(--rh,140px) - 1px),rgba(29,28,26,.35) calc(var(--rh,140px) - 1px) var(--rh,140px));background-position:0 4px}
+html[data-d2t=liniya] .d2-f.gr{--ground:rgba(40,34,26,.16)}
+html[data-d2t=liniya] .room{background:#E9E7E2}
+html[data-d2t=liniya] .room .ph{filter:grayscale(1) contrast(1.04) brightness(1.04);transition:transform 1.4s var(--ease),filter 1s var(--ease)}
+html[data-d2t=liniya] .room .dark{opacity:.12}
+@media (hover:hover){html[data-d2t=liniya] .room:not(.empty):hover .ph{filter:none}}
+html[data-d2t=liniya] .room.lit .ph{filter:none}
+html[data-d2t=liniya] .room.empty .ph{background:repeating-linear-gradient(135deg,#ECEAE6 0 9px,#E4E2DD 9px 18px)}
+html[data-d2t=liniya] .room.empty .t{color:var(--ink)}
+html[data-d2] .pme .av.d2-av{background:none;padding:6px;color:var(--ink)}
+html[data-d2] .pme .av.d2-av svg{width:100%;height:100%;display:block}
+
+/* ================= другие формы дома (варианты 9-11, html[data-d2dom]) =================
+   Общее: комнаты одного размера (раскладку ставит d2.js), дом плотный, без полупрозрачных стен. */
+html[data-d2dom] .floors{grid-auto-rows:clamp(118px,min(12.5vw,(100vh - 440px)/2),178px)}
+html[data-d2dom] .floors.r4{grid-auto-rows:clamp(92px,min(9vw,(100vh - 460px)/4),130px)}
+html[data-d2dom] .house{max-width:860px}
+@media (max-width:640px){
+  html[data-d2dom] .floors,html[data-d2dom] .floors.r4{grid-auto-rows:clamp(112px,30vw,150px)}
+}
+
+/* --- 9. Разрез: плотный объём, внутри - комнаты, фото висит картиной в раме --- */
+html[data-d2dom=razrez]{--face-l:#1B1A18;--face-r:#262421;--roof:#141312;--frame:#1F1D1B;--seam:rgba(255,255,255,.06)}
+html[data-d2dom=razrez] #home{--face-l:#1B1A18;--face-r:#262421;--roof:#141312;--frame:#1F1D1B}
+html[data-d2dom=razrez] .floors{gap:0;padding:0;background:var(--frame);box-shadow:inset 0 0 0 6px var(--frame)}
+html[data-d2dom=razrez] .room{background:linear-gradient(180deg,#2B2925 0%,#25231F 74%,#3A342C 74.5%,#2E2924 100%);box-shadow:inset 0 0 0 3px var(--frame),inset 18px 0 22px -14px rgba(0,0,0,.65),inset -18px 0 22px -14px rgba(0,0,0,.65),inset 0 16px 20px -12px rgba(0,0,0,.6)}
+html[data-d2dom=razrez] .room .ph{inset:12% 21% 31%;transform:none;border:3px solid #EFEAE1;box-shadow:0 10px 18px rgba(0,0,0,.45);z-index:0;transition:transform .9s var(--ease),box-shadow .9s var(--ease)}
+html[data-d2dom=razrez] .room .dark{z-index:1;inset:12% 21% 31%;opacity:.16}
+html[data-d2dom=razrez] .room::after{z-index:0;background:linear-gradient(180deg,transparent 60%,rgba(8,8,7,.55))}
+html[data-d2dom=razrez] .room .lamp{top:0;width:46%;height:60%;opacity:.9;z-index:0;background:radial-gradient(50% 55% at 50% 0%,rgba(255,232,196,.22),transparent 72%)}
+html[data-d2dom=razrez] .room .t{z-index:2;justify-content:center;left:8px;right:8px;bottom:clamp(7px,1vw,12px)}
+html[data-d2dom=razrez] .room .t::before{display:none}
+html[data-d2dom=razrez] .room.empty .ph{background:#2E2B27;border-color:rgba(239,234,225,.25);box-shadow:none}
+@media (hover:hover){html[data-d2dom=razrez] .room:not(.empty):hover .ph{transform:translateY(-3px) scale(1.06);box-shadow:0 18px 28px rgba(0,0,0,.55)}}
+html[data-d2dom=razrez] .room.lit .ph{transform:translateY(-3px) scale(1.06)}
+@media (max-width:640px){html[data-d2dom=razrez] .room .ph,html[data-d2dom=razrez] .room .dark{inset:13% 18% 36%}}
+
+/* --- 10. Окна: фасад с одинаковыми окнами, вечером окна загораются; фото за стеклом с глубиной --- */
+html[data-d2dom=okna] .d2-f.wl,html[data-d2dom=okna] .d2-f.wr,html[data-d2dom=okna] .d2-f.sl,html[data-d2dom=okna] .d2-f.sr{display:none}
+html[data-d2dom=okna] #home{--roof:#141312;--frame:#1C1B19}
+html[data-d2dom=okna] .floors{gap:0;padding:clamp(8px,1.2vw,16px) clamp(8px,1.2vw,16px) 0;background:linear-gradient(180deg,#1E1D1B,#191816);box-shadow:0 30px 60px rgba(0,0,0,.45)}
+html[data-d2dom=okna] .room{background:transparent;overflow:visible;padding:0 clamp(8px,1.2vw,16px)}
+html[data-d2dom=okna] .room .ph{inset:0 clamp(8px,1.2vw,16px) 30px;overflow:hidden;background:none;transform:none;z-index:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+html[data-d2dom=okna] .room .ph::before{content:"";position:absolute;inset:-12%;background:inherit;background-size:cover;background-position:center;transform:translate(calc(var(--px,0) * -4%),calc(var(--py,0) * -3%))}
+html[data-d2dom=okna] .room .dark{inset:0 clamp(8px,1.2vw,16px) 30px;z-index:1;background:#0B0B0A;opacity:.5}
+html[data-d2dom=okna] .room .lamp{inset:0 clamp(8px,1.2vw,16px) 30px;left:auto;width:auto;height:auto;transform:none;z-index:2;opacity:1;animation:none!important;
+  background:linear-gradient(90deg,transparent calc(50% - 1px),#1C1B19 calc(50% - 1px),#1C1B19 calc(50% + 1px),transparent calc(50% + 1px)),linear-gradient(180deg,transparent 38%,#1C1B19 38%,#1C1B19 calc(38% + 2px),transparent calc(38% + 2px)),linear-gradient(115deg,rgba(255,255,255,.07) 0 22%,transparent 22% 100%);
+  box-shadow:inset 0 0 0 3px #1C1B19,inset 0 10px 14px -6px rgba(0,0,0,.6)}
+html[data-d2dom=okna] .room::after{inset:auto clamp(4px,.8vw,10px) 24px;height:5px;background:#2A2826;z-index:2;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+html[data-d2dom=okna] .room .t{z-index:3;left:0;right:0;bottom:0;height:24px;justify-content:center;color:rgba(241,238,232,.82)}
+html[data-d2dom=okna] .room .t::before{display:none}
+html[data-d2dom=okna] .room .t b{font-size:clamp(9px,.85vw,11px)}
+html[data-d2dom=okna] .room .dark{transition:opacity .8s var(--ease)}
+html[data-d2dom=okna] .room:not(.empty) .ph{box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 0 0 0 rgba(255,214,150,0);transition:box-shadow .8s var(--ease)}
+@media (hover:hover){html[data-d2dom=okna] .room:not(.empty):hover .dark{opacity:0}html[data-d2dom=okna] .room:not(.empty):hover .ph{box-shadow:inset 0 0 0 1px rgba(255,255,255,.2),0 0 34px rgba(255,214,150,.22)}}
+html[data-d2dom=okna] .room.lit .dark{opacity:0}
+html[data-d2dom=okna] #home.enter .room .dark{animation:d2win 1.6s ease both;animation-delay:calc(.9s + var(--i,0)*.14s)}
+@keyframes d2win{0%{opacity:.85}60%{opacity:.15}100%{opacity:.5}}
+html[data-d2dom=okna] .room.empty .ph{background:#232220}
+@media (max-width:640px){html[data-d2dom=okna] .room .t b{font-size:9px;letter-spacing:.12em}}
+
+/* --- 11. Силуэт: дом тонкой линией, внутри названия; фото комнаты - на весь экран --- */
+html[data-d2dom=siluet] .d2-f{display:none}
+html[data-d2dom=siluet] .roof{background:transparent;overflow:visible}
+html[data-d2dom=siluet] .d2-rl polygon{fill:rgba(12,12,11,.4);stroke:rgba(241,238,232,.75);stroke-width:1}
+html[data-d2dom=siluet] .roof span{z-index:1}
+html[data-d2dom=siluet] .floors{background:rgba(12,12,11,.4);gap:0;padding:0;box-shadow:inset 0 0 0 1px rgba(241,238,232,.75)}
+html[data-d2dom=siluet] .room{background:transparent;box-shadow:inset 0 0 0 .5px rgba(241,238,232,.3)}
+html[data-d2dom=siluet] .room .ph,html[data-d2dom=siluet] .room .dark,html[data-d2dom=siluet] .room::after{display:none}
+html[data-d2dom=siluet] .room .lamp{width:100%;height:100%;opacity:0;animation:none!important;background:rgba(241,238,232,.1);transition:opacity .5s var(--ease)}
+html[data-d2dom=siluet] .room .t{left:0;right:0;top:0;bottom:0;flex-direction:column;justify-content:center;gap:8px;text-align:center;padding:0 8px}
+html[data-d2dom=siluet] .room .t::before{display:none}
+html[data-d2dom=siluet] .room .t b{font-family:var(--serif);font-weight:400;font-size:clamp(15px,1.7vw,22px);letter-spacing:0;text-transform:none;white-space:normal;line-height:1.15}
+html[data-d2dom=siluet] .room.long .t b{font-size:clamp(14px,1.45vw,19px)}
+html[data-d2dom=siluet] .d2n{display:block;font-style:normal;font-size:10px;letter-spacing:.24em;opacity:.65}
+html[data-d2dom=siluet] .room.d2-on .lamp{opacity:1}
+@media (hover:hover){html[data-d2dom=siluet] .room:not(.empty):hover .lamp{opacity:1}}
+.d2-rph{position:absolute;inset:0}
+.d2-rph i{position:absolute;inset:-2%;background:center/cover no-repeat;opacity:0;transform:scale(1.04);transition:opacity .9s var(--ease),transform 6s linear}
+.d2-rph i.on{opacity:1;transform:scale(1)}
+html[data-d2dom=siluet] #home.d2-rph-on .d2-veil{background:linear-gradient(180deg,rgba(10,10,9,.55) 0%,rgba(10,10,9,.22) 30%,rgba(10,10,9,.3) 62%,rgba(15,15,14,.94) 92%,#0F0F0E)}
+@media (max-width:640px){
+  html[data-d2dom=siluet] .room .t b{font-size:15px}
+  html[data-d2dom=siluet] .room.long .t b{font-size:13.5px}
+  html[data-d2dom=siluet] .room .t{gap:5px}
+}
+@media (prefers-reduced-motion:reduce){.d2-rph i{transition:opacity .3s}}
+
+/* --- 12. Линии: дом белыми линиями (из 11), в комнатах фото-окна и подписи (из 10), появление и наведение как в 6 --- */
+html[data-d2dom=linii] .d2-f{display:none}
+html[data-d2dom=linii] .roof{background:transparent;overflow:visible}
+html[data-d2dom=linii] .d2-rl polygon{fill:rgba(12,12,11,.42);stroke:rgba(241,238,232,.82);stroke-width:1;stroke-dasharray:1;stroke-dashoffset:0}
+html[data-d2dom=linii] .roof span{z-index:1}
+html[data-d2dom=linii] .floors{position:relative;background:rgba(12,12,11,.42);gap:0;padding:0;box-shadow:inset 0 0 0 1px rgba(241,238,232,.82)}
+html[data-d2dom=linii] .room{background:transparent;overflow:visible;box-shadow:inset 0 0 0 .5px rgba(241,238,232,.34)}
+html[data-d2dom=linii] .room .ph{inset:clamp(8px,1vw,13px) clamp(8px,1vw,13px) 32px;overflow:hidden;background-color:#161514;transform:none;z-index:0}
+html[data-d2dom=linii] .room .ph::before{content:"";position:absolute;inset:-9%;background:inherit;background-size:cover;background-position:center;transform:translate(calc(var(--px,0) * -3.5%),calc(var(--py,0) * -2.5%)) scale(var(--z,1));transition:transform 1.4s var(--ease)}
+html[data-d2dom=linii] .room .dark{inset:clamp(8px,1vw,13px) clamp(8px,1vw,13px) 32px;z-index:1;background:#0A0A09;opacity:.3;transition:opacity .7s var(--ease)}
+html[data-d2dom=linii] .room::after,html[data-d2dom=linii] .room .lamp{display:none}
+html[data-d2dom=linii] .room .t{z-index:2;left:0;right:0;bottom:0;height:32px;justify-content:center;gap:9px;color:rgba(241,238,232,.9)}
+html[data-d2dom=linii] .room .t::before{width:12px}
+html[data-d2dom=linii] .room .t b{font-size:clamp(9px,.85vw,11px)}
+@media (hover:hover){html[data-d2dom=linii] .room:not(.empty):hover{--z:1.09}html[data-d2dom=linii] .room:not(.empty):hover .dark{opacity:0}}
+html[data-d2dom=linii] .room.lit{--z:1.09}
+html[data-d2dom=linii] .room.lit .dark{opacity:0}
+html[data-d2dom=linii] .room.empty .ph{background:repeating-linear-gradient(135deg,rgba(241,238,232,.05) 0 9px,transparent 9px 18px)}
+/* вход: сначала дом рисуется линией, потом комнаты открываются шторкой (как в "Кино") */
+html[data-d2dom=linii] #home.enter .roof{animation:none}
+html[data-d2dom=linii] #home.enter .d2-rl polygon{animation:d2draw 1.5s var(--ease) .15s both}
+html[data-d2dom=linii] #home.enter .floors{animation:d2fl 1.3s var(--ease) .5s both}
+html[data-d2dom=linii] #home.enter .room{animation-delay:calc(.8s + var(--i,0)*.08s)}
+@keyframes d2draw{from{stroke-dashoffset:1;fill-opacity:0}60%{fill-opacity:0}to{stroke-dashoffset:0;fill-opacity:1}}
+@keyframes d2fl{from{clip-path:inset(0 0 100% 0);opacity:.4}to{clip-path:inset(0);opacity:1}}
+html[data-d2dom=linii][data-d2q="0"] #home.enter .d2-rl polygon,html[data-d2dom=linii][data-d2q="0"] #home.enter .floors{animation:none}
+@media (max-width:640px){
+  html[data-d2dom=linii] .room .ph,html[data-d2dom=linii] .room .dark{inset:7px 7px 28px}
+  html[data-d2dom=linii] .room .t{height:28px;gap:6px}
+  html[data-d2dom=linii] .room .t::before{width:8px}
+  html[data-d2dom=linii] .room .t b{font-size:9px;letter-spacing:.12em;white-space:nowrap;display:block}
+}
+
+/* ================= журнал-"сцена" (html[data-d2zh]) =================
+   Кадр стоит, содержимое сменяется: фото входит сбоку косой шторкой (--p 0..1 ведёт d2.js), плитка и подписи - внутри рамок. */
+html[data-d2zh] #book{display:none!important}
+.d2-zs{display:none;position:absolute;inset:0;align-items:center;justify-content:center}
+html[data-d2zh] #room[data-view=zhurnal] .d2-zs{display:flex}
+.d2-sf{position:relative;overflow:hidden;background:#141413;color:#F4F1EB;touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:pointer;box-shadow:0 30px 70px rgba(0,0,0,.45)}
+.d2-sf.drag{cursor:grabbing}
+.d2-sl{position:absolute;inset:0;visibility:hidden;z-index:1}
+.d2-sl.on{visibility:visible}
+.d2-sl img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;will-change:transform}
+.d2-sl .wm{opacity:.5}
+.d2-sl.fade{animation:d2sfade .38s ease both;z-index:2}
+@keyframes d2sfade{from{opacity:0}to{opacity:1}}
+.d2-sl.en{z-index:2;--e:calc((1 - var(--p,0)) * 114% - 7%);clip-path:polygon(calc(var(--e) + 7%) 0,100% 0,100% 100%,calc(var(--e) - 7%) 100%)}
+.d2-sf[data-dir="-1"] .d2-sl.en{--e:calc(var(--p,0) * 114% - 7%);clip-path:polygon(0 0,calc(var(--e) - 7%) 0,calc(var(--e) + 7%) 100%,0 100%)}
+.d2-sl.en img{transform:translateX(calc((1 - var(--p,0)) * var(--d,1) * 9%)) scale(calc(1.14 - var(--p,0) * .14))}
+.d2-sl.ex img{transform:translateX(calc(var(--p,0) * var(--d,1) * -11%)) scale(calc(1 + var(--p,0) * .04))}
+.d2-sl.ex::after{content:"";position:absolute;inset:0;background:#0A0A09;opacity:calc(var(--p,0) * .5)}
+.d2-sv{position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(180deg,rgba(10,10,9,.28) 0%,transparent 26%,transparent 44%,rgba(10,10,9,.82) 100%),linear-gradient(90deg,rgba(10,10,9,.4),transparent 46%)}
+.d2-sn{position:absolute;z-index:4;left:4.5%;top:50%;height:20px;margin-top:-10px;width:40%;overflow:hidden;font:500 12px/20px var(--sans);letter-spacing:.24em;pointer-events:none}
+.d2-sn span{position:absolute;left:0;top:0;white-space:nowrap}
+.d2-st{position:absolute;z-index:4;right:5%;top:50%;width:clamp(120px,19%,240px);aspect-ratio:1/1;transform:translateY(-58%);overflow:hidden;background:#1B1A19;box-shadow:0 18px 40px rgba(0,0,0,.45);cursor:pointer}
+.d2-st i{position:absolute;inset:0;background:center/cover no-repeat}
+.d2-st i.z{background-size:250%;background-position:62% 58%}
+.d2-sx{position:absolute;z-index:4;left:4.5%;right:32%;bottom:0;height:46%;pointer-events:none}
+.d2-sxw{position:absolute;left:0;right:0;bottom:clamp(18px,7%,44px)}
+.d2-sxi{max-width:560px}
+.d2-sxi h3{font-family:var(--serif);font-weight:400;font-size:clamp(24px,2.9vw,42px);line-height:1.08;letter-spacing:-.01em;margin:0}
+.d2-sxi .m{margin-top:10px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.72}
+.d2-sxi .x{margin-top:10px;font-size:14.5px;line-height:1.5;opacity:.86;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.d2-sgo{margin-top:8px;pointer-events:auto;color:#F4F1EB}
+.d2-sgo svg{width:16px;height:16px}
+.d2-sp{position:absolute;z-index:4;left:0;right:0;bottom:0;height:2px;background:rgba(244,241,235,.16);pointer-events:none}
+.d2-sp i{position:absolute;inset:0;background:#F4F1EB;transform-origin:0 50%;transform:scaleX(0);transition:transform 1s var(--ease)}
+/* смена номера, плитки и текста */
+.d2-sn .in-r{animation:d2nin .7s var(--ease) .25s both}.d2-sn .in-l{animation:d2nin .7s var(--ease) .25s both}
+.d2-sn .out-l,.d2-sn .out-r{animation:d2nout .4s ease-in both}
+@keyframes d2nin{from{transform:translateY(100%)}to{transform:none}}
+@keyframes d2nout{to{transform:translateY(-100%)}}
+.d2-st .in-r{animation:d2tin .95s var(--ease) .18s both;--from:100%}
+.d2-st .in-l{animation:d2tin .95s var(--ease) .18s both;--from:-100%}
+.d2-st .out-l{animation:d2tout .95s var(--ease) .18s both;--to:-100%}
+.d2-st .out-r{animation:d2tout .95s var(--ease) .18s both;--to:100%}
+@keyframes d2tin{from{transform:translateX(var(--from))}to{transform:none}}
+@keyframes d2tout{to{transform:translateX(var(--to))}}
+.d2-sxw.in-r .d2-sxi>*,.d2-sxw.in-l .d2-sxi>*{animation:d2xin .85s var(--ease) both}
+.d2-sxw.in-r{--from:46px}.d2-sxw.in-l{--from:-46px}
+.d2-sxw .d2-sxi>*:nth-child(1){animation-delay:.3s}.d2-sxw .d2-sxi>*:nth-child(2){animation-delay:.38s}.d2-sxw .d2-sxi>*:nth-child(3){animation-delay:.46s}.d2-sxw .d2-sxi>*:nth-child(4){animation-delay:.54s}
+.d2-sxw.out-l,.d2-sxw.out-r{animation:d2xout .36s ease-in both}
+.d2-sxw.out-l{--to:-36px}.d2-sxw.out-r{--to:36px}
+@keyframes d2xin{from{opacity:0;transform:translateX(var(--from))}to{opacity:1;transform:none}}
+@keyframes d2xout{to{opacity:0;transform:translateX(var(--to))}}
+/* появление сцены при входе в комнату */
+.d2-zs.go .d2-sf{animation:d2sgo 1.15s var(--swift,var(--ease)) both}
+.d2-zs.go .d2-sl.on img{animation:d2simg 1.6s var(--ease) both}
+.d2-zs.go .d2-sn,.d2-zs.go .d2-st,.d2-zs.go .d2-sxi>*{animation:d2xin .9s var(--ease) .5s both;--from:30px}
+@keyframes d2sgo{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0)}}
+@keyframes d2simg{from{transform:scale(1.12)}to{transform:none}}
+.d2-zs.nar .d2-sn{left:6%;top:calc(6% + 14px);margin-top:0;font-size:11px}
+.d2-zs.nar .d2-st{right:6%;top:6%;width:min(30%,34vh);transform:none}
+.d2-zs.nar .d2-sx{left:6%;right:6%;height:62%}
+.d2-zs.nar .d2-sxw{bottom:14px}
+.d2-zs.nar .d2-sxi .m{display:none}
+.d2-zs.nar .d2-sxi h3{font-size:clamp(23px,7vw,30px)}
+.d2-zs.nar .d2-sxi .x{font-size:13px;-webkit-line-clamp:2;margin-top:8px}
+.d2-zs.nar .d2-sv{background:linear-gradient(180deg,rgba(10,10,9,.34) 0%,transparent 24%,transparent 36%,rgba(10,10,9,.9) 78%)}
+@media (prefers-reduced-motion:reduce){.d2-zs *,.d2-zs.go *{animation:none!important}}
+
+/* ================= плавный вход =================
+   html.d2-wait - фото комнат ещё грузятся: анимации входа стоят на первом кадре, главная скрыта, видна тонкая линия-ожидание.
+   html.d2-in   - всё готово: главная мягко проявляется, дальше идут обычные анимации входа. */
+html.d2-wait #home.enter,html.d2-wait #home.enter *,html.d2-wait #home.enter *::before,html.d2-wait #home.enter *::after{animation-play-state:paused!important}
+html.d2-wait #home>.hero,html.d2-wait #home>.htop,html.d2-wait #home>#staff{opacity:0}
+html.d2-in #home>.hero{animation:d2appear .9s var(--ease) both}
+@keyframes d2appear{from{opacity:0}to{opacity:1}}
+html.d2-wait body::after{content:"";position:fixed;left:50%;top:50%;width:120px;height:1px;margin-left:-60px;z-index:50;pointer-events:none;
+  background:linear-gradient(90deg,transparent,currentColor,transparent) no-repeat 0 0/40% 100%,rgba(128,128,128,.25);color:var(--ink,#F1EEE8);opacity:0;animation:d2load 1.2s ease-in-out .35s infinite,d2appear .4s ease .35s forwards}
+html[data-d2t=kino].d2-wait body::after{color:#F1EEE8}
+@keyframes d2load{from{background-position:-60% 0,0 0}to{background-position:160% 0,0 0}}
+/* фон "Кино": кадр проявляется, когда загружен, а не выскакивает */
+html[data-d2t=kino] .d2-kbg{opacity:0;transition:opacity 1.3s var(--ease)}
+html[data-d2t=kino] .d2-kbg.rdy{opacity:1}
+@media (prefers-reduced-motion:reduce){html[data-d2t=kino] .d2-kbg{transition:none}html.d2-wait body::after{animation:none;opacity:.6}}
+
+/* ================= 13. "Просто" (html[data-d2p]) =================
+   Для человека, который зашёл первый раз: дом - комната - работа, без выбора видов и лишних кнопок. */
+/* главная: в шапке только "Написать" и меню; под домом нет второстепенных кнопок */
+html[data-d2p] .tnav,html[data-d2p] .hero-acts{display:none}
+html[data-d2p] .home .lead{font-size:clamp(14px,1.25vw,17px);letter-spacing:.02em}
+/* подписи комнат: крупно, обычными буквами, рядом - сколько работ */
+html[data-d2p][data-d2dom=linii] .room .ph,html[data-d2p][data-d2dom=linii] .room .dark{bottom:52px}
+html[data-d2p][data-d2dom=linii] .room .t{height:52px;flex-direction:column;align-items:center;gap:2px;padding:7px 8px 0}
+html[data-d2p][data-d2dom=linii] .room .t b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+html[data-d2p][data-d2dom=linii] .room.long .t b{font-size:clamp(13.5px,1.1vw,15.5px)}
+@media (min-width:641px){html[data-d2p][data-d2dom=linii] .room.long .t{padding-top:4px;gap:1px}html[data-d2p][data-d2dom=linii] .room.long .t b{white-space:normal;text-align:center;line-height:1.08;font-size:clamp(13px,1.05vw,14.5px);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}}
+html[data-d2p] #writeBtn{margin-left:auto}
+html[data-d2p][data-d2dom=linii] .room .t::before{display:none}
+html[data-d2p][data-d2dom=linii] .room .t b{font-family:var(--serif);font-weight:400;font-size:clamp(16px,1.45vw,20px);letter-spacing:0;text-transform:none;line-height:1.15}
+html[data-d2p] .d2n{display:block;flex:none;font-style:normal;font-size:11px;letter-spacing:.06em;opacity:.7;white-space:nowrap}
+html[data-d2p] .floors{grid-auto-rows:clamp(132px,min(13.5vw,(100vh - 400px)/2),196px)}
+@media (hover:hover){html[data-d2p] .room:not(.empty):hover .t b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}}
+/* комната: все работы сразу, крупно, название под фото */
+html[data-d2p] #views,html[data-d2p] .mini,html[data-d2p] #crumbsR{display:none}
+html[data-d2p] .rlist.plitki{max-width:1180px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:26px 18px;padding-bottom:40px}
+html[data-d2p] .plitki .rcard{background:transparent;box-shadow:none;overflow:visible}
+html[data-d2p] .plitki .rcard .ri{aspect-ratio:4/3;overflow:hidden;background:#1B1A19}
+html[data-d2p] .plitki .rcard .rm{position:static;background:none;padding:12px 2px 0}
+html[data-d2p] .plitki .rcard .rm b{font-size:clamp(17px,1.5vw,21px);line-height:1.2;-webkit-line-clamp:3}
+html[data-d2p] .plitki .rcard .tag{top:10px;left:10px;right:10px}
+@media (hover:hover){html[data-d2p] .plitki .rcard:hover .rm b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}}
+/* работа: остаются "назад", листание, "на весь экран" и "Хочу так же"; приблизить можно щипком, колесом или двойным нажатием */
+html[data-d2p] #work .grp.zoom,html[data-d2p] #uiTg,html[data-d2p] #dragHint{display:none}
+@media (max-width:640px){
+  html[data-d2p][data-d2dom=linii] .room .ph,html[data-d2p][data-d2dom=linii] .room .dark{bottom:52px}
+  html[data-d2p][data-d2dom=linii] .room .t{height:52px;flex-direction:column;align-items:center;gap:2px;padding:7px 6px 0}
+  html[data-d2p][data-d2dom=linii] .room .t b,html[data-d2p][data-d2dom=linii] .room.long .t b{font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:block}
+  html[data-d2p][data-d2dom=linii] .room.long .t{padding-top:4px;gap:1px}
+  html[data-d2p][data-d2dom=linii] .room.long .t b{font-size:13px;white-space:normal;text-align:center;line-height:1.08;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+  html[data-d2p] .d2n{font-size:10.5px}
+  html[data-d2p] .floors,html[data-d2p] .floors.r4{grid-auto-rows:clamp(128px,34vw,168px)}
+  html[data-d2p] .rlist.plitki{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 10px;padding-left:12px;padding-right:12px}
+  html[data-d2p] .plitki .rcard .rm b{font-size:15.5px;-webkit-line-clamp:3}
+}
+
+/* --- 13. "Просто": дом в три этажа на компьютере, фон под весь первый экран, ниже - тёмный раздел видео со своим фоном --- */
+/* высота слоя фона задаётся в d2.js (до низа дома); вуаль темнеет к низу и без шва переходит в .d2-low */
+html[data-d2p] .d2-veil{background:linear-gradient(180deg,rgba(10,10,9,.66) 0,rgba(10,10,9,.3) 22%,rgba(10,10,9,.34) 55%,rgba(13,13,12,.72) 82%,#0F0F0E 100%)}
+html[data-d2p] .hero{padding-bottom:clamp(28px,6vh,72px)}
+html[data-d2p] .reels-h{transition:opacity 1s var(--ease),transform 1s var(--ease)}
+html[data-d2p] .reels:not(.d2-vis) .reels-h,html[data-d2p] .reels:not(.d2-vis) .reel-row{opacity:0;transform:translateY(18px)}
+html[data-d2p] .reels .reel-row{transition:opacity 1.1s var(--ease) .15s,transform 1.1s var(--ease) .15s}
+@media (prefers-reduced-motion:reduce){html[data-d2p] .reels:not(.d2-vis) .reels-h,html[data-d2p] .reels:not(.d2-vis) .reel-row{opacity:1;transform:none}}
+@media (min-width:641px){
+  html[data-d2p] .floors.d2-e3,html[data-d2p] .floors.d2-e3.r4{grid-auto-rows:clamp(150px,min(14.5vw,(100vh - 330px)/2.4),226px)}
+  html[data-d2p][data-d2dom] .house{max-width:940px}
+}
+
+/* раздел видео и подвал в "Просто": та же тёмная гамма, что наверху. Фон - 1-3 фото работ, очень тёмные,
+   медленно сменяются и чуть плывут; поверх мягкое тёплое пятно света. Верх и низ вуали - цвет страницы, без швов. */
+html[data-d2p] .reels.d2-low{max-width:none;margin:0;position:relative;isolation:isolate;padding:clamp(80px,14vh,150px) 0 clamp(40px,8vh,90px)}
+html[data-d2p] .reels.d2-low>:not(.d2-lbg){max-width:1240px;margin-left:auto;margin-right:auto;position:relative;z-index:1}
+html[data-d2p] .reels.d2-low .reel-row{max-width:none;padding-left:max(var(--pad),calc((100% - 1240px)/2 + var(--pad)))}
+.d2-lbg{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#0F0F0E}
+.d2-ls{position:absolute;inset:-6%;background:center/cover no-repeat;opacity:0;transition:opacity 2.4s var(--ease)}
+.d2-lbg.on .d2-ls{animation:d2ls calc(var(--n) * 12s) linear infinite;animation-delay:calc(var(--k) * 12s)}
+.d2-lbg.one.on .d2-ls{animation:d2drift 40s ease-in-out infinite alternate;opacity:1}
+@keyframes d2ls{0%{opacity:0;transform:scale(1.1) translate3d(-1.5%,0,0)}10%{opacity:1}33%{opacity:1}43%{opacity:0;transform:scale(1.02) translate3d(1.5%,0,0)}100%{opacity:0;transform:scale(1.02) translate3d(1.5%,0,0)}}
+@keyframes d2drift{from{transform:scale(1.08) translate3d(-1.5%,-1%,0)}to{transform:scale(1.02) translate3d(1.5%,1%,0)}}
+.d2-lglow{position:absolute;left:-20%;top:10%;width:70%;height:80%;z-index:1;background:radial-gradient(closest-side,rgba(233,214,184,.10),rgba(233,214,184,0));animation:d2glow 26s ease-in-out infinite alternate}
+@keyframes d2glow{from{transform:translate3d(0,0,0)}to{transform:translate3d(85%,-8%,0)}}
+.d2-lveil{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,#0F0F0E 0%,rgba(15,15,14,.86) 22%,rgba(15,15,14,.74) 48%,rgba(15,15,14,.9) 70%,#0F0F0E 96%)}
+html[data-d2q="0"] .d2-lbg .d2-ls,html[data-d2q="0"] .d2-lglow{animation:none!important}
+html[data-d2q="0"] .d2-lbg .d2-ls:first-child{opacity:1}
+html[data-d2q="1"] .d2-lglow{animation:none}
+@media (prefers-reduced-motion:reduce){.d2-lbg .d2-ls,.d2-lglow{animation:none!important}.d2-lbg.on .d2-ls:first-child{opacity:1}}
+html[data-d2p] .reels.d2-low .eyebrow{color:rgba(241,238,232,.62)}
+html[data-d2p] .reels.d2-low h2{color:#F1EEE8}
+html[data-d2p] .reels.d2-low .reels-h p{color:rgba(241,238,232,.66)}
+html[data-d2p] .reels.d2-low .reels-h p a{color:#F1EEE8;text-decoration:underline;text-decoration-color:rgba(241,238,232,.4);text-underline-offset:3px}
+html[data-d2p] .reels.d2-low .reel.ph-empty{background:rgba(241,238,232,.035);border:1px solid rgba(241,238,232,.16);-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-d2p] .reels.d2-low .reel.ph-empty .pl{border-color:rgba(241,238,232,.42);color:rgba(241,238,232,.85)}
+html[data-d2p] .reels.d2-low .reel.ph-empty .rt b{color:#F1EEE8;font-family:var(--serif);font-weight:400;font-size:16px}
+html[data-d2p] .reels.d2-low .reel.ph-empty .rt span{color:rgba(241,238,232,.6)}
+html[data-d2p] .reels.d2-low .reel:not(.ph-empty){box-shadow:0 0 0 1px rgba(241,238,232,.14)}
+html[data-d2p] .reels.d2-low+.foot,html[data-d2p] .reels[hidden]+.foot{margin-top:0}
+html[data-d2p] .foot{background:#0F0F0E;color:rgba(241,238,232,.55);border-top-color:rgba(241,238,232,.12)}
+html[data-d2p] .foot a,html[data-d2p] .foot button{color:rgba(241,238,232,.75)}
+/* krasnodar/klient/ (data-d2k): чистый низ - без строки с именем мастера, датой обновления и пометкой о тесте */
+html[data-d2k] .foot,html[data-d2k] .d2-mfoot{display:none}
+html[data-d2k] .reels.d2-low{padding-bottom:calc(clamp(56px,10vh,110px) + var(--sb,0px))}
+/* "Просто": фото комнаты на доме видно целиком (просьба Александра 2026-11-23 - "непонятно, что на фото").
+   Сзади - то же фото, растянутое и размытое (заполняет края), спереди - всё фото без обрезки, чуть плывёт при повороте. */
+html[data-d2p][data-d2dom=linii] .room .ph{-webkit-clip-path:inset(0);clip-path:inset(0)}
+html[data-d2p][data-d2dom=linii] .room .ph::before{inset:-8%;filter:blur(16px) brightness(.42) saturate(.85);transform:none;transition:none}
+html[data-d2p][data-d2dom=linii] .room .ph::after{content:"";position:absolute;inset:4px;background:inherit;background-color:transparent;background-size:var(--bs,contain);background-repeat:no-repeat;background-position:center;
+  transform:translate(calc(var(--px,0) * -1%),calc(var(--py,0) * -.8%)) scale(var(--z,1));transition:transform 1.4s var(--ease)}
+html[data-d2p][data-d2dom=linii] .room:not(.empty):hover,html[data-d2p][data-d2dom=linii] .room.lit{--z:1.04}
+html[data-d2p][data-d2q="0"][data-d2dom=linii] .room .ph::before{filter:brightness(.3)}
+
+/* окно "Написать мастеру" в "Просто": мессенджеры одной строкой - тонкие кнопки с значками, без зелёного пузыря */
+html[data-d2p] .msg{background:rgba(241,238,232,.06);color:var(--ink);border:1px solid rgba(241,238,232,.12)}
+html[data-d2p] .mbtns{grid-template-columns:repeat(auto-fit,minmax(88px,1fr))}
+html[data-d2p] .mbtns .row{display:contents}
+html[data-d2p] .mbtns .btn{min-height:68px;padding:8px 6px;flex-direction:column;justify-content:center;font-size:10.5px;letter-spacing:.14em;gap:7px;white-space:nowrap;background:transparent;border:1px solid rgba(241,238,232,.32);color:var(--ink)}
+html[data-d2p] .mbtns .btn.wa{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+html[data-d2p] .mbtns .mi{display:block;width:19px;height:19px;flex:none}
+html[data-d2p] .mbtns .lg{display:none}
+html[data-d2p] .mbtns [hidden]{display:none}
+@media (hover:hover){html[data-d2p] .mbtns .btn:hover{border-color:var(--ink)}html[data-d2p] .mbtns .btn.wa:hover{opacity:.88}}

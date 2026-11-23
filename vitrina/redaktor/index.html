@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f1b18">
+<meta name="robots" content="noindex">
+<title>Мастерская витрины - работы, отзывы, цены</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231f1b18'/%3E%3Cpath fill='%23d9a566' d='M5 6h14v12H5zm2 2v8h4V8zm6 0v3h4V8zm0 5v3h4v-3z'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../../shared/site.css">
+<style>
+/* Мастерская витрины: мастер с телефона добавляет работы (фото сразу с водяным знаком, рассказ голосом),
+   отзывы, коды заказов для отзывов, цены расчёта. Черновик - в этом браузере (localStorage vt-draft,
+   фото - IndexedDB vt-photos). "Скачать файлы для сайта" собирает архив: dannye.js + foto/. */
+html:root{--bg:#f6f2ec;--card:#fffdfa;--ink:#221d19;--muted:#776b60;--line:#e7ddd0;--dark:#1f1b18;--acc:#b97a37;--acc2:#94602a;--acc-l:#f6e8d6;--ok:#2f6f5e;--ok-l:#e2efea;--bad:#b3412f}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+a{color:var(--acc2)}
+button,input,select,textarea{font:inherit;color:inherit}
+.hide{display:none!important}
+.in{max-width:900px;margin:0 auto;padding:0 16px}
+header{background:var(--dark);color:#f3ede6;padding:12px 0 16px}
+header .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+header h1{margin:14px 0 2px;font-size:25px;letter-spacing:-.015em}
+header p{margin:0;opacity:.75;font-size:14.5px;max-width:640px}
+.tabs{position:sticky;top:0;z-index:20;background:rgba(246,242,236,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.tabs .in{display:flex;gap:4px;overflow-x:auto;padding-top:8px;padding-bottom:8px;scrollbar-width:none}
+.tabs .in::-webkit-scrollbar{display:none}
+.tabs button{border:0;background:none;padding:8px 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button.on{background:var(--dark);color:#fff}
+main{padding:16px 0 120px}
+.view{display:none}.view.on{display:block}
+h2{font-size:20px;margin:22px 0 10px}
+h2:first-child{margin-top:4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+.card+.card{margin-top:10px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.t{font-size:16px;padding:9px 11px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);width:100%;min-width:0}
+textarea.t{resize:vertical;min-height:90px;line-height:1.45}
+.t:focus{outline:2px solid rgba(185,122,55,.35);border-color:var(--acc)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:12px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;min-height:40px}
+.btn:hover{border-color:var(--acc)}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.sm{padding:5px 10px;min-height:32px;font-size:13px;border-radius:10px}
+.btn.l{border:0;background:none;color:var(--muted);padding:6px}
+.btn.del{color:var(--bad)}
+.btn svg{width:18px;height:18px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.mic.on{background:var(--bad);border-color:var(--bad);color:#fff;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(179,65,47,.35)}50%{box-shadow:0 0 0 7px rgba(179,65,47,0)}}
+.live{font-size:14px;color:var(--muted);font-style:italic;min-height:20px;margin-top:4px}
+.small{font-size:13px;color:var(--muted);margin:6px 0 0}
+.list{display:grid;gap:8px}
+.it{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;cursor:pointer;text-align:left;width:100%}
+.it:hover{border-color:var(--acc)}
+.it img{width:64px;height:48px;object-fit:cover;border-radius:8px;flex:none;background:#eee}
+.it b{display:block;font-size:15px}
+.it span{display:block;font-size:13px;color:var(--muted)}
+.it .x{flex:1;min-width:0}
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px}
+.pf{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.pf img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#eee}
+.pf textarea{border:0;border-top:1px solid var(--line);font-size:14px;padding:7px 9px;resize:vertical;min-height:52px}
+.pf .r{display:flex;justify-content:space-between;padding:2px 4px}
+.tag{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700;background:#eee7df;color:var(--muted)}
+.tag.ok{background:var(--ok-l);color:var(--ok)}
+.kod{font:700 20px ui-monospace,Menlo,monospace;letter-spacing:.06em;background:var(--acc-l);border-radius:10px;padding:6px 12px;display:inline-block}
+table.pr{width:100%;border-collapse:collapse;font-size:14px}
+table.pr th{text-align:left;color:var(--muted);font-weight:600;padding:6px 4px}
+table.pr td{padding:4px}
+table.pr input{width:100%;min-width:70px}
+ol.how{margin:0;padding-left:20px}
+ol.how li+li{margin-top:6px}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(31,27,24,.96);color:#fff;padding:10px 0 calc(10px + env(safe-area-inset-bottom))}
+.bar .in{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bar .st{font-size:13px;opacity:.75;flex:1 1 140px}
+.bar .btn{min-height:40px}
+#toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(20px);background:#000;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:90;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%)}
+footer{font-size:11px;color:var(--muted);opacity:.75;padding:10px 0 30px}
+.ms-tlink{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
+@media(max-width:600px){.g2,.g3{grid-template-columns:minmax(0,1fr)}.photos{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header><div class="in">
+  <div class="top"><nav data-variants></nav></div>
+  <h1>Мастерская витрины</h1>
+  <p>Добавляйте работы с телефона: фото сразу получают водяной знак, рассказ можно надиктовать. Всё сохраняется в этом браузере, пока вы не опубликуете.</p>
+</div></header>
+
+<nav class="tabs"><div class="in" id="tabs">
+  <button type="button" data-tab="raboty" class="on">Работы</button>
+  <button type="button" data-tab="otzyvy">Отзывы</button>
+  <button type="button" data-tab="master">О себе и контакты</button>
+  <button type="button" data-tab="ceny">Цены расчёта</button>
+  <button type="button" data-tab="pub">Опубликовать</button>
+</div></nav>
+
+<main class="in">
+  <div class="view on" id="v-raboty"></div>
+  <div class="view" id="v-otzyvy"></div>
+  <div class="view" id="v-master"></div>
+  <div class="view" id="v-ceny"></div>
+  <div class="view" id="v-pub">
+    <h2>Как выложить на сайт</h2>
+    <div class="card">
+      <ol class="how">
+        <li>Проверьте черновик: <a href="../?chernovik=1" target="_blank">так увидит клиент</a>.</li>
+        <li>Нажмите "Скачать файлы для сайта" - получится архив с текстами и фото (фото уже с водяным знаком).</li>
+        <li>Отправьте архив тому, кто ведёт сайт, - он выложит его. Обычно это несколько минут.</li>
+      </ol>
+      <div class="btns">
+        <button type="button" class="btn p" data-a="zip">Скачать файлы для сайта</button>
+        <a class="btn" href="../?chernovik=1" target="_blank">Посмотреть как клиент</a>
+      </div>
+      <p class="small">Почему не одной кнопкой: сайт лежит на бесплатном хостинге GitHub Pages, у него нет своего сервера и входа по паролю. Если захотите публиковать сами, без посредника, - это следующий шаг: подключить бесплатное хранилище с входом для мастера.</p>
+    </div>
+    <h2>Черновик</h2>
+    <div class="card">
+      <p class="small" style="margin:0">Черновик хранится только в этом браузере. Если почистить браузер, он пропадёт - поэтому после большой правки лучше скачать файлы.</p>
+      <div class="btns"><button type="button" class="btn del" data-a="reset">Начать заново с витрины на сайте</button></div>
+    </div>
+  </div>
+</main>
+
+<footer><div class="in" data-sign>Разработка в тестовом режиме. Все права защищены. <button type="button" class="ms-tlink" data-terms>Условия использования</button></div></footer>
+
+<div class="bar"><div class="in">
+  <span class="st" id="st">Черновик сохранён</span>
+  <a class="btn" href="../?chernovik=1" target="_blank">Как увидит клиент</a>
+  <button type="button" class="btn p" data-a="zip">Скачать для сайта</button>
+</div></div>
+
+<input type="file" id="fPhoto" accept="image/*" multiple class="hide">
+<div id="toast" role="status"></div>
+<script>window.MEBEL_TOOL = "vitrina-red";</script>
+<script src="../../shared/site.js"></script>
+<script src="../dannye.js"></script>
+<script src="../risunki.js"></script>
+<script src="redaktor.js"></script>
+</body>
+</html>

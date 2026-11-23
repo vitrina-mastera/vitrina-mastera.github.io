@@ -1,0 +1,89 @@
+/* Вариант 2 - "Светлое утро" (скандинавский). Светлое небо, мягкое солнце с лучами, плывущие облака,
+   шалфейные холмы и берёзы, пылинки в лучах, зерно бумаги. Дом белый с тёмной фальцевой крышей.
+   При входе дом рисуется карандашной линией (чертёж), потом комнаты проявляются снизу вверх. */
+html[data-tema=utro]{--bg:#F5F0E8;--bg2:#FBF8F3;--card:#FFFFFF;--line:#E6DCCD;--ink:#26221D;--muted:#6E665B;--acc:#B0693F;--acc-ink:#FFFFFF;--serif:Manrope,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--dzb:rgba(255,255,255,.7)}
+html[data-tema=utro] .home h1{font-weight:800;letter-spacing:-.035em;font-size:clamp(30px,4.2vw,54px)}
+html[data-tema=utro] .room-head h2,html[data-tema=utro] .pn-head h2,html[data-tema=utro] .reels h2,html[data-tema=utro] .mbox h3,html[data-tema=utro] .sheet h3{font-weight:800;letter-spacing:-.03em}
+html[data-tema=utro] .room-head h2{font-size:clamp(34px,4.6vw,60px)}
+html[data-tema=utro] .room .t b,html[data-tema=utro] .wcard .meta b,html[data-tema=utro] .rcard .rm b{font-weight:800;letter-spacing:-.02em}
+html[data-tema=utro] .btn.main{box-shadow:0 10px 24px rgba(176,105,63,.28)}
+
+/* небо, солнце, облака */
+.sc-utro .sky{background:linear-gradient(180deg,#C9DEEA 0%,#DFE9ED 28%,#EEEDE6 58%,#F5F0E8 100%)}
+.sc-utro .sun{position:absolute;left:9vw;top:10vh;width:clamp(90px,11vw,160px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#FFFBEF 0 30%,#FFEBC0 62%,rgba(255,232,180,0) 72%);box-shadow:0 0 90px 40px rgba(255,230,170,.45)}
+.sc-utro .rays{position:absolute;left:calc(9vw + clamp(45px,5.5vw,80px));top:calc(10vh + clamp(45px,5.5vw,80px));width:180vmax;height:180vmax;margin:-90vmax 0 0 -90vmax;border-radius:50%;
+  background:repeating-conic-gradient(from 0deg,rgba(255,240,200,.32) 0deg 4deg,rgba(255,240,200,0) 4deg 16deg);
+  -webkit-mask-image:radial-gradient(closest-side,#000 0,rgba(0,0,0,.5) 30%,transparent 70%);mask-image:radial-gradient(closest-side,#000 0,rgba(0,0,0,.5) 30%,transparent 70%);opacity:.8}
+html[data-q="2"] .sc-utro .rays{animation:utRays 140s linear infinite;will-change:transform}
+@keyframes utRays{to{transform:rotate(360deg)}}
+.sc-utro .cl{position:absolute;color:#fff;opacity:.92;height:auto}
+.sc-utro .cl.a{top:14vh;left:0}
+.sc-utro .cl.b{top:27vh;left:0;opacity:.7}
+.sc-utro .cl.c{top:6vh;left:0}
+.sc-utro .cl.d{top:36vh;left:0;opacity:.6}
+.sc-utro .cl.a{transform:translateX(30vw)}.sc-utro .cl.b{transform:translateX(70vw)}.sc-utro .cl.c{transform:translateX(55vw)}.sc-utro .cl.d{transform:translateX(5vw)}
+html:not([data-q="0"]) .sc-utro .cl{animation:utCloud 120s linear infinite}
+html:not([data-q="0"]) .sc-utro .cl.a{animation-delay:-40s}
+html:not([data-q="0"]) .sc-utro .cl.b{animation-duration:160s;animation-delay:-110s}
+html:not([data-q="0"]) .sc-utro .cl.c{animation-duration:95s;animation-delay:-60s}
+html:not([data-q="0"]) .sc-utro .cl.d{animation-duration:190s;animation-delay:-20s}
+@keyframes utCloud{from{transform:translateX(-340px)}to{transform:translateX(calc(100vw + 40px))}}
+.sc-utro .far svg{height:30vh}
+.sc-utro .far .h1{fill:#DCE3D2}
+.sc-utro .far .h2{fill:#C7D4BD}
+.sc-utro .birches svg{height:46vh}
+.sc-utro .tr{transform-box:fill-box;transform-origin:50% 100%}
+.sc-utro .trunk{fill:#9C8A74}
+.sc-utro .crown.c0{fill:#A9BC92}.sc-utro .crown.c1{fill:#93AA80}.sc-utro .crown.c2{fill:#BFCBA8}
+.sc-utro .crown.hi{fill:#D3DCC0;opacity:.75}
+html:not([data-q="0"]) .sc-utro .tr{animation:utSway 7s ease-in-out infinite alternate}
+@keyframes utSway{from{transform:rotate(-.8deg)}to{transform:rotate(1.1deg)}}
+.sc-utro .grain{opacity:.045}
+
+/* дом: белые стены, тёмная крыша с фальцами */
+html[data-tema=utro] .roof{background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 1px,transparent 1px 22px),linear-gradient(180deg,#46504D,#343B39)}
+html[data-tema=utro] .roof span{color:#F7F2EA;font-family:var(--sans);font-weight:800;letter-spacing:.02em}
+html[data-tema=utro] .floors{background:#FFFFFF;padding:8px;gap:8px;border-radius:0 0 16px 16px;box-shadow:0 40px 80px -24px rgba(70,50,30,.32),0 1px 0 rgba(0,0,0,.04)}
+html[data-tema=utro] .room{border-radius:9px;background:#EFE9DF}
+html[data-tema=utro] .room .dark{background:#F5F0E8;opacity:.3}
+html[data-tema=utro] .room::after{background:linear-gradient(180deg,transparent 40%,rgba(30,24,18,.72))}
+html[data-tema=utro] .room .lamp{background:radial-gradient(50% 60% at 50% 0%,rgba(255,250,235,.6),transparent 70%)}
+html[data-tema=utro] .room.lit .dark,html[data-tema=utro] .room:hover .dark{opacity:0}
+html[data-tema=utro] .room.empty .ph{background:repeating-linear-gradient(135deg,#F3EEE6 0 10px,#EEE8DE 10px 20px)}
+html[data-tema=utro] .dz-deco.outline{--ol:#B0693F;--olw:1.6px;--olo:0}
+html[data-tema=utro] .dz-deco.ground{left:-7%;right:-7%;top:calc(100% - 2px);height:22px;z-index:-1;border-radius:50%;background:radial-gradient(50% 50% at 50% 0,rgba(110,90,60,.22),transparent 70%)}
+.dz-deco.ground .bush{position:absolute;bottom:10px;width:58px;height:34px;border-radius:50% 50% 40% 40%;background:#AFC294;box-shadow:16px 4px 0 -4px #9DB382}
+.dz-deco.ground .bush.b1{left:2%}.dz-deco.ground .bush.b2{right:4%;transform:scale(.8)}.dz-deco.ground .bush.b3{right:12%;transform:scale(.55);bottom:8px}
+.dz-deco.ground .pot{position:absolute;left:12%;bottom:10px;width:20px;height:18px;border-radius:2px 2px 6px 6px;background:#B0693F}
+.dz-deco.ground .pot::before{content:"";position:absolute;left:-6px;right:-6px;bottom:100%;height:26px;border-radius:50% 50% 30% 30%;background:#8FA676}
+@media (max-width:600px){.dz-deco.ground .bush{width:40px;height:24px}.dz-deco.ground .pot{display:none}}
+
+/* вход в дом: карандашный контур, потом крыша и комнаты */
+html[data-tema=utro] #home.enter .roof{animation:utRoof 1s cubic-bezier(.22,1,.36,1) .9s both}
+@keyframes utRoof{from{opacity:0;clip-path:polygon(50% 0,50% 100%,50% 100%)}to{opacity:1;clip-path:polygon(50% 0,100% 100%,0 100%)}}
+html[data-tema=utro] #home.enter .floors{animation:utFloors .9s ease .8s both}
+@keyframes utFloors{from{background-color:rgba(255,255,255,0);box-shadow:none}to{background-color:#fff}}
+html[data-tema=utro] #home.enter .room{animation:utRoom 1s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(1.05s + var(--i,0) * .07s)}
+@keyframes utRoom{from{clip-path:inset(100% 0 0 0 round 9px)}to{clip-path:inset(0 0 0 0 round 9px)}}
+html[data-tema=utro] #home.enter .room .lamp{animation:none}
+html[data-tema=utro] #home.enter .hero-acts{animation-delay:1.5s}
+
+/* вход: бумага расходится, в середине рисуется домик */
+html[data-tema=utro] #doors{background:#EDE6DB}
+html[data-tema=utro] .door.l,html[data-tema=utro] .door.r{border-color:#E2D8C8}
+html[data-tema=utro] .door{background:repeating-linear-gradient(90deg,#FBF8F3 0 46px,#F3EDE3 46px 48px);box-shadow:inset 0 0 0 1px #E2D8C8;transition:transform 1.3s cubic-bezier(.7,0,.2,1)}
+html[data-tema=utro] .door::before{border-color:#E3D9C9;box-shadow:none}
+html[data-tema=utro] .door::after{border-color:rgba(176,105,63,.25)}
+html[data-tema=utro] .door i{width:6px;height:120px;margin-top:-60px;background:linear-gradient(180deg,#C99A6E,#9E6E46);box-shadow:none}
+html[data-tema=utro] #doors.open .door.l{transform:translateX(-101%)}
+html[data-tema=utro] #doors.open .door.r{transform:translateX(101%)}
+html[data-tema=utro] #doors::before{background:radial-gradient(50% 50% at 50% 50%,rgba(255,250,235,.9),rgba(255,250,235,0) 70%)}
+html[data-tema=utro] .plate{background:#FFFFFF;border:0;border-radius:16px;box-shadow:0 20px 50px rgba(70,50,30,.14)}
+html[data-tema=utro] .plate b{font-family:var(--sans);font-weight:800;letter-spacing:-.03em;color:#26221D}
+html[data-tema=utro] .plate span{color:#857C70}
+.dz-deco.sketch{position:relative;width:min(220px,50vw);aspect-ratio:200/160}
+.dz-deco.sketch svg{position:absolute;inset:0;width:100%;height:100%}
+.dz-deco.sketch path{fill:none;stroke:#B0693F;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:0}
+html:not([data-q="0"]) .dz-deco.sketch path{animation:olDraw 1.4s cubic-bezier(.65,0,.35,1) both}
+.dz-deco.sketch path:nth-child(2){animation-delay:.25s}.dz-deco.sketch path:nth-child(3){animation-delay:.6s}.dz-deco.sketch path:nth-child(4){animation-delay:.8s}.dz-deco.sketch path:nth-child(5){animation-delay:.1s}
+html[data-tema=utro] .btn.ghost{border-color:rgba(40,30,20,.18)}

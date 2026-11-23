@@ -1,0 +1,175 @@
+/* Общие стили пробных оформлений "Путешествия по дому" (dizajn.js).
+   Цвета и рисунки каждого варианта - в tema-*.css. Здесь: фон-сцена, уровни качества, светлый вид,
+   переключатель вариантов, смена с View Transition, контур-чертёж, появление заголовка по словам. */
+
+/* фон страницы рисует сцена, поэтому body и дом прозрачные */
+html[data-tema] body{background:transparent}
+html[data-tema] #home{background:transparent}
+/* тень дома без filter: фильтр на большом блоке пересчитывается на каждом кадре анимации внутри него */
+html[data-tema] .house{filter:none}
+html[data-tema] .floors{box-shadow:0 30px 70px rgba(0,0,0,.45)}
+
+/* ---------- сцена ---------- */
+#scene{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;opacity:0;visibility:hidden;transition:opacity .6s cubic-bezier(.22,1,.36,1),visibility 0s linear .6s;contain:strict}
+#scene.on{opacity:1;visibility:visible;transition:opacity .6s cubic-bezier(.22,1,.36,1)}
+#scene.paused,#scene.paused *{animation-play-state:paused!important}
+#scene .ly{position:absolute;inset:0;transform:translate3d(calc(var(--px,0) * var(--pk,0) * 1px),calc(var(--py,0) * var(--pk,0) * 1px - var(--sy,0) * var(--k,0) * 1px),0)}
+html[data-q="2"] #scene .ly{will-change:transform}
+#scene canvas{position:absolute;inset:0;width:100%;height:100%}
+#scene svg{position:absolute;left:0;right:0;bottom:0;width:100%;display:block}
+#scene .grain{position:absolute;inset:-50%;background-image:var(--noise);opacity:.06;pointer-events:none}
+/* фонарик / прожектор за указателем мыши */
+#scene .lantern,#scene .spot{position:absolute;left:0;top:0;width:600px;height:600px;border-radius:50%;opacity:0;transition:opacity .8s;will-change:transform}
+html[data-q="2"] #scene .lantern,html[data-q="2"] #scene .spot{opacity:1}
+/* без движения: всё стоит */
+html[data-q="0"] #scene *,html[data-q="0"] .dz-deco *,html[data-q="0"] .dz-deco{animation:none!important}
+/* на слабом телефоне размытие под стеклом - самое тяжёлое: убираем, фон делаем плотнее */
+html[data-q="0"] *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html[data-q="0"] .htop{background:var(--bg2)}
+
+/* ---------- украшения дома ---------- */
+.dz-deco{position:absolute;pointer-events:none}
+.dz-deco.outline{inset:0;z-index:3}
+.dz-deco.outline svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.dz-deco.outline path{fill:none;stroke:var(--ol,var(--acc));stroke-width:var(--olw,1.5px);vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:0;opacity:var(--olo,.0);stroke-linecap:round;stroke-linejoin:round}
+#home.enter .dz-deco.outline path{animation:olDraw 1.6s cubic-bezier(.65,0,.35,1) both,olRest 1s ease 1.9s both;animation-delay:calc(var(--i) * .07s),calc(1.7s + var(--i) * .04s)}
+@keyframes olDraw{from{stroke-dashoffset:1;opacity:1}to{stroke-dashoffset:0;opacity:1}}
+@keyframes olRest{from{opacity:1}to{opacity:var(--olo,0)}}
+
+/* ---------- заголовок по словам ---------- */
+.home h1 .w{display:inline-block}
+#home.enter h1 .w{animation:wordIn 1s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(.2s + var(--w) * .08s)}
+@keyframes wordIn{from{opacity:0;transform:translateY(.45em) rotate(2deg)}to{opacity:1;transform:none}}
+#home.enter .hero-t{animation:none}
+
+/* ---------- смена оформления: круг раскрывается от кнопки ---------- */
+html.dz-vt::view-transition-old(root){animation:none}
+html.dz-vt::view-transition-new(root){animation:dzReveal .85s cubic-bezier(.7,0,.2,1) both}
+html.dz-vt-tod::view-transition-new(root){animation-duration:1.1s}
+@keyframes dzReveal{from{clip-path:circle(0 at var(--vx) var(--vy))}to{clip-path:circle(var(--vr) at var(--vx) var(--vy))}}
+
+/* ---------- переключатель вариантов (пробные страницы) ---------- */
+.dzbar{position:relative;z-index:13;max-width:1240px;margin:0 auto;padding:calc(8px + var(--st)) clamp(12px,3vw,32px) 8px;display:flex;align-items:center;gap:8px 12px;font-size:13px;color:var(--muted);font-family:var(--sans)}
+.dz-t{flex:1;min-width:0;line-height:1.25}
+.dz-t b{display:block;color:var(--acc);font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.dz-t span{display:block;color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dz-n{display:flex;gap:4px;padding:3px;border-radius:999px;background:var(--dzb,rgba(127,127,127,.14));border:1px solid var(--line)}
+.dz-n button{display:inline-flex;align-items:center;gap:6px;min-height:36px;min-width:36px;justify-content:center;padding:0 10px;border-radius:999px;font-size:13px;font-weight:700;color:var(--muted);transition:background .3s,color .3s,transform .25s}
+.dz-n button b{font-weight:800}
+.dz-n button span{display:none}
+.dz-n button.on{background:var(--acc);color:var(--acc-ink)}
+.dz-n button.on span{display:inline}
+.dz-n button:active{transform:scale(.94)}
+@media (hover:hover){.dz-n button:not(.on):hover{color:var(--ink)}}
+.dz-more{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--ink);border:1px solid var(--line);background:var(--dzb,rgba(127,127,127,.14))}
+.dz-more svg{width:18px;height:18px}
+.dz-menu{position:absolute;right:clamp(12px,3vw,32px);top:calc(100% - 2px);width:min(320px,calc(100vw - 24px));padding:12px;border-radius:18px;background:var(--bg2);border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.35);color:var(--ink);animation:dzMenu .35s cubic-bezier(.22,1,.36,1) both;transform-origin:100% 0}
+@keyframes dzMenu{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:none}}
+.dz-mh{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin:2px 4px 8px}
+.dz-q{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:3px;border-radius:12px;border:1px solid var(--line)}
+.dz-q button{min-height:38px;border-radius:9px;font-size:13px;font-weight:700;color:var(--muted)}
+.dz-q button.on{background:var(--acc);color:var(--acc-ink)}
+.dz-qn{font-size:12.5px;color:var(--muted);margin:8px 4px 10px;line-height:1.4}
+.dz-mi{display:flex;align-items:center;width:100%;min-height:44px;padding:0 10px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;text-align:left;border-top:1px solid var(--line)}
+@media (hover:hover){.dz-mi:hover{background:rgba(127,127,127,.1)}}
+@media (min-width:861px){.dz-n button span{display:inline}.dz-n button{padding:0 13px}}
+@media (max-width:420px){.dz-t span{font-size:12.5px}.dz-n button{min-width:34px;padding:0 8px}.dz-n button.on span{display:none}}
+#home.enter .dzbar{animation:rise .8s cubic-bezier(.22,1,.36,1) .1s both}
+
+/* ---------- кнопка времени суток (живой дом) ---------- */
+.dz-tod{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px 0 6px;margin-bottom:10px;border-radius:999px;font-size:14px;font-weight:800;color:var(--ink);background:var(--dzb,rgba(127,127,127,.14));border:1px solid var(--line);transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.dz-tod small{font-size:12px;font-weight:600;color:var(--muted)}
+.dz-tod .ti{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#FFD36E 0 40%,rgba(255,211,110,.35) 41% 60%,transparent 61%)}
+html[data-tod=utro] .dz-tod .ti{background:radial-gradient(circle at 50% 70%,#FFB38A 0 38%,rgba(255,179,138,.35) 39% 58%,transparent 59%)}
+html[data-tod=vecher] .dz-tod .ti{background:radial-gradient(circle at 50% 80%,#FF8A5C 0 38%,rgba(255,138,92,.35) 39% 58%,transparent 59%)}
+html[data-tod=noch] .dz-tod .ti{background:radial-gradient(circle at 62% 38%,transparent 0 30%,#F4EBC8 31% 44%,transparent 45%)}
+.dz-tod:active{transform:scale(.95)}
+@media (hover:hover){.dz-tod:hover{transform:translateY(-2px)}}
+
+/* ---------- светлый вид (утро, живой дом днём) ----------
+   Основная витрина рассчитана на тёмный фон, поэтому здесь перекрашиваем то, где цвета заданы прямо.
+   Экран работы (фото на весь экран) остаётся тёмным - так фото смотрится лучше. */
+html[data-svet=light] .htop{background:rgba(255,255,255,.72);border-bottom-color:rgba(40,30,20,.08)}
+html[data-svet=light] .tnav button,html[data-svet=light] .tnav a{color:var(--muted)}
+html[data-svet=light] .btn.ghost{border-color:rgba(40,30,20,.18);background:rgba(255,255,255,.7);color:var(--ink)}
+@media (hover:hover){html[data-svet=light] .btn.ghost:hover{border-color:rgba(40,30,20,.4)}}
+html[data-svet=light] .btn .cnt{background:rgba(0,0,0,.06)}
+html[data-svet=light] .foot{color:var(--muted)}
+html[data-svet=light] .reel{background-color:#E9E2D6;border-color:rgba(40,30,20,.1)}
+html[data-svet=light] .reel.ph-empty{background:repeating-linear-gradient(135deg,rgba(255,255,255,.75) 0 12px,rgba(255,255,255,.55) 12px 24px);border-color:color-mix(in srgb,var(--acc) 45%,transparent)}
+html[data-svet=light] .reel.ph-empty .pl{background:rgba(255,255,255,.8);color:var(--acc)}
+html[data-svet=light] .reel.ph-empty .rt span{color:var(--muted)}
+/* подписи на фото - всегда светлые */
+html[data-svet=light] .room,html[data-svet=light] .wcard,html[data-svet=light] .rcard,html[data-svet=light] .pw,html[data-svet=light] .reel:not(.ph-empty){color:#FBF7F1;--muted:rgba(251,247,241,.8)}
+html[data-svet=light] .pn-back{background:rgba(40,30,20,.28)}
+html[data-svet=light] .pn-head{border-bottom-color:rgba(40,30,20,.08)}
+html[data-svet=light] .pn-head .grab{background:rgba(40,30,20,.2)}
+html[data-svet=light] .pn-box{box-shadow:-30px 0 80px rgba(40,30,20,.18)}
+html[data-svet=light] .ic{background:rgba(255,255,255,.75);border-color:rgba(40,30,20,.12);color:var(--ink)}
+@media (hover:hover){html[data-svet=light] .ic:hover{background:#fff}}
+html[data-svet=light] .modal{background:rgba(40,30,20,.3)}
+html[data-svet=light] .mbox .x{color:var(--muted)}
+/* комната */
+/* размытое фото за комнатой витрина готовит тёмным (без filter, на холсте) - на светлом виде вместо него мягкий светлый фон */
+html[data-svet=light] #room{background:radial-gradient(90% 60% at 50% 0%,#FFFFFF,var(--bg) 70%)}
+html[data-svet=light] .room-bg{display:none}
+html[data-svet=light] .crumbs button,html[data-svet=light] .crumbs span{background:rgba(255,255,255,.75);border-color:rgba(40,30,20,.12)}
+html[data-svet=light] .crumbs span{border-color:var(--acc)}
+html[data-svet=light] .mini{background:rgba(255,255,255,.75);border-color:rgba(40,30,20,.12)}
+html[data-svet=light] .mini button{background:rgba(40,30,20,.12)}
+html[data-svet=light] .mini button.has{background:rgba(40,30,20,.32)}
+html[data-svet=light] .mini button.on{background:var(--acc)}
+html[data-svet=light] .views{background:rgba(255,255,255,.75);border-color:rgba(40,30,20,.12)}
+html[data-svet=light] .dots i{background:rgba(40,30,20,.2)}
+html[data-svet=light] .dots i.on{background:var(--acc)}
+html[data-svet=light] #room.sc .topbar{background:linear-gradient(180deg,color-mix(in srgb,var(--bg) 94%,transparent) 55%,transparent)}
+html[data-svet=light] .wcard,html[data-svet=light] .rcard{box-shadow:0 26px 60px rgba(40,30,20,.22)}
+html[data-svet=light] .wcard.ph,html[data-svet=light] .rcard.ph{background:rgba(255,255,255,.6);border-color:rgba(40,30,20,.2);color:var(--muted)}
+html[data-svet=light] .wcard.ph b{color:#25221E}
+html[data-svet=light] .pg-l,html[data-svet=light] .pg-r,html[data-svet=light] .book.single .pg-r{box-shadow:0 26px 60px rgba(40,30,20,.25)}
+/* работа на весь экран и видео - тёмные */
+html[data-svet=light] #work,html[data-svet=light] .vplayer{--ink:#F4EEE4;--muted:#BDB2A2;--bg2:#1A1712;--card:#211D17;--line:#3A3229;color:var(--ink)}
+html[data-svet=light] #work .ic{background:rgba(17,15,12,.55);border-color:rgba(244,238,228,.22);color:#F4EEE4}
+html[data-svet=light] #work .crumbs button,html[data-svet=light] #work .crumbs span{background:rgba(17,15,12,.5);border-color:rgba(244,238,228,.18)}
+html[data-svet=light] #work .crumbs span{border-color:var(--acc)}
+html[data-svet=light] #work .mini{background:rgba(17,15,12,.6);border-color:rgba(244,238,228,.18)}
+html[data-svet=light] #work .mini button{background:#3E362D}
+html[data-svet=light] #work .mini button.has{background:#7A6A57}
+html[data-svet=light] #work .mini button.on{background:var(--acc)}
+
+/* ---------- появление по прокрутке: CSS scroll-driven animations (где браузер умеет) ----------
+   Видео-лента: карточки въезжают по мере горизонтальной прокрутки. Старые браузеры - обычное появление. */
+@supports (animation-timeline:view()){
+  html:not([data-q="0"]) .reels.in .reel{animation:reelView linear both;animation-timeline:view(inline);animation-range:entry 0% entry 90%}
+  @keyframes reelView{from{opacity:.2;transform:translateX(30px) scale(.9) rotate(2deg)}to{opacity:1;transform:none}}
+}
+
+@media (prefers-reduced-motion:reduce){
+  #scene *{animation:none!important}
+  html.dz-vt::view-transition-new(root){animation:none}
+}
+html[data-tema] .house{--rh:clamp(76px,7.5vw,100px)}
+html[data-tema] .roof{height:var(--rh)}
+html[data-svet=light] .room .tags span{background:rgba(255,255,255,.9);color:var(--acc);border-color:transparent}
+html[data-svet=light] .room.empty{color:var(--ink);--muted:#857C70}
+html[data-svet=light] .room.empty::after{display:none}
+/* двери без filter (тяжело на телефоне): затемнение не нужно, створки уходят ребром */
+html[data-tema] .door{transition:transform 1.7s cubic-bezier(.55,.02,.18,1)}
+html[data-tema] #doors.open .door{filter:none}
+/* украшения шире дома (свет на земле, трава) не должны давать прокрутку вбок на телефоне */
+@media (max-width:1000px){html[data-tema] .hero{overflow:hidden;overflow:clip}}
+/* дым из трубы (вечер, живой дом) */
+@keyframes smoke{0%{opacity:0;transform:translate(0,0) scale(.6)}15%{opacity:1}100%{opacity:0;transform:translate(-40px,-90px) scale(2.6)}}
+/* на телефоне названия комнат шрифтом без засечек шире - чуть мельче, длинные переносятся */
+@media (max-width:600px){
+  html[data-tema=utro] .room .t b,html[data-tema=zhivoj] .room .t b{font-size:16.5px;letter-spacing:-.02em;line-height:1.08;-webkit-hyphens:auto;hyphens:auto}
+  html[data-tema=utro] .room.long .t b,html[data-tema=zhivoj] .room.long .t b{font-size:14px}
+}
+/* вход: когда двери открываются, за ними сразу виден дом (своё оформление задаёт фон дверей - здесь он уходит) */
+html[data-tema] #doors.open{background:transparent}
+/* ручки ниже таблички и кнопки - на телефоне они попадали на "Войти в дом" */
+@media (max-width:600px){html[data-tema] .door i{top:76%;height:110px;margin-top:0}}
+/* навигация "← Варианты дизайна" / "Главная" (shared/site.js) - в полосе пробного дизайна */
+.dz-nav{flex:none;color:var(--ink)}
+.dz-nav:empty{display:none}
+@media (max-width:560px){.dz-t{display:none}.dz-nav{flex:1;min-width:0}}

@@ -1,0 +1,281 @@
+/* Замок закрытой витрины: вход по пин-коду и расшифровка в браузере.
+   Репозиторий публичный, поэтому на сайте лежат только зашифрованные файлы (enc/):
+   d.bin - все тексты, <id>.bin - фото. Без пин-кода из них ничего не достать.
+   Ключ выводится из пин-кода (PBKDF2-SHA256, 600 000 повторов, соль из enc/meta.json),
+   расшифровка - AES-256-GCM (Web Crypto). Пин-код нигде не хранится. После входа ключ
+   (без возможности его выгрузить) лежит в IndexedDB этого браузера - чтобы не вводить пин
+   каждый раз; "Выйти" его стирает.
+   Фото: служебный работник sw.js отдаёт расшифрованное фото по адресу f/<id>.jpg (по мере
+   прокрутки). Если браузер его не поддерживает - все фото расшифровываются сразу.
+   Шифрует файлы site/tools/zashifrovat-krasnodar.js. */
+(function () {
+  "use strict";
+  if (window.KrZamok) return;
+  var me = document.currentScript && document.currentScript.src;
+  var BASE = me ? me.replace(/[^/]*$/, "") : new URL("./", location.href).href; // .../krasnodar/
+  var DB = "kr-zamok", ST = "k", TRIES = "kr-tries";
+  var subtle = window.crypto && crypto.subtle;
+
+  // ---------- IndexedDB: ключ ----------
+  function idb() {
+    return new Promise(function (ok, no) {
+      var r = indexedDB.open(DB, 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore(ST); };
+      r.onsuccess = function () { ok(r.result); };
+      r.onerror = function () { no(r.error); };
+    });
+  }
+  function getKey() {
+    return idb().then(function (db) {
+      return new Promise(function (ok) {
+        var q = db.transaction(ST).objectStore(ST).get("aes");
+        q.onsuccess = function () { ok(q.result || null); };
+        q.onerror = function () { ok(null); };
+      });
+    }).catch(function () { return null; });
+  }
+  function putKey(rec) {
+    return idb().then(function (db) {
+      return new Promise(function (ok) {
+        var t = db.transaction(ST, "readwrite"); t.objectStore(ST).put(rec, "aes");
+        t.oncomplete = function () { ok(true); }; t.onerror = function () { ok(false); };
+      });
+    }).catch(function () { return false; });
+  }
+  function dropKey() {
+    return idb().then(function (db) {
+      return new Promise(function (ok) {
+        var t = db.transaction(ST, "readwrite"); t.objectStore(ST).delete("aes"); t.objectStore(ST).delete("pub"); // pub - ключ публикации мастера
+        t.oncomplete = function () { ok(); }; t.onerror = function () { ok(); };
+      });
+    }).catch(function () {});
+  }
+
+  // ---------- шифр ----------
+  function b64(s) { var b = atob(s), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
+  function derive(pin, meta) {
+    return subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveBits"]).then(function (k) {
+      return subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: b64(meta.salt), iterations: meta.iter }, k, 512);
+    }).then(function (bits) {
+      return subtle.importKey("raw", new Uint8Array(bits, 0, 32), { name: "AES-GCM" }, false, ["decrypt"]);
+    });
+  }
+  function fetchBin(name) {
+    return fetch(BASE + "enc/" + name, { cache: "no-cache" }).then(function (r) {
+      if (!r.ok) throw new Error("нет файла " + name);
+      return r.arrayBuffer();
+    });
+  }
+  function open(key, buf) {
+    return subtle.decrypt({ name: "AES-GCM", iv: new Uint8Array(buf, 0, 12) }, key, new Uint8Array(buf, 12));
+  }
+  function mime(buf) {
+    var u = new Uint8Array(buf, 0, Math.min(16, buf.byteLength));
+    if (u[0] === 0x89 && u[1] === 0x50) return "image/png";
+    if (u[8] === 0x57 && u[9] === 0x45 && u[10] === 0x42 && u[11] === 0x50) return "image/webp";
+    if (u[4] === 0x66 && u[5] === 0x74 && u[6] === 0x79 && u[7] === 0x70) return "video/mp4"; // ....ftyp
+    if (u[0] === 0x1A && u[1] === 0x45 && u[2] === 0xDF && u[3] === 0xA3) return "video/webm";
+    if (u[0] === 0x3C) return "image/svg+xml"; // "<svg" или "<?xml"
+    return "image/jpeg";
+  }
+
+  // ---------- окно входа ----------
+  var CSS = [
+    "#krLock{position:fixed;inset:0;z-index:2147483000;background:#1f1b18;color:#f3ede6;display:flex;align-items:center;justify-content:center;padding:20px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}",
+    "#krLock .box{width:100%;max-width:360px;text-align:center}",
+    "#krLock .ic{width:64px;height:64px;border-radius:20px;background:#2c2622;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px}",
+    "#krLock h1{font-size:22px;margin:0 0 6px;font-weight:700}",
+    "#krLock p{margin:0 0 18px;color:#c9bdb0;font-size:15px;line-height:1.45}",
+    "#krLock input{width:100%;box-sizing:border-box;font:inherit;font-size:28px;letter-spacing:.35em;text-align:center;padding:12px 10px;border-radius:14px;border:1px solid #4a4038;background:#2a2420;color:#fff;outline:none}",
+    "#krLock input:focus{border-color:#d9a566;box-shadow:0 0 0 3px rgba(217,165,102,.25)}",
+    "#krLock button{margin-top:12px;width:100%;font:inherit;font-weight:700;font-size:17px;padding:14px;border-radius:14px;border:0;background:#d9a566;color:#1f1b18;cursor:pointer}",
+    "#krLock button:disabled{opacity:.6;cursor:default}",
+    "#krLock .msg{min-height:22px;margin-top:12px;font-size:14px;color:#f0b4a0}",
+    "#krLock .msg.ok{color:#c9bdb0}",
+    "#krLock .foot{margin-top:26px;font-size:12px;color:#8a7d70}",
+    "#krBack{position:fixed;right:10px;top:calc(10px + env(safe-area-inset-top));z-index:2147482000;display:inline-flex;align-items:center;gap:6px;background:rgba(31,27,24,.9);color:#f3ede6;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:7px 12px;font:600 13px system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.25);backdrop-filter:blur(6px)}",
+    "#krBack.bl{top:auto;right:auto;left:12px;bottom:calc(14px + env(safe-area-inset-bottom))}",
+    // путешествие по дому: кнопка видна только на экране дома, в комнате и работе есть свои "назад" - ничего не налезает
+    "#krBack{transition:opacity .4s cubic-bezier(.22,1,.36,1),transform .5s cubic-bezier(.22,1,.36,1),visibility 0s}",
+    "body[data-vp]:not([data-vp=home]) #krBack{opacity:0;transform:translateY(-16px) scale(.9);pointer-events:none;visibility:hidden;transition:opacity .3s,transform .4s,visibility 0s linear .4s}",
+    "@media (prefers-reduced-motion:reduce){#krBack{transition:none!important}}"
+  ].join("\n");
+  function style() { if (document.getElementById("krCss")) return; var s = document.createElement("style"); s.id = "krCss"; s.textContent = CSS; document.head.appendChild(s); }
+  function lockScreen() {
+    style();
+    var el = document.getElementById("krLock");
+    if (el) return el;
+    el = document.createElement("div"); el.id = "krLock";
+    el.innerHTML = '<form class="box" autocomplete="off">' +
+      '<div class="ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#d9a566" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>' +
+      "<h1>Закрытая витрина</h1><p>Вход только по пин-коду. Его выдаёт тот, кто прислал вам эту ссылку.</p>" +
+      '<input id="krPin" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="16" placeholder="••••••••" aria-label="Пин-код">' +
+      '<button type="submit" id="krGo">Войти</button><div class="msg" id="krMsg" role="status" aria-live="polite"></div>' +
+      '<div class="foot">Разработка в тестовом режиме. Все права защищены.</div></form>';
+    (document.body || document.documentElement).appendChild(el);
+    return el;
+  }
+  function msg(t, ok) { var m = document.getElementById("krMsg"); if (m) { m.textContent = t || ""; m.className = "msg" + (ok ? " ok" : ""); } }
+  function unlockScreen() { var el = document.getElementById("krLock"); if (el) el.remove(); }
+
+  // попытки: на статическом сайте надёжно ограничить их нельзя (можно перебирать файлы и без страницы),
+  // поэтому здесь только пауза от случайного перебора руками. Защиту даёт длина пина и 600 000 повторов.
+  function tries() { try { return JSON.parse(localStorage.getItem(TRIES) || "{}"); } catch (e) { return {}; } }
+  function setTries(o) { try { localStorage.setItem(TRIES, JSON.stringify(o)); } catch (e) {} }
+
+  function askPin(meta, dataBuf) {
+    var el = lockScreen(), f = el.querySelector("form"), inp = el.querySelector("#krPin"), go = el.querySelector("#krGo");
+    setTimeout(function () { inp.focus(); }, 30);
+    return new Promise(function (done) {
+      f.onsubmit = function (e) {
+        e.preventDefault();
+        var pin = inp.value.replace(/\D/g, "");
+        var t = tries(), now = Date.now();
+        if (t.until && now < t.until) { msg("Подождите " + Math.ceil((t.until - now) / 1000) + " с и попробуйте снова."); return; }
+        if (pin.length < 6) { msg("Пин-код - не меньше 6 цифр."); return; }
+        go.disabled = true; msg("Проверяю...", true);
+        var key;
+        derive(pin, meta).then(function (k) { key = k; return open(k, dataBuf); }).then(function (plain) {
+          setTries({});
+          return putKey({ key: key, salt: meta.salt }).then(function () { done({ key: key, plain: plain }); });
+        }).catch(function () {
+          var n = (t.n || 0) + 1;
+          setTries({ n: n, until: n >= 5 ? Date.now() + 30000 * Math.pow(2, Math.min(n - 5, 5)) : 0 });
+          go.disabled = false; inp.value = ""; inp.focus();
+          msg(n >= 5 ? "Неверный пин-код. Следующая попытка через " + Math.round(30 * Math.pow(2, Math.min(n - 5, 5))) + " с." : "Неверный пин-код.");
+        });
+      };
+    });
+  }
+
+  // ---------- фото ----------
+  function ids(x, out) {
+    if (typeof x === "string") { if (/^@[0-9a-f]{8,}$/.test(x)) out[x.slice(1)] = 1; }
+    else if (Array.isArray(x)) x.forEach(function (y) { ids(y, out); });
+    else if (x && typeof x === "object") Object.keys(x).forEach(function (k) { ids(x[k], out); });
+    return out;
+  }
+  function swReady() {
+    if (!("serviceWorker" in navigator)) return Promise.resolve(false);
+    return navigator.serviceWorker.register(BASE + "sw.js", { scope: BASE, updateViaCache: "none" }).then(function () {
+      if (navigator.serviceWorker.controller) return true;
+      return new Promise(function (ok) {
+        var t = setTimeout(function () { ok(!!navigator.serviceWorker.controller); }, 4000);
+        navigator.serviceWorker.addEventListener("controllerchange", function () { clearTimeout(t); ok(true); });
+      });
+    }).catch(function () { return false; });
+  }
+  function photoMap(key, data, progress) {
+    var all = Object.keys(ids(data, {}));
+    var map = {};
+    if (!all.length) return Promise.resolve(function (r) { return r; });
+    return swReady().then(function (sw) {
+      if (sw) {
+        all.forEach(function (id) { map[id] = BASE + "f/" + id + ".jpg"; });
+        return;
+      }
+      // запасной путь: расшифровать все фото сразу, по 4 параллельно
+      var i = 0, done = 0;
+      function next() {
+        if (i >= all.length) return Promise.resolve();
+        var id = all[i++];
+        return fetchBin(id + ".bin").then(function (buf) { return open(key, buf); }).then(function (p) {
+          map[id] = URL.createObjectURL(new Blob([p], { type: mime(p) }));
+        }).catch(function () {}).then(function () { done++; if (progress) progress(done, all.length); return next(); });
+      }
+      return Promise.all([next(), next(), next(), next()]);
+    }).then(function () {
+      return function (ref) { return typeof ref === "string" && ref.charAt(0) === "@" ? (map[ref.slice(1)] || "") : ref; };
+    });
+  }
+  function mapDeep(x, fn) {
+    if (typeof x === "string") return fn(x);
+    if (Array.isArray(x)) return x.map(function (y) { return mapDeep(y, fn); });
+    if (x && typeof x === "object") { var o = {}; Object.keys(x).forEach(function (k) { o[k] = mapDeep(x[k], fn); }); return o; }
+    return x;
+  }
+
+  // ---------- вход ----------
+  function unlock() {
+    if (!subtle) {
+      lockScreen(); msg("Этот браузер не умеет расшифровывать. Откройте ссылку в Chrome, Safari или Edge.");
+      document.getElementById("krGo").disabled = true;
+      return new Promise(function () {});
+    }
+    var meta, dataBuf;
+    return Promise.all([
+      fetch(BASE + "enc/meta.json", { cache: "no-cache" }).then(function (r) { return r.json(); }),
+      fetchBin("d.bin"), getKey()
+    ]).then(function (a) {
+      meta = a[0]; dataBuf = a[1];
+      var rec = a[2];
+      if (rec && rec.key && rec.salt === meta.salt) {
+        return open(rec.key, dataBuf).then(function (plain) { return { key: rec.key, plain: plain }; }, function () { return askPin(meta, dataBuf); });
+      }
+      return askPin(meta, dataBuf);
+    }).then(function (r) {
+      var data = JSON.parse(new TextDecoder().decode(r.plain));
+      return sloj(r.key, data).then(function () { r.data = data; return r; });
+    }).then(function (r) {
+      var data = r.data;
+      var el = document.getElementById("krLock");
+      if (el) msg("Открываю фото...", true);
+      return photoMap(r.key, data, function (d, n) { if (el) msg("Открываю фото: " + d + " из " + n, true); }).then(function (fn) {
+        unlockScreen();
+        return { data: mapDeep(data, fn), photo: fn };
+      });
+    }).catch(function (e) {
+      lockScreen(); msg("Не удалось открыть витрину: " + (e && e.message || e) + ". Проверьте интернет и обновите страницу.");
+      throw e;
+    });
+  }
+  // ---------- правки мастера ----------
+  // enc/m.bin - то, что мастер опубликовал сам из Мастерской (тексты, новые работы, фото, скрытые работы).
+  // Нет файла - витрина как была. Не читается - показываем витрину без правок (и пишем в консоль).
+  function loadScript(src) {
+    return new Promise(function (ok, no) { var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = function () { no(new Error("нет " + src)); }; document.head.appendChild(s); });
+  }
+  function sloj(key, data) {
+    window.KR_SLOJ = null;
+    return fetch(BASE + "enc/m.bin", { cache: "no-cache" }).then(function (r) {
+      if (!r.ok) return null;
+      return r.arrayBuffer().then(function (buf) { return open(key, buf); }).then(function (p) {
+        var L = JSON.parse(new TextDecoder().decode(p));
+        return (window.KrSloj ? Promise.resolve() : loadScript(BASE + "sloj.js")).then(function () {
+          window.KR_SLOJ = JSON.parse(JSON.stringify(L)); // как есть, со ссылками "@id" - для Мастерской
+          if (data.vitrina) window.KrSloj.apply(data.vitrina, L);
+        });
+      });
+    }).catch(function (e) { try { console.warn("Правки мастера не подмешаны:", e); } catch (x) {} });
+  }
+
+  function logout() {
+    try { if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage("kr-forget"); } catch (e) {}
+    return dropKey().then(function () { location.href = BASE; });
+  }
+
+  // страница витрины (вариант 3 или 4) внутри закрытой части: данные - из расшифровки, дальше - обычные скрипты
+  function page(opts) {
+    style();
+    var hide = document.createElement("style"); hide.id = "krHide"; hide.textContent = "body>*:not(#krLock){visibility:hidden}"; document.head.appendChild(hide);
+    return unlock().then(function (r) {
+      window.VITRINA = r.data.vitrina;
+      var list = (opts && opts.scripts) || [];
+      window.KR_DATA = r.data; // для kr-dom.js: приветствие и т.п.
+      return list.reduce(function (p, src) {
+        return p.then(function () {
+          return new Promise(function (ok, no) { var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = no; document.body.appendChild(s); });
+        });
+      }, Promise.resolve()).then(function () {
+        hide.remove();
+        // чистая версия для клиентов: скрытый вход мастера удержанием знака (master-vhod.js)
+        if (window.MEBEL_TOOL === "kr-klient") loadScript(BASE + "master-vhod.js").catch(function () {});
+        if (opts && opts.back === "none") return; // главная (дом): возвращаться некуда
+        var a = document.createElement("a"); a.id = "krBack"; a.href = BASE; a.textContent = "← Назад"; a.title = "Назад к дому"; if (opts && opts.back === "bl") a.className = "bl";
+        document.body.appendChild(a);
+      });
+    });
+  }
+
+  window.KrZamok = { unlock: unlock, page: page, logout: logout, base: BASE, idb: idb, b64: b64, fetchBin: fetchBin, mime: mime };
+})();

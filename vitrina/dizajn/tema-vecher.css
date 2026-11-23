@@ -1,0 +1,67 @@
+/* Вариант 1 - "Тёплый вечер". Сумерки, звёзды, луна, холмы с огоньками посёлка, ели, светлячки.
+   Дом - деревянный, окна-комнаты зажигаются по очереди, а потом то тут, то там. Дым из трубы, свет на землю. */
+html[data-tema=vecher]{--bg:#0D1020;--bg2:#151829;--card:#1C1F33;--line:#2E3150;--ink:#F6EEE3;--muted:#B8B1BE;--acc:#F2B66D;--acc-ink:#21150A;--dzb:rgba(255,255,255,.06)}
+html[data-tema=vecher] .htop{background:rgba(13,16,32,.6)}
+
+/* небо */
+.sc-vecher .sky{background:linear-gradient(180deg,#080B19 0%,#10142B 26%,#211B3A 50%,#472943 68%,#8A493D 85%,#C06F3F 100%)}
+.sc-vecher .stars i{position:absolute;left:0;top:0;width:1.6px;height:1.6px;border-radius:50%}
+html:not([data-q="0"]) .sc-vecher .stars.s1{animation:vcTw 5s ease-in-out infinite alternate}
+html:not([data-q="0"]) .sc-vecher .stars.s2{animation:vcTw 3.4s ease-in-out -1.7s infinite alternate}
+@keyframes vcTw{from{opacity:1}to{opacity:.3}}
+.sc-vecher .moon{position:absolute;right:9vw;top:12vh;width:clamp(44px,5.6vw,78px);aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 64% 60%,rgba(190,160,110,.35) 0 9%,transparent 10%),radial-gradient(circle at 36% 40%,rgba(190,160,110,.28) 0 7%,transparent 8%),radial-gradient(circle at 40% 36%,#FFF7E2,#F3DCAA 58%,#DDB97F);
+  box-shadow:0 0 34px 8px rgba(255,222,160,.28),0 0 140px 50px rgba(255,200,130,.12)}
+.sc-vecher .far svg{height:36vh}
+.sc-vecher .far path{fill:#1B1A37}
+.sc-vecher .town rect{fill:#FFC77A}
+html[data-q="2"] .sc-vecher .town{animation:vcTown 4s ease-in-out infinite alternate}
+@keyframes vcTown{from{opacity:1}to{opacity:.55}}
+.sc-vecher .near svg{height:32vh}
+.sc-vecher .near path,.sc-vecher .near rect{fill:#070914}
+.sc-vecher .fog i{position:absolute;left:-40%;width:180%;height:24vh;bottom:2vh;background:radial-gradient(50% 50% at 50% 50%,rgba(210,150,160,.14),transparent 70%)}
+.sc-vecher .fog i+i{bottom:12vh;height:18vh;opacity:.7}
+html[data-q="2"] .sc-vecher .fog i{animation:vcFog 38s ease-in-out infinite alternate}
+html[data-q="2"] .sc-vecher .fog i+i{animation-duration:52s;animation-direction:alternate-reverse}
+@keyframes vcFog{from{transform:translateX(-8%)}to{transform:translateX(8%)}}
+.sc-vecher .lantern{background:radial-gradient(closest-side,rgba(255,196,120,.16),rgba(255,196,120,.05) 55%,transparent)}
+
+/* дом: деревянный, черепица, тёплые окна */
+html[data-tema=vecher] .roof{background:repeating-linear-gradient(180deg,transparent 0 12px,rgba(0,0,0,.25) 12px 14px),linear-gradient(180deg,#5C3E2B,#2E2019)}
+html[data-tema=vecher] .roof span{color:#FFD9A0;text-shadow:0 0 18px rgba(255,180,100,.5)}
+html[data-tema=vecher] .floors{background:linear-gradient(180deg,#3A291E,#2B1E16);padding:7px;gap:7px;box-shadow:0 34px 80px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,200,140,.06)}
+html[data-tema=vecher] .room{border-radius:3px}
+html[data-tema=vecher] .room::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;box-shadow:inset 0 0 0 2px rgba(20,12,8,.55),inset 0 0 24px rgba(0,0,0,.35)}
+html[data-tema=vecher] .room .dark{background:#0A0B1A;opacity:.66}
+html[data-tema=vecher] .room .lamp{background:radial-gradient(50% 60% at 50% 0%,rgba(255,200,120,.55),transparent 70%)}
+html[data-tema=vecher] .room.glim .dark{opacity:.14}
+html[data-tema=vecher] .room.glim .lamp{opacity:1}
+html[data-tema=vecher] .room.glim .ph{transform:scale(1.07)}
+.dz-deco.spill{left:-25%;right:-25%;bottom:-90px;height:220px;z-index:-1;background:radial-gradient(50% 50% at 50% 50%,rgba(255,176,96,.24),transparent 70%)}
+html[data-q="2"][data-tema=vecher] .dz-deco.spill{animation:vcSpill 6s ease-in-out infinite alternate}
+@keyframes vcSpill{from{opacity:.75}to{opacity:1}}
+html[data-tema=vecher] .dz-deco.ground{left:-14%;right:-14%;top:calc(100% - 4px);height:46px;z-index:-1;background:radial-gradient(55% 100% at 50% 0%,rgba(12,10,20,.95),transparent 72%)}
+/* труба и дым */
+.dz-deco.chim{left:70%;top:calc(var(--rh) * .1);width:4.4%;min-width:16px;height:calc(var(--rh) * .52);z-index:-1}
+.dz-deco.chim i{position:absolute;inset:0;background:linear-gradient(90deg,#3A281E,#4E3628);border-top:6px solid #22170F;border-radius:2px 2px 0 0}
+.dz-deco.chim b{position:absolute;left:20%;bottom:100%;width:60%;aspect-ratio:1;border-radius:50%;background:radial-gradient(closest-side,rgba(210,200,220,.32),transparent);opacity:0}
+html[data-q="2"] .dz-deco.chim b{animation:smoke 6s ease-out infinite}
+html[data-q="2"] .dz-deco.chim b:nth-of-type(2){animation-delay:2s}
+html[data-q="2"] .dz-deco.chim b:nth-of-type(3){animation-delay:4s}
+
+/* вход: двери, свет из щели, фонарь над табличкой */
+html[data-tema=vecher] #doors{background:#07080F}
+html[data-tema=vecher] .door{background:repeating-linear-gradient(90deg,#45301F 0,#4F3826 3px,#432E1E 7px,#4B3423 11px)}
+html[data-tema=vecher] .door.l{box-shadow:inset 0 0 120px rgba(0,0,0,.5),inset -26px 0 40px -26px rgba(255,190,110,.4)}
+html[data-tema=vecher] .door.r{box-shadow:inset 0 0 120px rgba(0,0,0,.5),inset 26px 0 40px -26px rgba(255,190,110,.4)}
+.dz-deco.porch{position:relative;width:60px;height:96px;margin-bottom:-6px;transform-origin:50% 0}
+.dz-deco.porch i{position:absolute;left:50%;top:-40vh;width:2px;height:calc(40vh + 54px);margin-left:-1px;background:#1A120C}
+.dz-deco.porch b{position:absolute;left:50%;top:50px;width:26px;height:36px;margin-left:-13px;border-radius:40% 40% 50% 50%;background:radial-gradient(circle at 50% 40%,#FFF3D2,#FFC56E 60%,#D98F3A);box-shadow:0 0 30px 10px rgba(255,190,100,.45),0 0 120px 50px rgba(255,170,80,.18)}
+html:not([data-q="0"]) .dz-deco.porch{animation:swing 4.2s ease-in-out infinite alternate}
+@keyframes swing{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+html[data-tema=vecher] #doors.open .porch{opacity:0;transition:opacity .4s}
+html[data-tema=vecher] .plate{background:rgba(20,13,9,.82);border-color:#7A5A3E}
+html[data-tema=vecher] .plate b{color:#FFE0AE}
+
+/* вход в дом: звёзды светлеют, окна зажигаются по очереди (база), заголовок - слово за словом */
+html[data-tema=vecher] #home.enter .room .lamp{animation-duration:1.8s}

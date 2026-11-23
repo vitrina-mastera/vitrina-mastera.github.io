@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#121212">
+<title>Варианты дизайна витрины</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Manrope:wght@400;600;700;800&family=Nunito:wght@800;900&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-300-normal-cyrillic.woff2) format("woff2");font-weight:300;font-display:swap;unicode-range:U+0400-045F}
+@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-300-normal-latin.woff2) format("woff2");font-weight:300;font-display:swap;unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-400-normal-cyrillic.woff2) format("woff2");font-weight:400;font-display:swap;unicode-range:U+0400-045F}
+@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-400-normal-latin.woff2) format("woff2");font-weight:400;font-display:swap;unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-500-normal-cyrillic.woff2) format("woff2");font-weight:500 800;font-display:swap;unicode-range:U+0400-045F}
+@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-500-normal-latin.woff2) format("woff2");font-weight:500 800;font-display:swap;unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:"Playfair";src:url(../../vitrina/dizajn2/fonts/playfair-display-400-normal-cyrillic.woff2) format("woff2");font-weight:400 800;font-display:swap;unicode-range:U+0400-045F}
+@font-face{font-family:"Playfair";src:url(../../vitrina/dizajn2/fonts/playfair-display-400-normal-latin.woff2) format("woff2");font-weight:400 800;font-display:swap;unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:"Playfair";src:url(../../vitrina/dizajn2/fonts/playfair-display-400-italic-cyrillic.woff2) format("woff2");font-weight:400 800;font-style:italic;font-display:swap;unicode-range:U+0400-045F}
+@font-face{font-family:"Playfair";src:url(../../vitrina/dizajn2/fonts/playfair-display-400-italic-latin.woff2) format("woff2");font-weight:400 800;font-style:italic;font-display:swap;unicode-range:U+0000-00FF,U+2000-206F}
+/* новые варианты 5-8: строгие карточки, мини-картинка - объёмный домик */
+.sec{display:flex;flex-wrap:wrap;align-items:baseline;gap:16px;margin:44px 0 0;padding-top:18px;border-top:1px solid var(--line)}
+.sec h2{font-family:Playfair,Georgia,serif;font-weight:400;font-size:clamp(24px,3vw,32px)}
+.sec span{color:var(--muted);font-size:14px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:22px 0 10px}
+.c2{position:relative;display:flex;flex-direction:column;background:var(--bg);text-decoration:none;font-family:Jost,system-ui,sans-serif;animation:up .9s var(--ease) both;animation-delay:calc(var(--i) * .08s)}
+.c2 .pv2{position:relative;aspect-ratio:4/3;overflow:hidden;perspective:500px;display:flex;align-items:center;justify-content:center}
+.c2 .hh{position:relative;width:44%;aspect-ratio:1/1.05;transform-style:preserve-3d;transform:rotateX(-4deg) rotateY(-18deg);transition:transform 1.1s var(--ease)}
+@media (hover:hover){.c2:hover .hh{transform:rotateX(-6deg) rotateY(14deg)}.c2:hover .gl{transform:translateX(0)}}
+.c2 .hh i{position:absolute;display:block}
+.c2 .r{left:0;right:0;top:0;height:32%;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.c2 .hh .b{left:0;right:0;top:32%;bottom:0;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;padding:3px}
+.c2 .b b{display:block}
+.c2 .sd{top:32%;bottom:0;right:0;width:22%;transform-origin:100% 50%;transform:rotateY(-90deg)}
+.c2 .t{padding:18px 20px 22px;display:flex;flex-direction:column;gap:6px;flex:1;border-top:1px solid var(--line)}
+.c2 small{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.c2 .nm{font-family:Playfair,Georgia,serif;font-size:26px;line-height:1.1;color:var(--ink)}
+.c2 p{color:var(--muted);font-size:14.5px;line-height:1.5}
+.c2 .ln{margin-top:auto;padding-top:14px;display:flex;align-items:center;gap:12px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink)}
+.c2 .ln::before{content:"";width:28px;height:1px;background:currentColor;transition:width .5s var(--ease)}
+@media (hover:hover){.c2:hover .ln::before{width:52px}}
+.c2 .tag{position:absolute;top:14px;left:16px;z-index:2;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;padding:5px 9px;border:1px solid currentColor}
+.c2 .gl{position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);transform:translateX(-100%);transition:transform 1.2s var(--ease);pointer-events:none}
+.v5 .pv2{background:linear-gradient(180deg,#F4F1EC,#E6E0D6)}.v5 .r{background:#2B2926}.v5 .b{background:#fff}.v5 .b b{background:#D8CFC2}.v5 .b b:nth-child(3n+1){background:#B9A58C}.v5 .sd{background:#CFC7BB}.v5 .tag{color:#2B2926}
+.v6 .pv2{background:radial-gradient(80% 90% at 50% 100%,rgba(0,0,0,.6),transparent),linear-gradient(115deg,#5a4636,#2a2420 45%,#6b5442 70%,#3a3029);background-size:100% 100%,300% 100%;animation:pan 16s ease-in-out infinite alternate}@keyframes pan{to{background-position:0 0,100% 0}}.v6 .r{background:rgba(20,18,16,.85)}.v6 .b{background:rgba(255,255,255,.12);backdrop-filter:blur(2px)}.v6 .b b{background:rgba(255,236,205,.35);border:1px solid rgba(255,255,255,.35)}.v6 .sd{background:rgba(255,255,255,.1)}.v6 .tag{color:#fff}
+.v7 .pv2{background:radial-gradient(50% 60% at 50% 30%,rgba(196,150,96,.22),transparent),#141312}.v7 .r{background:#2C2A26}.v7 .b{background:#1F1E1C}.v7 .b b{background:#2a2622;border:1px solid rgba(196,150,96,.55)}.v7 .sd{background:#252320}.v7 .tag{color:#C49660}
+.v8 .pv2{background:#FAFAF8}.v8 .r{background:#1b1b1b}.v8 .r::after{content:"";position:absolute;inset:1.5px 2.5px 0;background:#FAFAF8;clip-path:polygon(50% 0,100% 100%,0 100%)}.v8 .b{background:#1b1b1b;gap:1.5px;padding:1.5px}.v8 .b b{background:#FAFAF8}.v8 .b b:nth-child(2){background:linear-gradient(#bbb,#888)}.v8 .sd{background:transparent;border:1.5px solid #1b1b1b}.v8 .tag{color:#1b1b1b}
+.v9 .pv2,.v10 .pv2,.v11 .pv2{background:radial-gradient(80% 90% at 50% 100%,rgba(0,0,0,.6),transparent),linear-gradient(115deg,#5a4636,#2a2420 45%,#6b5442 70%,#3a3029);background-size:100% 100%,300% 100%;animation:pan 16s ease-in-out infinite alternate}
+.v9 .r{background:#141312}.v9 .b{background:#1F1D1B;gap:2px;padding:2px}.v9 .b b{background:linear-gradient(#2B2925 74%,#3A342C 74%);position:relative}.v9 .b b::after{content:"";position:absolute;inset:18% 26% 34%;background:#b8a58c;border:1.5px solid #EFEAE1}.v9 .sd{background:#262421}.v9 .tag{color:#fff}
+.v10 .r{background:#141312}.v10 .b{background:#1C1B19;gap:5px;padding:5px}.v10 .b b{background:linear-gradient(90deg,transparent 47%,#1C1B19 47% 53%,transparent 53%),linear-gradient(180deg,transparent 38%,#1C1B19 38% 44%,transparent 44%),#d9b98a}.v10 .b b:nth-child(2n){background:linear-gradient(90deg,transparent 47%,#1C1B19 47% 53%,transparent 53%),linear-gradient(180deg,transparent 38%,#1C1B19 38% 44%,transparent 44%),#5d5246}
+.v11 .r{background:rgba(241,238,232,.8)}.v11 .r::after{content:"";position:absolute;inset:1px 1.6px 0;background:#3b3029;clip-path:polygon(50% 0,100% 100%,0 100%)}.v11 .b{background:rgba(241,238,232,.75);gap:1px;padding:1px}.v11 .b b{background:#3b3029}.v11 .b b:nth-child(4){background:#7a6450}
+.v12 .pv2{background:radial-gradient(80% 90% at 50% 100%,rgba(0,0,0,.6),transparent),linear-gradient(115deg,#5a4636,#2a2420 45%,#6b5442 70%,#3a3029);background-size:100% 100%,300% 100%;animation:pan 16s ease-in-out infinite alternate}
+.v12 .r{background:rgba(241,238,232,.85)}.v12 .r::after{content:"";position:absolute;inset:1px 1.6px 0;background:#3b3029;clip-path:polygon(50% 0,100% 100%,0 100%)}.v12 .b{background:rgba(241,238,232,.8);gap:1px;padding:1px}.v12 .b b{background:#3b3029;position:relative}.v12 .b b::after{content:"";position:absolute;inset:12% 12% 28%;background:#c9a57c}.v12 .b b:nth-child(2n)::after{background:#8fa0b5}.v12 .tag{color:#fff}
+.ms{display:flex;gap:18px;align-items:center;flex-wrap:wrap;border:1px solid var(--line);padding:20px 22px;margin:18px 0 0;text-decoration:none;font-family:Jost,system-ui,sans-serif}
+.ms b{font-family:Playfair,Georgia,serif;font-weight:400;font-size:22px}
+.ms p{color:var(--muted);font-size:14.5px;flex:1;min-width:240px}
+.ms .ln{display:flex;align-items:center;gap:12px;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+.ms .ln::before{content:"";width:28px;height:1px;background:currentColor}
+</style>
+<style>
+/* Страница выбора пробного оформления "Путешествия по дому" (закрытая витрина Краснодара).
+   Сами варианты - v1..v8/ (v1-v4 первые, v5-v8 строгие) (собирает site/build.py). Здесь нет данных мастера, только описание. */
+:root{--bg:#121212;--card:#1B1B1D;--line:#2C2C30;--ink:#F2EEE8;--muted:#A9A39A;--acc:#E7B877;--ease:cubic-bezier(.22,1,.36,1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 Manrope,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top,0px)) clamp(14px,4vw,40px) calc(40px + env(safe-area-inset-bottom,0px))}
+.top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:26px}
+.top .sp{flex:1}
+.pill{display:inline-flex;align-items:center;min-height:38px;padding:0 15px;border-radius:999px;border:1px solid var(--line);font-size:14px;font-weight:700;text-decoration:none;color:var(--muted);transition:color .2s,border-color .2s}
+.pill:hover{color:var(--ink);border-color:#55555c}
+.top .ms-prod{color:var(--ink)}
+.eb{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc);font-weight:800}
+h1{font-family:Playfair,"Cormorant Garamond",Georgia,serif;font-weight:400;font-size:clamp(34px,5vw,58px);line-height:1.02;margin:6px 0 10px}
+.lead{color:var(--muted);max-width:720px;font-size:clamp(15px,1.5vw,17px)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:16px;margin:28px 0 30px}
+.card{position:relative;display:flex;flex-direction:column;border-radius:22px;overflow:hidden;background:var(--card);border:1px solid var(--line);text-decoration:none;transition:transform .5s var(--ease),border-color .3s;animation:up .8s var(--ease) both;animation-delay:calc(var(--i) * .08s)}
+@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@media (hover:hover){.card:hover{transform:translateY(-6px);border-color:#4a4a50}.card:hover .pv .hs{transform:translateY(-4px) scale(1.03)}}
+.card:active{transform:scale(.98)}
+.card.rec{border-color:rgba(231,184,119,.55)}
+.badge{position:absolute;top:12px;left:12px;z-index:2;font-size:11px;font-weight:800;letter-spacing:.06em;padding:5px 10px;border-radius:99px;background:var(--acc);color:#1d140a}
+/* мини-картинка варианта: небо, холм, домик */
+.pv{position:relative;aspect-ratio:16/10;overflow:hidden}
+.pv .hl{position:absolute;left:-10%;right:-10%;bottom:-30%;height:60%;border-radius:50%}
+.pv .hs{position:absolute;left:50%;bottom:12%;width:46%;margin-left:-23%;transition:transform .6s var(--ease)}
+.pv .rf{height:30px;clip-path:polygon(50% 0,100% 100%,0 100%);margin:0 6%}
+.pv .fl{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px}
+.pv .fl i{height:20px;border-radius:2px}
+.pv .o{position:absolute;border-radius:50%}
+.v1 .pv{background:linear-gradient(180deg,#080B19,#211B3A 50%,#8A493D 85%,#C06F3F)}
+.v1 .hl{background:#070914}.v1 .rf{background:#4A3326}.v1 .fl{background:#33241B}.v1 .fl i{background:#2a2030}.v1 .fl i:nth-child(2n){background:#E9B46E;box-shadow:0 0 12px rgba(255,190,110,.6)}
+.v1 .o{right:14%;top:14%;width:20px;height:20px;background:#F3DCAA;box-shadow:0 0 20px 6px rgba(255,220,160,.3)}
+.v2 .pv{background:linear-gradient(180deg,#C9DEEA,#EEEDE6 60%,#F5F0E8)}
+.v2 .hl{background:#C7D4BD}.v2 .rf{background:#3E4745}.v2 .fl{background:#fff;padding:4px;gap:4px;border-radius:0 0 6px 6px;box-shadow:0 10px 20px rgba(70,50,30,.2)}.v2 .fl i{background:#E8DFD2;border-radius:3px}.v2 .fl i:nth-child(3n){background:#D8B99C}
+.v2 .o{left:12%;top:12%;width:30px;height:30px;background:#FFF1CC;box-shadow:0 0 30px 12px rgba(255,230,170,.5)}
+.v3 .pv{background:radial-gradient(60% 70% at 20% 10%,rgba(205,167,105,.25),transparent),radial-gradient(60% 70% at 90% 50%,rgba(60,105,118,.22),transparent),#0B0B0C}
+.v3 .hl{display:none}.v3 .rf{background:#CDA769;position:relative}.v3 .rf::before{content:"";position:absolute;inset:1.5px 2.5px 0;background:#0E0E0F;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.v3 .fl{gap:4px;padding:4px 0 0}.v3 .fl i{background:#151517;border:1px solid rgba(205,167,105,.5)}
+.v3 .o{display:none}
+.v4 .pv{background:linear-gradient(180deg,#7EC8EE,#BFE6F7 55%,#EAF6F4)}
+.v4 .hl{background:#C2B46A}.v4 .rf{background:#D9734E}.v4 .fl{background:#FFF1DC;padding:4px;gap:4px;border-radius:0 0 6px 6px}.v4 .fl i{background:#8ec3e6;border:2px solid #fff;border-radius:4px}
+.v4 .o{right:14%;top:10%;width:26px;height:26px;background:#FFE08A;box-shadow:0 0 0 6px rgba(255,224,138,.35)}
+.v4 .pv::after{content:"";position:absolute;left:12%;bottom:26%;width:22px;height:22px;border-radius:50%;background:#E9A23B;box-shadow:120px 6px 0 -2px #D9622B,150px -4px 0 2px #C2452F}
+.cb{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px;flex:1}
+.cb small{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.cb b{font-size:21px;line-height:1.15}
+.cb p{color:var(--muted);font-size:14.5px}
+.cb ul{list-style:none;display:grid;gap:4px;margin-top:4px;font-size:13.5px;color:#d6d0c7}
+.cb li{display:flex;gap:8px}.cb li::before{content:"";flex:none;width:5px;height:5px;border-radius:50%;background:var(--acc);margin-top:8px}
+.go{margin-top:auto;padding-top:12px;font-weight:800;color:var(--acc);font-size:14.5px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 20px;margin-bottom:14px}
+.box h2{font-size:18px;margin-bottom:8px}
+.box p,.box li{color:#d6d0c7;font-size:15px}
+.box ul{padding-left:18px;display:grid;gap:6px}
+.box b{color:var(--ink)}
+.rec2{border-color:rgba(231,184,119,.45)}
+.foot{color:var(--muted);font-size:12.5px;margin-top:24px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><nav data-variants></nav></div>
+  <div class="eb">Пробные варианты</div>
+  <h1>Как может выглядеть путешествие по дому</h1>
+  <p class="lead">Тринадцать оформлений главной. Работы, комнаты и тексты везде одни и те же, текущую витрину не меняли. Откройте вариант, посмотрите и вернитесь сюда кнопкой "← Варианты дизайна" - она вверху каждого варианта.</p>
+
+  <div class="sec"><h2>Сборные варианты</h2><span>12 и 13: собраны из того, что выбрали</span></div>
+  <div class="g2" style="max-width:920px">
+    <a class="c2 v12 v13" href="v13/" style="--i:0"><span class="tag">Новый</span>
+      <div class="pv2"><div class="hh"><i class="r"></i><i class="b"><b></b><b></b><b></b><b></b><b></b><b></b></i></div><i class="gl"></i></div>
+      <div class="t"><small>Вариант 13</small><span class="nm">Просто</span>
+        <p>Тот же дом, что в 12, но для человека, который зашёл первый раз. Комнаты подписаны крупно, рядом - сколько работ. Нажали "Кухни" - сразу видны все кухни с названиями, нажали на нужную - она открылась. Без выбора видов, мини-карты и лишних кнопок.</p>
+        <span class="ln">Открыть</span></div></a>
+    <a class="c2 v12" href="v12/" style="--i:1">
+      <div class="pv2"><div class="hh"><i class="r"></i><i class="b"><b></b><b></b><b></b><b></b><b></b><b></b></i></div><i class="gl"></i></div>
+      <div class="t"><small>Вариант 12</small><span class="nm">Линии</span>
+        <p>Основа - "Окна" (10), дом белыми линиями из "Силуэта" (11), подписи как в 10, комнаты открываются как в "Кино" (6). В комнате вид "Журнал" теперь не перелистывается: кадр стоит на месте, а фото и подписи сменяются сбоку - листайте пальцем влево и вправо.</p>
+        <span class="ln">Открыть</span></div></a>
+  </div>
+
+  <div class="sec"><h2>Кино: другой дом</h2><span>новые, 9-11: фон из "Кино", дом и комнаты по-новому</span></div>
+  <p class="lead" style="margin-top:14px">По отзыву на "Кино": без лишней стены сбоку, комнаты одного размера ровными рядами, фото не растягиваются.</p>
+  <div class="g2">
+    <a class="c2 v9" href="v9/" style="--i:0"><span class="tag">Рекомендую</span>
+      <div class="pv2"><div class="hh"><i class="r"></i><i class="b"><b></b><b></b><b></b><b></b><b></b><b></b></i><i class="sd"></i></div><i class="gl"></i></div>
+      <div class="t"><small>Вариант 9</small><span class="nm">Разрез</span>
+        <p>Дом как макет в разрезе: плотный объём, ровные комнаты. В каждой комнате фото висит картиной в светлой раме, при наведении приподнимается.</p>
+        <span class="ln">Открыть</span></div></a>
+    <a class="c2 v10" href="v10/" style="--i:1">
+      <div class="pv2"><div class="hh"><i class="r"></i><i class="b"><b></b><b></b><b></b><b></b><b></b><b></b></i></div><i class="gl"></i></div>
+      <div class="t"><small>Вариант 10</small><span class="nm">Окна</span>
+        <p>Фасад с одинаковыми окнами, без боковых стен. Окна загораются по очереди, фото - как комната за стеклом, чуть сдвигается при повороте.</p>
+        <span class="ln">Открыть</span></div></a>
+    <a class="c2 v11" href="v11/" style="--i:2">
+      <div class="pv2"><div class="hh"><i class="r"></i><i class="b"><b></b><b></b><b></b><b></b><b></b><b></b></i></div><i class="gl"></i></div>
+      <div class="t"><small>Вариант 11</small><span class="nm">Силуэт</span>
+        <p>Дом тонкой линией, внутри - названия комнат. Наводите на комнату - её фото открывается на весь экран вместо видео. На телефоне - при прокрутке.</p>
+        <span class="ln">Открыть</span></div></a>
+  </div>
+
+  <div class="sec"><h2>Строгие варианты</h2><span>новые, 5-8: по мотивам сайтов фабрик</span></div>
+  <div class="g2">
+    <a class="c2 v5" href="v5/" style="--i:0">
+      <div class="pv2"><div class="hh"><i class="r"></i><i class="b"><b></b><b></b><b></b><b></b><b></b><b></b></i><i class="sd"></i></div><i class="gl"></i></div>
+      <div class="t"><small>Вариант 5</small><span class="nm">Галерея</span>
+        <p>Светлый и спокойный, как сайты Walter Knoll и Rolf Benz. Объёмный дом поворачивается за мышью, на телефоне - при прокрутке. Много воздуха, фото работ крупно.</p>
+        <span class="ln">Открыть</span></div></a>
+    <a class="c2 v6" href="v6/" style="--i:1">
+      <div class="pv2"><div class="hh"><i class="r"></i><i class="b"><b></b><b></b><b></b><b></b><b></b><b></b></i><i class="sd"></i></div><i class="gl"></i></div>
+      <div class="t"><small>Вариант 6</small><span class="nm">Кино</span>
+        <p>На фоне - фильм из работ мастера, как у Euromobil. Поверх - стеклянный дом с комнатами. На слабых телефонах вместо видео спокойно сменяются фото.</p>
+        <span class="ln">Открыть</span></div></a>
+    <a class="c2 v7" href="v7/" style="--i:2">
+      <div class="pv2"><div class="hh"><i class="r"></i><i class="b"><b></b><b></b><b></b><b></b><b></b><b></b></i><i class="sd"></i></div><i class="gl"></i></div>
+      <div class="t"><small>Вариант 7</small><span class="nm">Тёмный зал</span>
+        <p>Тёмный, как выставочный зал: мягкий свет-прожектор, бронзовые линии, по стёклам комнат проходит блик. Строгий и дорогой.</p>
+        <span class="ln">Открыть</span></div></a>
+    <a class="c2 v8" href="v8/" style="--i:3">
+      <div class="pv2"><div class="hh"><i class="r"></i><i class="b"><b></b><b></b><b></b><b></b><b></b><b></b></i><i class="sd"></i></div><i class="gl"></i></div>
+      <div class="t"><small>Вариант 8</small><span class="nm">Линия</span>
+        <p>Почти архитектурный чертёж: тонкий контур дома, фото в окнах чёрно-белые и оживают в цвете при наведении. Самый минималистичный.</p>
+        <span class="ln">Открыть</span></div></a>
+  </div>
+
+  <div class="sec"><h2>Первые варианты</h2><span>1-4, оставлены для сравнения</span></div>
+  <div class="grid">
+    <a class="card v1" href="v1/" style="--i:0">
+      <div class="pv"><i class="o"></i><i class="hl"></i><div class="hs"><div class="rf"></div><div class="fl"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+      <div class="cb"><small>Вариант 1</small><b>Тёплый вечер</b>
+        <p>Уютные сумерки: дом с тёплыми окнами на фоне неба со звёздами.</p>
+        <ul><li>Луна, холмы с огоньками посёлка, ели, светлячки</li><li>Окна зажигаются по очереди, потом то тут, то там</li><li>Дым из трубы, свет от дома на землю</li><li>На компьютере за мышью идёт тёплый свет</li></ul>
+        <span class="go">Открыть вариант 1 →</span></div></a>
+    <a class="card v2" href="v2/" style="--i:1">
+      <div class="pv"><i class="o"></i><i class="hl"></i><div class="hs"><div class="rf"></div><div class="fl"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+      <div class="cb"><small>Вариант 2</small><b>Светлое утро</b>
+        <p>Светлый скандинавский стиль: воздух, белый дом, дерево и шалфей.</p>
+        <ul><li>Солнце с медленными лучами, облака, деревья качаются</li><li>При входе дом рисуется карандашом, как чертёж</li><li>Комнаты проявляются снизу вверх</li><li>Светлые разделы, фото работ - на тёмном</li></ul>
+        <span class="go">Открыть вариант 2 →</span></div></a>
+    <a class="card v3" href="v3/" style="--i:2">
+      <div class="pv"><i class="o"></i><i class="hl"></i><div class="hs"><div class="rf"></div><div class="fl"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+      <div class="cb"><small>Вариант 3</small><b>Графит и латунь</b>
+        <p>Тёмный премиум: чёрный, латунь, архитектурные линии.</p>
+        <ul><li>Медленное сияние, сетка с бегущей линией света</li><li>Дом чертится латунными линиями, комнаты - как витрины</li><li>На компьютере комнаты наклоняются за мышью, по ним бежит блик</li><li>Вход - шторы расходятся по светящейся линии</li></ul>
+        <span class="go">Открыть вариант 3 →</span></div></a>
+    <a class="card v4" href="v4/" style="--i:3">
+      <div class="pv"><i class="o"></i><i class="hl"></i><div class="hs"><div class="rf"></div><div class="fl"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+      <div class="cb"><small>Вариант 4</small><b>Живой дом</b>
+        <p>Яркая иллюстрация, которая живёт по часам и по сезону.</p>
+        <ul><li>Утро, день, вечер, ночь - как сейчас у клиента, можно сменить</li><li>Осенью падают листья, зимой снег, весной лепестки, ночью светлячки</li><li>Птицы, облака, деревья качаются, забор и цветы у дома</li><li>Вход - облака расходятся</li></ul>
+        <span class="go">Открыть вариант 4 →</span></div></a>
+  </div>
+
+  <div class="box rec2">
+    <h2>Что рекомендую</h2>
+    <p><b>Вариант 9, "Разрез".</b> Фон из "Кино", который понравился, а дом теперь читается как настоящий макет: ровные комнаты, фото не растянуты, а висят картинами. Если хочется ещё больше воздуха - вариант 11 "Силуэт": фото комнаты открывается на весь экран. Разделы и меню во всех новых вариантах те же, что в "Галерее" и "Кино".</p>
+  </div>
+  <div class="box">
+    <h2>Чтобы не тормозило</h2>
+    <ul>
+      <li><b>Качество подстраивается само.</b> Сначала по телефону, потом по замеру: если кадры не успевают, анимация фона упрощается. На сильных телефонах и компьютерах - всё на максимуме.</li>
+      <li>Фон двигается только на экране дома. В комнате, в журнале, на фото и при открытом разделе он стоит и не тратит силы телефона.</li>
+      <li>Если в телефоне включено "уменьшить движение" или экономия трафика - фон без движения.</li>
+      <li>В вариантах 1-4 в меню "⋯" наверху можно вручную выбрать: Авто, Максимум или Лёгкая. В 5-8 качество выбирается само, вручную - добавкой ?kach=lite или ?kach=max к адресу.</li>
+    </ul>
+  </div>
+  <div class="box">
+    <h2>Что нового из современных приёмов</h2>
+    <ul>
+      <li>Смена времени суток - кругом от нажатой кнопки (View Transitions, как в новых приложениях).</li>
+      <li>Видео-лента въезжает при прокрутке силами самого браузера, без лишнего кода (scroll-driven animations).</li>
+      <li>Слои фона с глубиной: при прокрутке и движении мыши ближние слои двигаются быстрее дальних (параллакс).</li>
+      <li>Частицы света, листья и снег на canvas - сотни кадров без нагрузки на страницу.</li>
+      <li>Заголовок появляется слово за словом, дом рисуется линией, комнаты проявляются шторкой.</li>
+    </ul>
+  </div>
+  <p class="foot">Разработка в тестовом режиме. Все права защищены.</p>
+</div>
+<script>window.MEBEL_TOOL = "kr-dizajn-list";</script>
+<script src="../../shared/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#ECEAE5">
+<title>Закрытая витрина - Мастерская</title>
+<style>
+/* Мастерская закрытой витрины: правка данных мастера, новые фото и видео в ленту с водяным знаком.
+   Сайт статический: всё делается в браузере мастера. Если Александр включил публикацию (publik.js, код мастера),
+   правки уходят на сайт кнопкой "Опубликовать"; иначе - пакетом (ZIP), который кладут в репозиторий.
+   Логика - masterskaya.js. Вход - тот же пин-код (zamok.js). */
+@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-300-normal-cyrillic.woff2) format("woff2");font-weight:300;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-300-normal-latin.woff2) format("woff2");font-weight:300;unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-400-normal-cyrillic.woff2) format("woff2");font-weight:400;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-400-normal-latin.woff2) format("woff2");font-weight:400;unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-500-normal-cyrillic.woff2) format("woff2");font-weight:500 700;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Jost";src:url(../../vitrina/dizajn2/fonts/jost-500-normal-latin.woff2) format("woff2");font-weight:500 700;unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:"Playfair";src:url(../../vitrina/dizajn2/fonts/playfair-display-400-normal-cyrillic.woff2) format("woff2");font-weight:400 700;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Playfair";src:url(../../vitrina/dizajn2/fonts/playfair-display-400-normal-latin.woff2) format("woff2");font-weight:400 700;unicode-range:U+0000-00FF,U+2000-206F}
+:root{--bg:#ECEAE5;--bg2:#F4F2EE;--card:#FBFAF8;--line:#D3CFC6;--ink:#1D1C1A;--muted:#6E6A63;--ok:#2F6B45;--err:#9B3A2C;--serif:"Playfair",Georgia,serif;--sans:"Jost",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--ease:cubic-bezier(.22,1,.36,1);--pad:clamp(16px,4vw,48px);--sb:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--sans);font-weight:300;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:calc(40px + var(--sb))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+a{color:inherit}
+[hidden]{display:none!important}
+:focus-visible{outline:1px solid var(--ink);outline-offset:3px}
+.top{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:1100px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) var(--pad) 0}
+.brand{display:flex;align-items:center;gap:12px;min-height:44px}
+.brand i{width:30px;height:30px;flex:none;display:block}
+.brand i svg{width:100%;height:100%;display:block}
+.brand b{font-family:var(--serif);font-weight:400;font-size:20px;line-height:1.1}
+.brand .bk{margin-left:auto;text-decoration:none;display:inline-flex;align-items:center;min-height:44px;font-weight:500;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.tabs{display:flex;gap:22px;overflow-x:auto;scrollbar-width:none;margin-top:6px}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;position:relative;min-height:44px;font-weight:500;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.tabs button::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--ink);transform:scaleX(0);transform-origin:0 50%;transition:transform .5s var(--ease)}
+.tabs button[aria-selected=true]{color:var(--ink)}
+.tabs button[aria-selected=true]::after{transform:scaleX(1)}
+.tabs button i{font-style:normal;font-weight:400;margin-left:4px;vertical-align:4px;font-size:10px}
+main{max-width:1100px;margin:0 auto;padding:clamp(22px,4vh,40px) var(--pad)}
+section[role=tabpanel]{animation:rise .6s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(30px,4.6vw,48px);line-height:1.05;margin-bottom:10px}
+h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);line-height:1.15;margin:34px 0 12px}
+.lead{color:var(--muted);max-width:640px;margin-bottom:22px}
+.eyebrow{display:flex;align-items:center;gap:12px;font-weight:500;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin:30px 0 14px}
+.eyebrow::before{content:"";width:28px;height:1px;background:currentColor}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 22px}
+.f{display:flex;flex-direction:column;gap:6px;min-width:0}
+.f.w{grid-column:1/-1}
+.f label{font-weight:500;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.f input,.f select,.f textarea{width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--line);background:var(--card);border-radius:0;font-size:16px;font-weight:400;-webkit-appearance:none;appearance:none}
+.f textarea{min-height:110px;resize:vertical;line-height:1.5}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--ink)}
+.f small{font-size:12.5px;color:var(--muted)}
+.f .was{font-size:12px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);padding:clamp(16px,2.6vw,26px);margin-bottom:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 22px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font-weight:500;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;text-decoration:none;white-space:nowrap;transition:opacity .2s}
+.btn.l{background:none;color:var(--ink);border-color:var(--line)}
+.btn.sm{min-height:38px;padding:0 14px;font-size:10.5px}
+.btn:disabled{opacity:.4;cursor:default}
+@media (hover:hover){.btn:not(:disabled):hover{opacity:.85}.btn.l:not(:disabled):hover{border-color:var(--ink);opacity:1}}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.file{position:relative;overflow:hidden}
+.file input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.logo-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.logo-box{width:92px;height:92px;border:1px solid var(--line);display:grid;place-items:center;background:var(--bg2);flex:none}
+.logo-box svg,.logo-box img{width:76px;height:76px;display:block;object-fit:contain}
+.media{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:14px}
+.m{position:relative;aspect-ratio:1;background:var(--bg2);border:1px solid var(--line);overflow:hidden}
+.m img,.m video{width:100%;height:100%;object-fit:cover;display:block}
+.m .tip{position:absolute;left:6px;top:6px;padding:2px 7px;background:rgba(20,20,19,.75);color:#fff;font-weight:500;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase}
+.m .x{position:absolute;right:4px;top:4px;width:34px;height:34px;display:grid;place-items:center;background:rgba(20,20,19,.75);color:#fff}
+.m .x svg{width:16px;height:16px}
+.m .bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(0,0,0,.15)}
+.m .bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .3s}
+.m .st{position:absolute;left:0;right:0;bottom:3px;padding:6px 8px;font-size:11.5px;line-height:1.3;color:#fff;background:linear-gradient(180deg,transparent,rgba(0,0,0,.7))}
+.m.err{border-color:var(--err)}
+.m.err .st{background:var(--err)}
+.list{display:grid;gap:10px}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.row b{font-weight:500}
+.row span{color:var(--muted);font-size:13.5px}
+.row .sp{flex:1;min-width:0}
+/* водяной знак */
+.wm-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(18px,3vw,36px);align-items:start}
+.pv{position:relative;background:#222;aspect-ratio:4/3;overflow:hidden}
+.pv canvas{width:100%;height:100%;display:block;object-fit:contain}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{min-height:40px;padding:0 14px;border:1px solid var(--line);background:var(--card);font-weight:500;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pos{display:grid;grid-template-columns:repeat(3,44px);gap:6px}
+.pos button{width:44px;height:44px;border:1px solid var(--line);background:var(--card);position:relative}
+.pos button::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px;background:var(--line)}
+.pos button[aria-pressed=true]{border-color:var(--ink)}
+.pos button[aria-pressed=true]::after{background:var(--ink)}
+.rng{display:flex;align-items:center;gap:12px}
+.rng input{flex:1;accent-color:var(--ink)}
+.rng output{min-width:46px;text-align:right;font-variant-numeric:tabular-nums;font-size:14px}
+.note{font-size:13.5px;color:var(--muted);border-left:1px solid var(--ink);padding:4px 0 4px 14px;margin:16px 0}
+.note b{color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:calc(20px + var(--sb));z-index:50;transform:translate(-50%,20px);opacity:0;padding:12px 18px;background:var(--ink);color:var(--bg);font-weight:500;font-size:13px;letter-spacing:.03em;transition:opacity .3s,transform .3s var(--ease);pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.save{font-size:12px;color:var(--muted)}
+.busy{position:fixed;inset:0;z-index:40;background:rgba(236,234,229,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+.busy b{font-family:var(--serif);font-weight:400;font-size:26px}
+.busy .pb{width:min(360px,80vw);height:2px;background:var(--line)}
+.busy .pb i{display:block;height:100%;width:0;background:var(--ink)}
+.busy span{color:var(--muted);font-size:14px;max-width:420px}
+@media (max-width:760px){.g2,.wm-grid{grid-template-columns:1fr}.brand b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px}.brand .bk{letter-spacing:.12em;flex:none}}
+.brand nav.kn{margin-left:auto;color:var(--ink);flex-wrap:nowrap;flex:none}
+/* голос и вставка у полей */
+.vt{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.vt button{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 12px;border:1px solid var(--line);background:var(--card);font-weight:500;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.vt button svg{width:15px;height:15px;flex:none}
+.vt button.on{background:var(--err);border-color:var(--err);color:#fff}
+.vt button.on svg{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.vt .live{flex-basis:100%;font-size:13px;color:var(--muted);min-height:0}
+.vt .live:empty{display:none}
+/* публикация */
+.pub-ok{border-color:var(--ok)}
+.pub-ok h2{margin-top:0;color:var(--ok)}
+.code{font-family:var(--serif);font-size:clamp(28px,6vw,40px);letter-spacing:.08em;margin:8px 0 4px;user-select:all;-webkit-user-select:all;word-break:break-all}
+.chk{display:flex;align-items:flex-start;gap:10px;margin-top:12px;font-size:14.5px;cursor:pointer}
+.chk input{width:20px;height:20px;margin-top:2px;flex:none;accent-color:var(--ink)}
+.banner{max-width:1100px;margin:0 auto;padding:10px var(--pad);font-size:13.5px;color:var(--muted);border-bottom:1px solid var(--line)}
+.banner[hidden]{display:none}
+.small-link{background:none;border:0;padding:0;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;min-height:36px}
+.hidden-w{opacity:.55}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><i id="logoTop" hidden></i><b id="nmTop">Мастерская</b><nav class="kn" data-variants></nav></div>
+    <nav class="tabs" role="tablist" aria-label="Разделы Мастерской">
+      <button type="button" role="tab" aria-selected="true" data-t="master">О мастере</button>
+      <button type="button" role="tab" aria-selected="false" data-t="lenta">Работы<i id="cntL"></i></button>
+      <button type="button" role="tab" aria-selected="false" data-t="znak">Знак</button>
+      <button type="button" role="tab" aria-selected="false" data-t="paket">Опубликовать<i id="cntP"></i></button>
+    </nav>
+  </div>
+</header>
+<div class="banner" id="banner" hidden></div>
+<main id="main"></main>
+<div class="toast" id="toast" role="status"></div>
+<div class="busy" id="busy" hidden role="alertdialog" aria-live="polite"><b id="busyT">Готовлю видео</b><div class="pb"><i id="busyP"></i></div><span id="busyS"></span><button type="button" class="btn l sm" id="busyX">Остановить</button></div>
+<script>window.MEBEL_TOOL = "kr-masterskaya";</script>
+<script src="../../shared/site.js"></script>
+<script src="../zamok.js"></script>
+<script>KrZamok.page({ scripts: ["publik.js", "masterskaya.js"], back: "none" });</script>
+</body>
+</html>

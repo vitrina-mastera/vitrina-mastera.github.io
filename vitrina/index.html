@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f1b18">
+<title>Мебель на заказ - работы мастера, отзывы, расчёт</title>
+<meta name="description" content="Работы мастера корпусной мебели: фото и рассказы, отзывы клиентов с номером заказа, быстрый расчёт стоимости, контакты.">
+<meta property="og:title" content="Мебель на заказ - работы мастера">
+<meta property="og:description" content="Фото работ с рассказом, отзывы клиентов, быстрый расчёт стоимости.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231f1b18'/%3E%3Cpath fill='%23d9a566' d='M5 6h14v12H5zm2 2v8h4V8zm6 0v3h4V8zm0 5v3h4v-3z'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../shared/site.css">
+<style>
+/* Витрина мастера - вариант 3. Лёгкая страница для клиентов: ссылку мастер шлёт в Telegram, WhatsApp, ВК.
+   Всё содержимое - в dannye.js (меняется без правки вёрстки), логика - vitrina.js.
+   Мастер (кто заходил на сайт инструментов) видит сверху полоску вариантов и ссылку на Мастерскую. */
+html:root{--bg:#f6f2ec;--card:#fffdfa;--ink:#221d19;--muted:#776b60;--line:#e7ddd0;--dark:#1f1b18;--acc:#b97a37;--acc2:#94602a;--acc-l:#f6e8d6;--ok:#2f6f5e;--ok-l:#e2efea;--wa:#1f9e57;--tg:#2a8bd0;--vk:#3d6fb6}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+a{color:var(--acc2)}
+button,input,select,textarea{font:inherit;color:inherit}
+img{display:block;max-width:100%}
+.hide{display:none!important}
+.in{max-width:1080px;margin:0 auto;padding:0 18px}
+.muted{color:var(--muted)}
+svg.i{width:20px;height:20px;flex:none}
+/* ---------- полоска мастера ---------- */
+#staff{background:#14110f;color:#e9e1d7;font-size:13.5px}
+#staff .in{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
+#staff .note{flex:1 1 260px;opacity:.85}
+#staff .note b{color:#f0c58d;font-weight:600}
+#staff a.ed{color:#14110f;background:#f0c58d;border-radius:999px;padding:6px 14px;text-decoration:none;font-weight:700;white-space:nowrap}
+/* ---------- шапка ---------- */
+.hero{position:relative;color:#f6efe6;background:var(--dark);overflow:hidden}
+.hero .cov{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.32;filter:saturate(.9)}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,17,15,.35),rgba(20,17,15,.92) 78%)}
+.hero .in{position:relative;z-index:1;padding-top:34px;padding-bottom:26px}
+/* назад в "Путешествие по дому": видно, если пришли оттуда (и всегда в закрытой витрине) */
+.todom{display:inline-flex;align-items:center;gap:6px;margin:0 0 18px;min-height:44px;padding:0 18px 0 12px;border-radius:999px;background:#f0c58d;color:#14110f;font-weight:700;font-size:15px;text-decoration:none;box-shadow:0 6px 20px rgba(0,0,0,.3);transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s;animation:todomIn .6s cubic-bezier(.22,1,.36,1) both}
+.todom[hidden]{display:none}
+.todom svg{flex:none}
+@media (hover:hover){.todom:hover{transform:translateX(-3px);box-shadow:0 10px 26px rgba(0,0,0,.4)}}
+.todom:active{transform:scale(.97)}
+@keyframes todomIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.todom{animation:none;transition:none}}
+.who{display:flex;align-items:center;gap:16px}
+.ava{flex:none;width:76px;height:76px;border-radius:50%;background:linear-gradient(140deg,#d9a566,#94602a);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;border:3px solid rgba(255,255,255,.25);overflow:hidden}
+.ava img{width:100%;height:100%;object-fit:cover}
+.hero h1{margin:0;font-size:32px;line-height:1.1;letter-spacing:-.02em}
+.hero .rol{margin:4px 0 0;font-size:16px;opacity:.85}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0;padding:0;list-style:none}
+.facts li{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:5px 13px;font-size:14px}
+.facts b{color:#f0c58d}
+.pitch{margin:16px 0 0;font-size:17px;max-width:640px;opacity:.95}
+.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:14px;padding:11px 18px;font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;min-height:46px;transition:transform .12s,background .15s,border-color .15s}
+.btn:hover{transform:translateY(-1px);border-color:var(--acc)}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.p:hover{background:#c88a45}
+.btn.wa{background:var(--wa);border-color:var(--wa);color:#fff}
+.btn.tg{background:var(--tg);border-color:var(--tg);color:#fff}
+.btn.vk{background:var(--vk);border-color:var(--vk);color:#fff}
+.btn.gh{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);color:#fff}
+.btn.sm{padding:7px 12px;min-height:36px;font-size:14px;border-radius:11px}
+.btn.l{background:none;border:0;color:var(--acc2);padding:6px 4px;min-height:0}
+/* ---------- сторис ---------- */
+.stories{display:flex;gap:14px;overflow-x:auto;padding:22px 2px 6px;scrollbar-width:none;scroll-snap-type:x proximity}
+.stories::-webkit-scrollbar{display:none}
+.st{flex:none;width:84px;background:none;border:0;padding:0;cursor:pointer;text-align:center;scroll-snap-align:start;color:#f6efe6}
+.st .ring{display:block;width:76px;height:76px;margin:0 auto;border-radius:50%;padding:3px;background:conic-gradient(#f0c58d,#b97a37,#e9b877,#f0c58d)}
+.st.seen .ring{background:rgba(255,255,255,.28)}
+.st .ring span{display:block;width:100%;height:100%;border-radius:50%;border:3px solid var(--dark);background-size:cover;background-position:center}
+.st small{display:block;margin-top:6px;font-size:12px;line-height:1.25;opacity:.9;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.hint{font-size:12.5px;opacity:.6;margin:4px 0 0}
+/* ---------- навигация ---------- */
+.nav{position:sticky;top:0;z-index:30;background:rgba(246,242,236,.9);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line)}
+.nav .in{display:flex;gap:4px;padding-top:8px;padding-bottom:8px;overflow-x:auto;scrollbar-width:none}
+.nav .in::-webkit-scrollbar{display:none}
+.nav a{padding:8px 14px;border-radius:999px;text-decoration:none;color:var(--muted);font-size:14.5px;font-weight:600;white-space:nowrap}
+.nav a:hover,.nav a.on{color:var(--ink);background:rgba(0,0,0,.05)}
+.nav a.go{margin-left:auto;background:var(--dark);color:#fff}
+/* ---------- секции ---------- */
+section{padding-top:40px}
+.sh{margin:0 0 16px}
+.sh h2{margin:0;font-size:26px;letter-spacing:-.015em;line-height:1.15}
+.sh p{margin:6px 0 0;color:var(--muted);font-size:15px;max-width:680px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:14px;cursor:pointer;line-height:1.2}
+.chip:hover{border-color:var(--acc)}
+.chip.on{background:var(--dark);border-color:var(--dark);color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 1px 2px rgba(40,30,20,.04)}
+/* фото и водяной знак */
+.ph{position:relative;overflow:hidden;background:#e9dfd2;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.ph img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.ph .wm{position:absolute;inset:0;pointer-events:none;background-repeat:repeat;opacity:.9}
+/* работы */
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.w{cursor:pointer;overflow:hidden;display:flex;flex-direction:column;text-align:left;padding:0;transition:transform .15s,box-shadow .15s}
+.w:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(40,30,20,.12)}
+.w .ph{aspect-ratio:4/3}
+.w .cnt{position:absolute;right:10px;top:10px;background:rgba(20,17,15,.6);color:#fff;font-size:12px;border-radius:999px;padding:2px 9px}
+.w .tx{padding:14px 16px 16px;display:flex;flex-direction:column;gap:4px;flex:1}
+.w .vid{font-size:12px;font-weight:700;color:var(--acc2);text-transform:uppercase;letter-spacing:.04em}
+.w b{font-size:17px;line-height:1.25}
+.w .meta{font-size:13.5px;color:var(--muted)}
+.w p{margin:4px 0 0;font-size:14.5px;color:#4a413a;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+/* чем отличаюсь */
+.why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.why .card{padding:18px}
+.why b{display:flex;gap:10px;align-items:flex-start;font-size:16.5px;line-height:1.3}
+.why b span{flex:none;width:28px;height:28px;border-radius:9px;background:var(--acc-l);color:var(--acc2);display:flex;align-items:center;justify-content:center;font-size:14px}
+.why p{margin:8px 0 0;font-size:14.5px;color:#4a413a}
+/* расчёт */
+.calc{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+.calc .card{padding:20px}
+.lbl{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 8px}
+.lbl:first-child{margin-top:0}
+.size{display:flex;align-items:center;gap:12px}
+.size input[type=range]{flex:1;accent-color:var(--acc);height:32px}
+.size output{font-weight:700;font-size:18px;min-width:118px;text-align:right}
+.lv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.lv button{border:1px solid var(--line);background:#fff;border-radius:14px;padding:10px 12px;text-align:left;cursor:pointer}
+.lv button b{display:block;font-size:15px}
+.lv button span{display:block;font-size:12.5px;color:var(--muted);line-height:1.3;margin-top:2px}
+.lv button.on{border-color:var(--acc);box-shadow:0 0 0 3px rgba(185,122,55,.15);background:#fffaf3}
+.ck{display:flex;flex-wrap:wrap;gap:8px}
+.ck label{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:14px;cursor:pointer}
+.ck input{accent-color:var(--acc);width:17px;height:17px;margin:0}
+.res{position:sticky;top:76px;background:var(--dark)!important;color:#f6efe6;border-color:var(--dark)!important}
+.res .lab{font-size:13px;opacity:.7}
+.res .sum{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:4px 0 6px}
+.res .what{font-size:14px;opacity:.85}
+.res .note{font-size:13px;opacity:.65;margin:12px 0 0}
+.res .btn{width:100%;margin-top:10px}
+/* отзывы */
+.revs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.rv{padding:18px;display:flex;flex-direction:column;gap:8px}
+.rv .top{display:flex;align-items:center;gap:10px}
+.rv .av{flex:none;width:40px;height:40px;border-radius:50%;background:var(--acc-l);color:var(--acc2);display:flex;align-items:center;justify-content:center;font-weight:700}
+.rv .top b{display:block;font-size:15.5px}
+.stars{color:#d9962f;letter-spacing:1px;font-size:15px}
+.rv p{margin:0;font-size:15px}
+.rv .ord{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:auto;font-size:13px;color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;background:#eee7df;color:var(--muted)}
+.tag.ok{background:var(--ok-l);color:var(--ok)}
+.rv .ord a{font-weight:600}
+.trust{display:grid;align-items:start;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.trust .card{padding:20px}
+.trust h3{margin:0 0 8px;font-size:18px}
+.trust ol{margin:0;padding-left:20px;font-size:14.5px}
+.trust li+li{margin-top:6px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:13.5px;color:var(--muted)}
+input.t,textarea.t{font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);width:100%;min-width:0}
+textarea.t{resize:vertical;min-height:96px;line-height:1.45}
+input.t:focus,textarea.t:focus{outline:2px solid rgba(185,122,55,.35);border-color:var(--acc)}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.form{display:flex;flex-direction:column;gap:10px}
+.rate{display:flex;gap:4px}
+.rate button{border:0;background:none;font-size:30px;line-height:1;color:#d8cbbb;cursor:pointer;padding:0 2px}
+.rate button.on{color:#d9962f}
+.kodst{font-size:13.5px;border-radius:10px;padding:8px 11px;background:#f1ebe3;color:var(--muted)}
+.kodst.ok{background:var(--ok-l);color:var(--ok);font-weight:600}
+.tarea{position:relative}
+.tarea .mic{position:absolute;right:8px;bottom:8px}
+.mic{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink)}
+.mic.on{background:#b3412f;border-color:#b3412f;color:#fff;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(179,65,47,.35)}50%{box-shadow:0 0 0 8px rgba(179,65,47,0)}}
+.small{font-size:13px;color:var(--muted);margin:0}
+/* контакты */
+.cont{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px}
+.cont .card{padding:22px}
+.cont .btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.cont dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:15px}
+.cont dt{color:var(--muted)}
+.cont dd{margin:0}
+/* подвал */
+footer{margin-top:48px;padding:26px 0 96px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted)}
+footer p{margin:4px 0}
+footer .copy{font-size:11px;opacity:.75}
+.ms-tlink{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
+/* панель на телефоне */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:35;display:none;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(246,242,236,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.dock .btn{flex:1;min-height:44px;padding:8px 10px;font-size:14.5px}
+/* окно работы */
+.ov{position:fixed;inset:0;z-index:60;background:rgba(18,15,13,.7);display:flex;align-items:flex-end;justify-content:center;overflow:auto}
+.ov[hidden]{display:none}
+.sheet{background:var(--card);width:100%;max-width:880px;border-radius:24px 24px 0 0;max-height:94vh;overflow:auto;position:relative;animation:up .22s ease}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.sheet .x{position:sticky;top:10px;float:right;margin:10px 10px 0 0;z-index:3;width:40px;height:40px;border-radius:50%;border:0;background:rgba(20,17,15,.65);color:#fff;font-size:24px;line-height:1;cursor:pointer}
+.gal{position:relative;background:#1a1613}
+.gal .ph{aspect-ratio:4/3;background:#1a1613}
+.gal .ph img{object-fit:contain}
+.gal .nav2{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.85);font-size:22px;cursor:pointer;z-index:2}
+.gal .pv{left:10px}.gal .nx{right:10px}
+.gal .cap{position:absolute;left:0;right:0;bottom:0;padding:26px 16px 12px;color:#fff;font-size:14.5px;background:linear-gradient(transparent,rgba(0,0,0,.7));z-index:1}
+.dots{display:flex;gap:6px;justify-content:center;padding:10px 0 0}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--acc)}
+.wbody{padding:18px 22px 26px}
+.wbody h3{margin:0;font-size:24px;line-height:1.2}
+.wbody .meta{color:var(--muted);font-size:14.5px;margin-top:4px}
+.wbody .story{font-size:16.5px;margin:14px 0 0}
+.wbody h4{margin:20px 0 8px;font-size:16px}
+.wbody ul{margin:0;padding-left:20px}
+.wbody li+li{margin-top:4px}
+.params{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.params div{background:#f3ece3;border-radius:12px;padding:9px 12px;font-size:14px}
+.params small{display:block;color:var(--muted);font-size:12px}
+/* сторис во весь экран */
+#story{position:fixed;inset:0;z-index:70;background:#000;display:flex;align-items:center;justify-content:center}
+#story[hidden]{display:none}
+#story .fr{position:relative;width:100%;height:100%;max-width:480px;max-height:100vh;background:#111;overflow:hidden}
+#story .ph{position:absolute;inset:0;background:#111}
+#story .ph img{object-fit:cover}
+#story .fr::before{content:"";position:absolute;left:0;right:0;top:0;height:120px;z-index:2;background:linear-gradient(rgba(0,0,0,.6),transparent);pointer-events:none}
+#story .bars{position:absolute;left:10px;right:10px;top:10px;display:flex;gap:4px;z-index:3}
+#story .bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.35);overflow:hidden}
+#story .bars i b{display:block;height:100%;width:0;background:#fff}
+#story .hd{position:absolute;left:12px;right:12px;top:22px;display:flex;align-items:center;gap:10px;color:#fff;z-index:3;font-size:14px}
+#story .hd .a{width:34px;height:34px;border-radius:50%;background:linear-gradient(140deg,#d9a566,#94602a);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;overflow:hidden}
+#story .hd .a img{width:100%;height:100%;object-fit:cover}
+#story .hd b{display:block}
+#story .hd small{opacity:.75}
+#story .hd button{margin-left:auto;background:none;border:0;color:#fff;font-size:30px;line-height:1;cursor:pointer;padding:0 4px}
+#story .tx{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:60px 18px calc(18px + env(safe-area-inset-bottom));color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.82) 40%)}
+#story .tx p{margin:0 0 12px;font-size:16px;line-height:1.45;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+#story .tx .row{display:flex;gap:8px}
+#story .tx .btn{flex:1;min-height:44px;font-size:14.5px;padding:8px}
+#story .tap{position:absolute;top:70px;bottom:150px;z-index:2;width:40%;background:none;border:0;cursor:pointer}
+#story .tap.l{left:0}#story .tap.r{right:0;width:60%}
+#story .side{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:24px;cursor:pointer;display:none}
+@media(min-width:700px){#story .side{display:block}#story .side.l{left:-64px}#story .side.r{right:-64px}#story .fr{border-radius:18px;height:92vh;overflow:visible}#story .ph,#story .fr>.clip{border-radius:18px}}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:90;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%)}
+/* ---------- телефон ---------- */
+@media(max-width:860px){
+  .grid,.why,.revs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .calc,.trust,.cont{grid-template-columns:minmax(0,1fr)}
+  .res{position:static}
+}
+@media(max-width:600px){
+  .in{padding:0 14px}
+  .hero .in{padding-top:24px}
+  .hero h1{font-size:26px}
+  .ava{width:62px;height:62px;font-size:23px}
+  .pitch{font-size:15.5px}
+  .cta .btn{flex:1 1 140px}
+  .grid,.why,.revs{grid-template-columns:minmax(0,1fr)}
+  .lv{grid-template-columns:minmax(0,1fr)}
+  .g2,.params{grid-template-columns:minmax(0,1fr)}
+  .sh h2{font-size:22px}
+  section{padding-top:32px}
+  .dock{display:flex}
+  .nav a.go{display:none}
+  .cont .btns{grid-template-columns:minmax(0,1fr)}
+  .sheet{border-radius:20px 20px 0 0}
+  .wbody{padding:16px 16px 24px}
+}
+</style>
+</head>
+<body>
+
+<div id="staff" class="hide"><div class="in">
+  <nav data-variants></nav>
+  <span class="note" id="staffNote"></span>
+  <a class="ed" href="redaktor/">Мастерская витрины</a>
+</div></div>
+
+<header class="hero">
+  <div class="cov" id="cover"></div>
+  <div class="in">
+    <a class="todom" id="toDom" href="#" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 3l9 7h-2v10h-5v-6h-4v6H5V10H3z"/></svg>Путешествие по дому</a>
+    <div class="who">
+      <div class="ava" id="ava"></div>
+      <div><h1 id="mName"></h1><p class="rol" id="mRol"></p></div>
+    </div>
+    <ul class="facts" id="facts"></ul>
+    <p class="pitch" id="mPitch"></p>
+    <div class="cta" id="cta"></div>
+    <div class="stories" id="stories" aria-label="Истории работ"></div>
+    <p class="hint">Нажмите на кружок - работа покажется как сторис, с рассказом.</p>
+  </div>
+</header>
+
+<nav class="nav" aria-label="Разделы"><div class="in">
+  <a href="#raboty">Работы</a>
+  <a href="#otlichiya">Почему я</a>
+  <a href="#raschet">Расчёт</a>
+  <a href="#otzyvy">Отзывы</a>
+  <a href="#kontakty">Контакты</a>
+  <a href="#kontakty" class="go">Написать</a>
+</div></nav>
+
+<main class="in">
+  <section id="raboty">
+    <div class="sh"><h2>Работы</h2><p>Под каждой - короткий рассказ: что за заказ, что было сложно и почему решили именно так.</p></div>
+    <div class="chips" id="vids"></div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="otlichiya">
+    <div class="sh"><h2>Чем отличаюсь</h2></div>
+    <div class="why" id="why"></div>
+  </section>
+
+  <section id="raschet">
+    <div class="sh"><h2>Сколько примерно стоит</h2><p>Выберите изделие, размер и материалы - покажу вилку цены. Точную цену назову после замера.</p></div>
+    <div class="calc">
+      <div class="card">
+        <div class="lbl">Что нужно</div>
+        <div class="chips" id="cIzd" style="margin:0"></div>
+        <div class="lbl">Размер</div>
+        <div class="size"><input type="range" id="cSize" aria-label="Размер"><output id="cSizeV"></output></div>
+        <div class="lbl">Материалы</div>
+        <div class="lv" id="cLv"></div>
+        <div class="lbl">Дополнительно</div>
+        <div class="ck" id="cDop"></div>
+      </div>
+      <div class="card res">
+        <div class="lab">Примерно</div>
+        <div class="sum" id="cSum"></div>
+        <div class="what" id="cWhat"></div>
+        <a class="btn wa" id="cSend" target="_blank" rel="noopener">Отправить мастеру на точный расчёт</a>
+        <a class="btn gh hide" href="#" id="c3d" hidden>Собрать шкаф в 3D и примерить на фото комнаты</a>
+        <p class="note" id="cNote"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="otzyvy">
+    <div class="sh"><h2>Отзывы</h2><p id="revSub">Каждый отзыв - от клиента с номером заказа. Под отзывом ссылка на фото этой самой работы.</p></div>
+    <div class="revs" id="revs"></div>
+    <div class="chips" id="plosh" style="margin-top:14px"></div>
+    <div class="trust">
+      <div class="card">
+        <h3>Как проверить, что отзыв настоящий</h3>
+        <ol>
+          <li>Ссылку на отзыв я отправляю клиенту только после сдачи заказа. В ссылке - личный код этого заказа.</li>
+          <li>Отзыв с верным кодом получает пометку <span class="tag ok">по заказу</span> и номер заказа.</li>
+          <li>Под отзывом - ссылка на фото той самой работы: можно сравнить, о чём пишут.</li>
+          <li>Если клиент согласился - есть ссылка на его страницу, можно написать и спросить.</li>
+          <li id="trustPl" class="hide">Отзывы на картах (2ГИС, Яндекс) я исправить или удалить не могу - ссылки выше.</li>
+        </ol>
+        <p class="small" style="margin-top:10px">Честно: сайт простой, отзывы публикую я сам после проверки. Поэтому для сомневающихся - ссылки на клиентов и на карты.</p>
+      </div>
+      <div class="card" id="revForm">
+        <h3>Оставить отзыв</h3>
+        <div class="form">
+          <label class="f">Код заказа из ссылки, если есть <input class="t" id="fKod" placeholder="Например, ABCD-1234" autocomplete="off" autocapitalize="characters"></label>
+          <div class="kodst" id="fKodSt">Без кода отзыв тоже можно отправить - я сверю его по своим заказам.</div>
+          <div class="g2">
+            <label class="f">Ваше имя <input class="t" id="fName" autocomplete="given-name" placeholder="Как подписать отзыв"></label>
+            <label class="f">Что делали <input class="t" id="fWhat" placeholder="Кухня, шкаф..."></label>
+          </div>
+          <div><div class="small" style="margin-bottom:4px">Оценка</div><div class="rate" id="fRate"></div></div>
+          <label class="f">Отзыв - можно надиктовать
+            <span class="tarea"><textarea class="t" id="fText" placeholder="Что понравилось, что было не так, советуете ли"></textarea><button type="button" class="mic" id="fMic" title="Надиктовать голосом" aria-label="Надиктовать голосом"></button></span>
+          </label>
+          <label class="f">Ссылка на вашу страницу (по желанию) <input class="t" id="fLink" placeholder="vk.com/... или instagram.com/..." inputmode="url"></label>
+          <label class="small" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="fOk" checked style="margin-top:3px;accent-color:var(--acc)"> Можно опубликовать отзыв с моим именем</label>
+          <div class="cta" style="margin-top:4px">
+            <a class="btn wa" id="fWa" target="_blank" rel="noopener">Отправить в WhatsApp</a>
+            <button type="button" class="btn" id="fCopy">Скопировать для Telegram</button>
+          </div>
+          <p class="small">Отзыв уходит мне сообщением. Я публикую его на сайте, обычно в течение пары дней.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="kontakty">
+    <div class="sh"><h2>Контакты</h2><p>Пишите как удобно: пришлите фото комнаты и примерные размеры - отвечу, сколько стоит и когда смогу.</p></div>
+    <div class="cont">
+      <div class="card"><div class="btns" id="cBtns"></div></div>
+      <div class="card"><dl id="cList"></dl></div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="in">
+  <p id="fUpd"></p>
+  <p>Фото на сайте защищены водяным знаком. Копирование работ без разрешения мастера запрещено.</p>
+  <p class="copy" data-sign>Разработка в тестовом режиме. Все права защищены. <button type="button" class="ms-tlink" data-terms>Условия использования</button></p>
+</div></footer>
+
+<div class="dock" id="dock"></div>
+
+<div class="ov" id="work" hidden><div class="sheet" role="dialog" aria-modal="true" aria-label="Работа"><button class="x" type="button" data-close aria-label="Закрыть">&times;</button><div id="workIn"></div></div></div>
+
+<div id="story" hidden role="dialog" aria-modal="true" aria-label="История работы"><div class="fr">
+  <div class="ph" id="sPh"></div>
+  <div class="bars" id="sBars"></div>
+  <div class="hd"><span class="a" id="sAva"></span><span><b id="sName"></b><small id="sMeta"></small></span><button type="button" id="sX" aria-label="Закрыть">&times;</button></div>
+  <button class="tap l" type="button" id="sPrev" aria-label="Назад"></button><button class="tap r" type="button" id="sNext" aria-label="Дальше"></button>
+  <button class="side l" type="button" id="sPrevW" aria-label="Предыдущая работа">&#8249;</button><button class="side r" type="button" id="sNextW" aria-label="Следующая работа">&#8250;</button>
+  <div class="tx"><p id="sCap"></p><div class="row"><button type="button" class="btn" id="sMore">Подробнее</button><a class="btn wa" id="sWant" target="_blank" rel="noopener">Хочу похожее</a></div></div>
+</div></div>
+
+<div id="toast" role="status"></div>
+<script>window.MEBEL_TOOL = "vitrina";</script>
+<script src="../shared/site.js"></script>
+<script src="dannye.js"></script>
+<script src="risunki.js"></script>
+<script src="vitrina.js"></script>
+</body>
+</html>

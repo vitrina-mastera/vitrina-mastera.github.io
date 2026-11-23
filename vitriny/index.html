@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#24302c">
+<title>Витрины мастеров</title>
+<meta name="description" content="Сайт-витрина для клиентов мастера: работы, отзывы и расчёт по одной ссылке. Несколько вариантов на выбор.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%2324302c'/%3E%3Cpath fill='%23d9b48a' d='M5 5h6v6H5zM13 5h6v3h-6zM13 10h6v9h-6zM5 13h6v6H5z'/%3E%3C/svg%3E">
+<style>
+/* Раздел "Витрины": сюда ведёт вторая карточка стартовой страницы и кнопка "← Витрины" внутри витрин.
+   Карточки рисуются из списка вариантов (shared/site.js, VARIANTS с group "vg"). */
+:root{--bg:#f4f1ec;--card:#fffdf9;--ink:#25221f;--muted:#70675f;--line:#e4dbd0;--accent:#2f6f5e;--wood:#b98a5a;--wood-l:#f6ebdd}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+.in{max-width:1080px;margin:0 auto;padding:0 16px}
+.hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(217,180,138,.22),transparent 60%),linear-gradient(160deg,#24302c,#1d2724);color:#eef2f0;padding:calc(18px + env(safe-area-inset-top)) 0 28px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{flex:none}
+.tag{display:inline-block;margin:24px 0 0;padding:4px 11px;border:1px solid rgba(232,184,120,.5);border-radius:999px;color:#f0d3ad;font-size:13px;font-weight:600}
+.v .st{align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:.02em;border-radius:999px;padding:3px 10px;background:#e7f0ec;color:#2f6f5e}
+.v.lock .st{background:#f3e6d6;color:#7a5a36}
+.hero h1{margin:12px 0 4px;font-size:30px;line-height:1.15;letter-spacing:-.015em}
+.hero p{margin:0;opacity:.78;max-width:640px}
+main{padding:22px 0 10px}
+.list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.v{display:flex;flex-direction:column;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s,box-shadow .15s}
+.v:hover{border-color:var(--wood);transform:translateY(-2px);box-shadow:0 8px 22px rgba(40,30,20,.08)}
+.v:active{transform:scale(.99)}
+.v .ic{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--wood-l);color:var(--wood)}
+.v h2{margin:4px 0 0;font-size:19px;line-height:1.2}
+.v .who{margin:0;font-size:14px;color:var(--muted)}
+.v ul{margin:4px 0 0;padding:0 0 0 18px;font-size:14px;flex:1}
+.v li{margin:3px 0}
+.v .go{margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;background:#24302c;color:#fff;border-radius:12px;padding:11px 14px;font-weight:600;font-size:15px}
+.v.lock .go{background:#7a5a36}
+.note{margin:18px 0 0;font-size:14px;color:var(--muted)}
+footer{padding:8px 0 calc(34px + env(safe-area-inset-bottom));font-size:13px;color:var(--muted)}
+footer .copy{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:11px;opacity:.75}
+@media(max-width:400px){.brand>svg{display:none}}
+@media(max-width:860px){.list{grid-template-columns:minmax(0,1fr)}.hero h1{font-size:26px}}
+</style>
+<link rel="stylesheet" href="../shared/site.css">
+</head>
+<body>
+<header class="hero">
+  <div class="in">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="#d9b48a" d="M3 4h8v7H3zM13 4h8v4h-8zM13 10h8v10h-8zM3 13h8v7H3z"/></svg>
+      <nav data-variants aria-label="Переход"></nav>
+    </div>
+    <span class="tag">В разработке</span>
+    <h1>Витрины для клиентов</h1>
+    <p>Сайт для клиентов мастера: работы, отзывы и расчёт по одной ссылке из мессенджера. Две витрины открыты как демо-версии, третья - закрытая, для мастера из Краснодара.</p>
+  </div>
+</header>
+<main class="in">
+  <div class="list" id="list"></div>
+  <p class="note">Клиент видит только саму витрину, без кнопок "Главная" и "Витрины" - их видите только вы. Витрина для Краснодара закрыта: открывается только по пин-коду.</p>
+</main>
+<footer><div class="in">
+  <p class="copy" data-sign>Разработка в тестовом режиме. Все права защищены. <button type="button" class="ms-tlink" data-terms>Условия использования</button></p>
+</div></footer>
+
+<script>window.MEBEL_TOOL = "vitriny";</script>
+<script src="../shared/site.js"></script>
+<script>
+(function () {
+  var S = window.MebelSite;
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  var ICON = {
+    v3: '<path fill="currentColor" d="M4 5h16v11H4zm2 2v7h12V7zM8 18h8v2H8z"/>',
+    v4: '<path fill="currentColor" d="M12 3 2 11h3v9h6v-6h2v6h6v-9h3z"/>',
+    v5: '<path fill="currentColor" d="M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z"/>'
+  };
+  document.getElementById("list").innerHTML = S.VG.kids.map(function (v) {
+    return '<a class="v' + (v.locked ? " lock" : "") + '" href="' + esc(S.variantUrl(v)) + '">' +
+      '<span class="ic"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' + (ICON[v.id] || ICON.v3) + "</svg></span>" +
+      "<h2>" + esc(v.name) + "</h2>" + '<span class="st">' + (v.locked ? "В разработке, вход по пин-коду" : "Демо-версия, открыта всем") + "</span>" + '<p class="who">' + esc(v.who) + "</p>" +
+      "<ul>" + v.points.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" +
+      '<span class="go">' + (v.locked ? "Войти по пин-коду" : "Открыть витрину") + " →</span></a>";
+  }).join("");
+})();
+</script>
+</body>
+</html>
