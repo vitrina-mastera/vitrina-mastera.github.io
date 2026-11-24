@@ -196,6 +196,13 @@
   var PH = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", SWT = 0, SWO = null;
   var SEL = '[src*="#kr="],[poster*="#kr="],[style*="#kr="],[href*="#kr="]', RX = /data:image\/gif;base64,[A-Za-z0-9+\/=]+#kr=([0-9a-f]{8,})/g;
   var MAPREF = null;
+  // обратно: адрес фото на странице -> ссылка в данных ("@id"). Нужно Мастерской, чтобы удалять фото и ставить на них точки.
+  window.KR_REF = function (u) {
+    u = String(u || ""); var m = /#kr=([0-9a-f]{8,})$/.exec(u) || /\/f\/([0-9a-f]{8,})\.jpg(?:[?#].*)?$/.exec(u);
+    if (m) return "@" + m[1];
+    if (MAPREF) for (var id in MAPREF) if (MAPREF[id] === u) return "@" + id;
+    return u;
+  };
   function swapSoon() { if (!SWT) SWT = setTimeout(swapNow, 120); }
   function swapNow() {
     SWT = 0; if (!MAPREF) return;

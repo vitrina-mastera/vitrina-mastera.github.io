@@ -973,6 +973,13 @@ html[data-d2p] .toast{background:rgba(12,12,11,.72);color:rgba(241,238,232,.9);b
 html[data-d2p] #work.pano #workTop{opacity:0;pointer-events:none}
 html[data-d2p] #exitPano{background:rgba(12,12,11,.45);border:1px solid rgba(241,238,232,.3);color:rgba(241,238,232,.92);font-weight:500;font-size:11px;letter-spacing:.16em;text-transform:uppercase}
 html[data-d2p] #work.d2-capon #workUi{opacity:0;pointer-events:none}
+html[data-d2p] .d2-cap .x.sp{-webkit-line-clamp:8;font-size:13.5px}
+html[data-d2p] .d2-cap .x.sp span{color:rgba(241,238,232,.55)}
+/* описание в панели работы - в стиле слоя */
+html[data-d2] .spec dt{font-weight:500;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;padding-top:3px}
+html[data-d2] .spec dd{color:var(--ink);font-weight:300}
+/* счётчик фото между стрелками */
+html[data-d2] .fcnt{font-size:11.5px;letter-spacing:.18em;color:var(--ink)}
 
 /* заставка, правка 2 (Александр): блеск мягче и реже; у "Войти в дом" без рамки - две завитушки в противоположных углах;
    сиреневая туманность */

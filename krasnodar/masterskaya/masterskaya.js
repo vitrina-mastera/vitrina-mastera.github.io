@@ -4,7 +4,10 @@
        фото - на холсте (canvas), видео - кадр за кадром на холсте с записью MediaRecorder (идёт столько же, сколько
        длится ролик; звук сохраняется). Оригиналы фото храним, чтобы при смене знака пересобрать их.
    - "Водяной знак": что ставить (знак, надпись или оба), где (9 мест или узор по всему фото), размер, прозрачность, цвет.
-   - Готовые работы: поправить название и рассказ, добавить фото, скрыть с сайта (и вернуть).
+   - Готовые работы: поправить название и рассказ, перенести в другую комнату, добавить фото, удалить фото,
+       поставить на фото точки-детали с подписями, скрыть с сайта (и вернуть) или удалить работу.
+   - "Комнаты": свои комнаты (гараж, подвал, мансарда) и удаление ненужных - работы при этом переносятся.
+   - "Шрифты": пары шрифтов для титульной страницы и для карточек работ (список - vitrina/dizajn2/shrifty.js).
    - Голос: у текстовых полей "Надиктовать" (Web Speech API, где браузер умеет) и "Вставить" (текст из буфера -
        например, продиктованный в другой программе).
    - "Опубликовать": если Александр включил публикацию (publik.js) и мастер ввёл код мастера - правки уходят на сайт
@@ -33,6 +36,9 @@
   S.znak = Object.assign({}, ZN0, S.znakEd || !ZPUB ? S.znak || {} : ZPUB);
   if (!/^(uzor|[vcn][lcp])$/.test(S.znak.pos)) S.znak.pos = "np";
   S.novye = S.novye || []; S.k = S.k || []; // k - добавки к готовым работам: [{ rabota, media: [...] }]
+  // у работ ещё: komnata (перенос), udalit: [ссылки фото], udalitW (удалить работу), tochki: { ссылка или "m:<id>": [точки] }
+  // комнаты: novye [{ id, nazvanie, hint, posle }], udalit [{ id, kuda, nazvanie }], vernut [id]; шрифты: shrift { titul, kartochki }
+  S.komn = S.komn || {}; S.komn.novye = S.komn.novye || []; S.komn.udalit = S.komn.udalit || []; S.komn.vernut = S.komn.vernut || [];
   var saveT = 0;
   function save() { clearTimeout(saveT); saveT = setTimeout(function () { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Браузеру не хватило памяти - скачайте пакет"); } counts(); }, 250); }
 
@@ -237,13 +243,13 @@
     [].forEach.call(document.querySelectorAll(".tabs button"), function (b) { b.setAttribute("aria-selected", b.getAttribute("data-t") === t); });
     var nav = document.querySelector(".tabs"), sb = nav && nav.querySelector('[aria-selected="true"]'); // на телефоне вкладки не влезают - показать выбранную
     if (sb && (sb.offsetLeft < nav.scrollLeft || sb.offsetLeft + sb.offsetWidth > nav.scrollLeft + nav.clientWidth)) nav.scrollLeft = sb.offsetLeft - 16;
-    ({ master: vMaster, lenta: vLenta, znak: vZnak, fon: vFon, paket: vPaket, pomosh: vPomosh })[t]();
+    ({ master: vMaster, lenta: vLenta, komnaty: vKomnaty, znak: vZnak, fon: vFon, shrift: vShrift, paket: vPaket, pomosh: vPomosh })[t]();
     scrollTo(0, 0);
   }
   function counts() {
     var n = 0; S.novye.concat(S.k).forEach(function (w) { n += (w.media || []).filter(function (m) { return m.st === "ok"; }).length; });
     $("cntL").textContent = n || "";
-    var c = changes(), ch = c.m + c.k + (c.logo ? 1 : 0) + n + c.raboty + c.pravka + c.skryt + c.vernut + (c.znak ? 1 : 0) + c.fon;
+    var c = changes(), ch = c.m + c.k + (c.logo ? 1 : 0) + n + c.raboty + c.pravka + c.skryt + c.vernut + (c.znak ? 1 : 0) + c.fon + c.komn + c.shrift + c.udalF + c.tochki + c.udalW;
     $("cntP").textContent = ch || "";
   }
 
@@ -281,23 +287,92 @@
   var WF = [["material", "Материал", "ЛДСП Egger, МДФ эмаль"], ["cvet", "Цвет и отделка", "Тёмно-синий матовый, дуб"], ["razmery", "Размеры", "3,2 x 2,4 м"], ["god", "Год", "2025"]];
   function wfHas(w) { return WF.some(function (f) { return w[f[0]] != null && String(w[f[0]]).trim(); }); }
   function wfInputs(w, base) { return '<div class="g2">' + WF.map(function (f) { var v = w[f[0]] != null ? w[f[0]] : (base && base[f[0]]) || ""; return '<div class="f"><label>' + f[1] + '</label><input data-w="' + f[0] + '" value="' + esc(v) + '" placeholder="' + f[2] + '"></div>'; }).join("") + "</div>"; }
-  function ordRooms() { return (D.komnaty || []).slice(); }
+  function ordRooms() { return allRooms(false); }
+  function SL() { return window.KR_SLOJ || {}; }
+  function refOf(src) { return window.KR_REF ? window.KR_REF(src) : src; } // адрес фото на странице -> "@id" в данных
+  // ---------- комнаты: опубликованные + черновик ----------
+  function slojKomn() { var K = SL().komnaty || {}; return { novye: K.novye || [], udalit: K.udalit || [], imena: K.imena || {} }; }
+  function insRoom(list, k) {
+    if (k.posle === "^") { list.unshift(k); return; }
+    var at = -1; list.forEach(function (x, j) { if (x.id === k.posle) at = j; });
+    if (at >= 0) list.splice(at + 1, 0, k); else list.push(k);
+  }
+  function allRooms(withDel) {
+    var PK = slojKomn(), gone = {}, svoi = {};
+    PK.udalit.forEach(function (id) { gone[id] = 1; }); PK.novye.forEach(function (k) { svoi[k.id] = 1; });
+    var list = (D.komnaty || []).filter(function (k) { return !gone[k.id]; }).map(function (k) { return { id: k.id, nazvanie: k.nazvanie, hint: k.hint || "", svoj: !!svoi[k.id] }; });
+    PK.novye.forEach(function (k) { if (!gone[k.id] && !list.some(function (x) { return x.id === k.id; })) insRoom(list, { id: k.id, nazvanie: k.nazvanie, hint: k.hint || "", posle: k.posle, svoj: true }); });
+    S.komn.vernut.forEach(function (id) { if (!list.some(function (x) { return x.id === id; })) list.push({ id: id, nazvanie: PK.imena[id] || "Комната", vern: true }); });
+    S.komn.novye.forEach(function (k) { insRoom(list, { id: k.id, nazvanie: k.nazvanie, hint: k.hint || "", posle: k.posle, draft: true }); });
+    var dd = {}; S.komn.udalit.forEach(function (d) { dd[d.id] = d; });
+    list.forEach(function (k) { if (dd[k.id]) k.del = dd[k.id]; });
+    return withDel ? list : list.filter(function (k) { return !k.del; });
+  }
+  function roomName(id) { var k = allRooms(true).filter(function (x) { return x.id === id; })[0]; return k ? k.nazvanie : ""; }
+  function kEdit(id) { return S.k.filter(function (x) { return x.rabota === id; })[0] || null; }
+  function roomOf(id) { var e = kEdit(id); if (e && e.komnata) return e.komnata; var w = workById(id); return w ? w.komnata : ""; }
+  function worksIn(rid) {
+    return (D.raboty || []).filter(function (w) { var e = kEdit(w.id); return roomOf(w.id) === rid && !(e && (e.udalitW || e.skryt)); }).length +
+      S.novye.filter(function (w) { return w.komnata === rid; }).length;
+  }
   function workById(id) { return (D.raboty || []).filter(function (r) { return r.id === id; })[0] || null; }
+  var IC_DEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+  function roomSel(cur) { return '<select data-w="komnata">' + ordRooms().map(function (k) { return '<option value="' + esc(k.id) + '"' + (cur === k.id ? " selected" : "") + ">" + esc(k.nazvanie) + "</option>"; }).join("") + "</select>"; }
   function workCard(w, isNew, i) {
-    var rs = ordRooms(), base = isNew ? null : (workById(w.rabota) || {}), title = isNew ? (w.nazvanie || "Новая работа") : (base.nazvanie || w.rabota);
-    var h = '<div class="card' + (!isNew && w.skryt ? " hidden-w" : "") + '" data-card="' + (isNew ? "n" : "k") + i + '">';
+    var base = isNew ? null : (workById(w.rabota) || {});
+    var h = '<div class="card' + (!isNew && (w.skryt || w.udalitW) ? " hidden-w" : "") + '" data-card="' + (isNew ? "n" : "k") + i + '">';
+    if (!isNew && w.udalitW) {
+      return h + '<div class="row" style="border:0;padding:0"><span class="sp"><b>' + esc(base.nazvanie || "Работа") + '</b><br><span>Удалится с витрины после публикации</span></span><button type="button" class="btn l sm" data-nodel>Не удалять</button></div></div>';
+    }
     if (isNew) {
       h += '<div class="g2"><div class="f"><label>Название работы</label><input data-w="nazvanie" data-voice value="' + esc(w.nazvanie || "") + '" placeholder="Кухня с островом в ЖК ..."></div>' +
-        '<div class="f"><label>Комната на витрине</label><select data-w="komnata">' + rs.map(function (k) { return '<option value="' + esc(k.id) + '"' + (w.komnata === k.id ? " selected" : "") + ">" + esc(k.nazvanie) + "</option>"; }).join("") + "</select></div>" +
+        '<div class="f"><label>Комната на витрине</label>' + roomSel(w.komnata) + "</div>" +
         '<div class="f w"><label>Рассказ о работе</label><textarea data-w="rasskaz" rows="3" placeholder="Что хотел заказчик, что придумали, сроки, материалы">' + esc(w.rasskaz || "") + "</textarea></div></div>" + wfInputs(w, null);
     } else {
-      h += '<div class="g2"><div class="f w"><label>Название работы</label><input data-w="nazvanie" data-voice value="' + esc(w.nazvanie != null ? w.nazvanie : base.nazvanie || "") + '"></div>' +
+      h += '<div class="g2"><div class="f"><label>Название работы</label><input data-w="nazvanie" data-voice value="' + esc(w.nazvanie != null ? w.nazvanie : base.nazvanie || "") + '"></div>' +
+        '<div class="f"><label>Комната на витрине</label>' + roomSel(w.komnata || base.komnata) + "</div>" +
         '<div class="f w"><label>Рассказ о работе</label><textarea data-w="rasskaz" rows="3" placeholder="Что хотел заказчик, что придумали, сроки, материалы">' + esc(w.rasskaz != null ? w.rasskaz : base.rasskaz || "") + "</textarea></div></div>" + wfInputs(w, base) +
+        '<div class="mh">Фото на витрине</div><p class="mhs">Нажмите «Точки», чтобы отметить на фото детали с подписями. Корзина - удалить фото с витрины.</p><div class="media cur"></div>' +
         '<label class="chk"><input type="checkbox" data-skryt' + (w.skryt ? " checked" : "") + "> Скрыть эту работу с витрины (потом можно вернуть)</label>";
     }
-    h += '<div class="media"></div><div class="btns"><span class="btn sm file">Добавить фото и видео<input type="file" accept="image/*,video/*" multiple data-add></span>' +
-      '<button type="button" class="btn l sm" data-rm>' + (isNew ? "Убрать работу" : "Отменить правки") + "</button></div></div>";
+    h += (isNew ? "" : '<div class="mh">Новые фото и видео</div>') + '<div class="media"></div><div class="btns"><span class="btn sm file">Добавить фото и видео<input type="file" accept="image/*,video/*" multiple data-add></span>' +
+      '<button type="button" class="btn l sm" data-rm>' + (isNew ? "Убрать работу" : "Отменить правки") + "</button>" +
+      (isNew ? "" : '<button type="button" class="btn l sm" data-delw>Удалить работу</button>') + "</div></div>";
     return h;
+  }
+  // точки на фото: черновик (w.tochki[ключ]) главнее опубликованного (f.tochki)
+  function ptsOf(w, key, f) { return w.tochki && w.tochki[key] ? w.tochki[key] : ((f && f.tochki) || []); }
+  function setPts(w, key, list, f) {
+    w.tochki = w.tochki || {};
+    var pub = JSON.stringify((f && f.tochki) || []);
+    if (JSON.stringify(list) === pub) delete w.tochki[key]; else w.tochki[key] = list;
+    if (!Object.keys(w.tochki).length) delete w.tochki;
+    save();
+  }
+  // фото, которые уже на витрине (у готовой работы): удалить (с подтверждением) и точки
+  function drawCur(card, w) {
+    var box = card && card.querySelector(".media.cur"); if (!box) return;
+    var base = workById(w.rabota) || {}, F = (base.foto || []).filter(function (f) { return f && f.src; }), del = w.udalit || [];
+    if (!F.length) { box.innerHTML = '<p class="mhs" style="grid-column:1/-1">У работы пока нет фото.</p>'; return; }
+    box.innerHTML = F.map(function (f, j) {
+      var r = refOf(f.src), d = del.indexOf(r) >= 0, n = ptsOf(w, r, f).length;
+      return '<div class="m' + (d ? " del" : "") + '" data-j="' + j + '"><img src="' + esc(f.src) + '" alt="" loading="lazy"><span class="tip">' + (j === 0 ? "Обложка" : "Фото " + (j + 1)) + "</span>" +
+        (d ? '<span class="st">Удалится после публикации</span><button type="button" class="pt" data-back>Вернуть</button>' :
+          '<button type="button" class="x" aria-label="Удалить фото">' + IC_DEL + '</button><button type="button" class="pt" data-pt>Точки' + (n ? " · " + n : "") + "</button>") + "</div>";
+    }).join("");
+    F.forEach(function (f, j) {
+      var el = box.querySelector('[data-j="' + j + '"]'), r = refOf(f.src);
+      var x = el.querySelector(".x"), pt = el.querySelector("[data-pt]"), bk = el.querySelector("[data-back]");
+      if (x) x.onclick = function () {
+        var left = F.filter(function (g) { return (w.udalit || []).indexOf(refOf(g.src)) < 0; }).length + (w.media || []).filter(function (m) { return m.tip !== "video" && m.st === "ok"; }).length;
+        if (left <= 1) { toast("Это последнее фото работы. Сначала добавьте новое - или скройте работу целиком", 4200); return; }
+        if (!confirm("Удалить это фото с витрины? После публикации его не будет на сайте.")) return;
+        w.udalit = w.udalit || []; if (w.udalit.indexOf(r) < 0) w.udalit.push(r);
+        save(); drawCur(card, w);
+      };
+      if (bk) bk.onclick = function () { w.udalit = (w.udalit || []).filter(function (y) { return y !== r; }); if (!w.udalit.length) delete w.udalit; save(); drawCur(card, w); };
+      if (pt) pt.onclick = function () { editPoints(f.src, ptsOf(w, r, f), function (list) { setPts(w, r, list, f); drawCur(card, w); }); };
+    });
   }
   function vLenta() {
     var opts = (D.raboty || []).map(function (r) { return '<option value="' + esc(r.id) + '">' + esc(r.nazvanie) + "</option>"; }).join("");
@@ -306,7 +381,7 @@
       (videoOk() ? "" : '<p class="note">Этот браузер не умеет записывать видео со знаком - фото добавляются как обычно. Для видео откройте Мастерскую в <b>Chrome</b> или <b>Safari 15+</b>.</p>') +
       '<div class="eyebrow">Новые работы</div><div id="nw">' + S.novye.map(function (w, i) { return workCard(w, true, i); }).join("") + "</div>" +
       '<div class="btns"><button type="button" class="btn" id="addW">Новая работа</button></div>' +
-      '<div class="eyebrow">Готовые работы</div><p class="lead" style="margin-bottom:14px">Поправить название или рассказ, добавить фото, скрыть с витрины.</p><div id="kw">' + S.k.map(function (w, i) { return workCard(w, false, i); }).join("") + "</div>" +
+      '<div class="eyebrow">Готовые работы</div><p class="lead" style="margin-bottom:14px">Поправить название, рассказ и описание, перенести в другую комнату, добавить или удалить фото, поставить точки-детали, скрыть или удалить работу.</p><div id="kw">' + S.k.map(function (w, i) { return workCard(w, false, i); }).join("") + "</div>" +
       '<div class="card"><div class="f"><label>Работа на витрине</label><select id="kSel"><option value="">Выберите работу</option>' + opts + "</select></div></div>" +
       (hid.length ? '<div class="eyebrow">Скрыты с витрины</div><div class="card"><div class="list">' + hid.map(function (id) {
         var back = (S.vernut || []).indexOf(id) >= 0;
@@ -324,8 +399,17 @@
   }
   function bindCard(card, w, isNew, i) {
     if (!card) return;
-    w.media = w.media || [];
-    drawMedia(card, w.media);
+    w.media = w.media || []; card._w = w;
+    var nd = card.querySelector("[data-nodel]");
+    if (nd) { nd.onclick = function () { delete w.udalitW; save(); vLenta(); }; return; }
+    drawMedia(card, w.media); if (!isNew) drawCur(card, w);
+    var dw = card.querySelector("[data-delw]");
+    if (dw) dw.onclick = function () {
+      var b = workById(w.rabota) || {};
+      if (!confirm("Удалить работу «" + (b.nazvanie || "") + "» с витрины совсем? Её фото и описание пропадут с сайта после публикации. Если работа может ещё пригодиться - лучше поставьте галочку «Скрыть».")) return;
+      w.media.forEach(function (m) { del("m:" + m.id); del("o:" + m.id); del("k:" + m.id); });
+      S.k[i] = { rabota: w.rabota, udalitW: true, media: [] }; save(); vLenta();
+    };
     var base = isNew ? null : (workById(w.rabota) || {});
     [].forEach.call(card.querySelectorAll("[data-w]"), function (e) { e.addEventListener(e.tagName === "SELECT" ? "change" : "input", function () {
       var k = e.getAttribute("data-w");
@@ -347,17 +431,179 @@
     };
   }
   function drawMedia(card, list) {
-    var box = card && card.querySelector(".media"); if (!box) return;
+    var box = card && card.querySelector(".media:not(.cur)"); if (!box) return;
+    var w = card._w || {};
     box.innerHTML = list.map(function (m, j) {
       var st = m.st === "work" ? (m.tip === "video" ? "Видео: впечатываю знак..." : "Фото: впечатываю знак...") : m.st === "err" ? esc(m.err || "Ошибка") : m.tip === "video" ? (m.dur || 0) + " с, " + Math.round((m.size || 0) / 1048576 * 10) / 10 + " МБ" : "";
       return '<div class="m' + (m.st === "err" ? " err" : "") + '" data-j="' + j + '"><span class="tip">' + (m.tip === "video" ? "Видео" : "Фото") + "</span>" +
-        (m.st === "work" ? "" : '<button type="button" class="x" aria-label="Убрать">' + IC_X + "</button>") + (st ? '<span class="st">' + st + "</span>" : "") + "</div>";
+        (m.st === "work" ? "" : '<button type="button" class="x" aria-label="Убрать">' + IC_X + "</button>") + (st ? '<span class="st">' + st + "</span>" : "") +
+        (m.st === "ok" && m.tip !== "video" ? '<button type="button" class="pt" data-pt>Точки' + (ptsOf(w, "m:" + m.id).length ? " · " + ptsOf(w, "m:" + m.id).length : "") + "</button>" : "") + "</div>";
     }).join("");
     list.forEach(function (m, j) {
       var el = box.querySelector('[data-j="' + j + '"]'); if (!el) return;
       if (m.st === "ok") blobUrl(m.tip === "video" ? "k:" + m.id : "m:" + m.id).then(function (u) { if (u && el.isConnected) el.insertAdjacentHTML("afterbegin", '<img src="' + u + '" alt="">'); });
-      var x = el.querySelector(".x"); if (x) x.onclick = function () { del("m:" + m.id); del("o:" + m.id); del("k:" + m.id); list.splice(j, 1); save(); drawMedia(card, list); };
+      var x = el.querySelector(".x"); if (x) x.onclick = function () { del("m:" + m.id); del("o:" + m.id); del("k:" + m.id); list.splice(j, 1); if (w.tochki) { delete w.tochki["m:" + m.id]; if (!Object.keys(w.tochki).length) delete w.tochki; } save(); drawMedia(card, list); };
+      var pt = el.querySelector("[data-pt]");
+      if (pt) pt.onclick = function () { blobUrl("m:" + m.id).then(function (u) { if (!u) { toast("Фото не найдено в черновике"); return; } editPoints(u, ptsOf(w, "m:" + m.id), function (pl) { setPts(w, "m:" + m.id, pl, null); drawMedia(card, list); }); }); };
     });
+  }
+
+  // ---------- точки-детали на фото ----------
+  // Как у стартовых работ ("Детали крупным планом"): нажатие на фото ставит точку, у точки - подпись и пара слов.
+  // Клиент видит плюсики на фото и список деталей в описании; нажатие приближает фото к точке.
+  function editPoints(src, list, onSave) {
+    var P = JSON.parse(JSON.stringify(list || [])), back = document.activeElement, moved = false;
+    var ov = document.createElement("div"); ov.className = "pe"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true"); ov.setAttribute("aria-label", "Точки на фото");
+    ov.innerHTML = '<div class="pe-top"><b>Точки на фото</b><span class="sp"></span><button type="button" class="btn l sm" data-x>Отмена</button><button type="button" class="btn sm" data-ok>Сохранить</button></div>' +
+      '<div class="pe-sc"><p class="pe-h">Нажмите на фото там, где нужна точка, и подпишите её. Точку можно перетащить. Клиент увидит плюсик, а в описании - список «Детали крупным планом».</p>' +
+      '<div class="pe-ph"><div class="pe-in"><img alt="" draggable="false"><div class="pe-pts"></div></div></div><div class="pe-list"></div></div>';
+    document.body.appendChild(ov); document.documentElement.classList.add("pe-on");
+    var img = ov.querySelector("img"), box = ov.querySelector(".pe-in"), dots = ov.querySelector(".pe-pts"), lst = ov.querySelector(".pe-list");
+    img.src = src;
+    function r1(v) { return Math.round(v * 10) / 10; }
+    function drawDots() {
+      dots.innerHTML = P.map(function (t, i) { return '<button type="button" class="pe-p" data-i="' + i + '" style="left:' + t.x + "%;top:" + t.y + '%" aria-label="Точка ' + (i + 1) + '">' + (i + 1) + "</button>"; }).join("");
+    }
+    function drawList(focus) {
+      lst.innerHTML = P.length ? P.map(function (t, i) {
+        return '<div class="pe-r" data-i="' + i + '"><i>' + (i + 1) + '</i><div class="pe-f"><input data-n="' + i + '" value="' + esc(t.nazvanie) + '" placeholder="Подпись, например: Подсветка цоколя" maxlength="60">' +
+          '<textarea data-t="' + i + '" rows="2" placeholder="Пару слов подробнее (можно не писать)" maxlength="300">' + esc(t.tekst || "") + '</textarea></div><button type="button" class="pe-d" data-d="' + i + '" aria-label="Убрать точку ' + (i + 1) + '">' + IC_X + "</button></div>";
+      }).join("") : '<p class="pe-e">Точек пока нет. Нажмите на фото.</p>';
+      if (focus != null) { var f = lst.querySelector('[data-n="' + focus + '"]'); if (f) { f.focus({ preventScroll: true }); f.scrollIntoView({ block: "nearest", behavior: "smooth" }); } }
+    }
+    function draw(focus) { drawDots(); drawList(focus); }
+    draw();
+    lst.addEventListener("input", function (e) {
+      var n = e.target.getAttribute("data-n"), t = e.target.getAttribute("data-t");
+      if (n != null) P[+n].nazvanie = e.target.value; else if (t != null) P[+t].tekst = e.target.value;
+    });
+    lst.addEventListener("click", function (e) { var d = e.target.closest("[data-d]"); if (d) { P.splice(+d.getAttribute("data-d"), 1); draw(); } });
+    var drag = null;
+    box.addEventListener("pointerdown", function (e) {
+      var b = e.target.closest(".pe-p"); if (!b) return;
+      e.preventDefault(); drag = { i: +b.getAttribute("data-i"), b: b, x: e.clientX, y: e.clientY, m: false };
+      try { b.setPointerCapture(e.pointerId); } catch (er) {}
+    });
+    box.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      if (!drag.m && Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) < 6) return;
+      drag.m = true; var r = img.getBoundingClientRect();
+      var t = P[drag.i]; t.x = r1(Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100))); t.y = r1(Math.max(0, Math.min(100, (e.clientY - r.top) / r.height * 100)));
+      drag.b.style.left = t.x + "%"; drag.b.style.top = t.y + "%";
+    });
+    box.addEventListener("pointerup", function (e) {
+      if (drag) { var d = drag; drag = null; moved = true; if (!d.m) drawList(d.i); return; }
+      if (e.target.closest(".pe-p")) return;
+      var r = img.getBoundingClientRect(); if (!r.width) return;
+      if (P.length >= 12) { toast("Не больше 12 точек на одном фото"); return; }
+      P.push({ x: r1((e.clientX - r.left) / r.width * 100), y: r1((e.clientY - r.top) / r.height * 100), nazvanie: "", tekst: "" });
+      draw(P.length - 1);
+    });
+    box.addEventListener("pointercancel", function () { drag = null; });
+    function close() { ov.remove(); document.documentElement.classList.remove("pe-on"); removeEventListener("keydown", key); if (back && back.focus) back.focus({ preventScroll: true }); }
+    function key(e) { if (e.key === "Escape") close(); }
+    addEventListener("keydown", key);
+    ov.querySelector("[data-x]").onclick = close;
+    ov.querySelector("[data-ok]").onclick = function () {
+      P.forEach(function (t) { t.nazvanie = String(t.nazvanie || "").trim(); t.tekst = String(t.tekst || "").trim(); });
+      var bad = -1; P.forEach(function (t, i) { if (!t.nazvanie && bad < 0) bad = i; });
+      if (bad >= 0) { toast("Подпишите точку " + (bad + 1) + " - или уберите её"); drawList(bad); return; }
+      onSave(P); close(); toast(P.length ? "Точки сохранены. Они появятся на витрине после публикации" : "Точек нет");
+    };
+  }
+
+  // ---------- Комнаты ----------
+  var DELR = null; // комната, для которой открыт вопрос "куда перенести работы"
+  function vKomnaty() {
+    var R = allRooms(true), live = R.filter(function (k) { return !k.del; }), PK = slojKomn();
+    var gone = PK.udalit.filter(function (id) { return S.komn.vernut.indexOf(id) < 0; });
+    var h = '<section role="tabpanel"><h1>Комнаты</h1><p class="lead">Комнаты - это разделы дома на витрине. Можно добавить свою (гараж, подвал, мансарда, баня) и удалить ненужную. Новая комната появится в доме, когда в ней будет хотя бы одна работа: выберите её в карточке работы.</p>' +
+      '<div class="eyebrow">Комнаты в доме</div><div class="card"><div class="list kl">' + R.map(function (k) {
+        var n = worksIn(k.id), st = k.del ? "Удалится после публикации" + (k.del.kuda ? ", работы - в «" + esc(roomName(k.del.kuda)) + "»" : n ? ", работы скроются" : "") :
+          (n + " " + plural(n, ["работа", "работы", "работ"]) + (k.draft ? " · новая, появится после публикации" : k.vern ? " · вернётся после публикации" : k.svoj ? " · ваша комната" : "") + (!n && (k.draft || k.svoj) ? " · без работ в доме не видна" : ""));
+        var row = '<div class="row' + (k.del ? " hidden-w" : "") + '"><span class="sp"><b>' + esc(k.nazvanie) + "</b><br><span>" + st + "</span></span>" +
+          (k.del ? '<button type="button" class="btn l sm" data-undel="' + esc(k.id) + '">Не удалять</button>' : '<button type="button" class="btn l sm" data-del="' + esc(k.id) + '">Удалить</button>') + "</div>";
+        if (DELR === k.id && !k.del) {
+          var others = live.filter(function (x) { return x.id !== k.id; });
+          row += '<div class="kdel"><p>В комнате ' + n + " " + plural(n, ["работа", "работы", "работ"]) + ". Что с ними сделать?</p>" +
+            '<div class="f"><select id="kKuda">' + others.map(function (x) { return '<option value="' + esc(x.id) + '">Перенести в «' + esc(x.nazvanie) + "»</option>"; }).join("") +
+            '<option value="">Скрыть с витрины (вернуть можно во вкладке «Работы»)</option></select></div>' +
+            '<div class="btns"><button type="button" class="btn sm" id="kDelGo">Удалить комнату</button><button type="button" class="btn l sm" id="kDelNo">Отмена</button></div></div>';
+        }
+        return row;
+      }).join("") + "</div></div>" +
+      '<div class="eyebrow">Новая комната</div><div class="card"><div class="g2">' +
+      '<div class="f"><label for="kNm">Название</label><input id="kNm" data-voice maxlength="40" placeholder="Гараж"></div>' +
+      '<div class="f"><label for="kHint">Что там бывает</label><input id="kHint" maxlength="60" placeholder="стеллажи, верстаки, шкафы для инструмента"><small>Мелкая подпись под названием в доме. Можно не писать.</small></div>' +
+      '<div class="f w"><label for="kPos">Место в доме</label><select id="kPos"><option value="">В конце</option><option value="^">Первой</option>' +
+      live.map(function (x) { return '<option value="' + esc(x.id) + '">После «' + esc(x.nazvanie) + "»</option>"; }).join("") + "</select><small>Комнаты стоят в доме по порядку: на компьютере по три в ряд, на телефоне по две.</small></div>" +
+      '</div><div class="btns"><button type="button" class="btn" id="kAdd">Добавить комнату</button></div></div>' +
+      (gone.length ? '<div class="eyebrow">Удалённые комнаты</div><div class="card"><div class="list">' + gone.map(function (id) {
+        return '<div class="row"><span class="sp"><b>' + esc(PK.imena[id] || "Комната") + '</b></span><button type="button" class="btn l sm" data-vern="' + esc(id) + '">Вернуть</button></div>';
+      }).join("") + "</div></div>" : "") + "</section>";
+    $("main").innerHTML = h;
+    [].forEach.call(document.querySelectorAll("[data-del]"), function (b) { b.onclick = function () {
+      var id = b.getAttribute("data-del");
+      if (live.length <= 1) { toast("Должна остаться хотя бы одна комната"); return; }
+      if (!worksIn(id)) { if (!confirm("Удалить комнату «" + roomName(id) + "»?")) return; delRoom(id, ""); return; }
+      DELR = id; vKomnaty(); var k = $("kKuda"); if (k) k.focus();
+    }; });
+    if ($("kDelGo")) $("kDelGo").onclick = function () { var id = DELR; DELR = null; delRoom(id, $("kKuda").value); };
+    if ($("kDelNo")) $("kDelNo").onclick = function () { DELR = null; vKomnaty(); };
+    [].forEach.call(document.querySelectorAll("[data-undel]"), function (b) { b.onclick = function () { var id = b.getAttribute("data-undel"); S.komn.udalit = S.komn.udalit.filter(function (d) { return d.id !== id; }); save(); vKomnaty(); }; });
+    [].forEach.call(document.querySelectorAll("[data-vern]"), function (b) { b.onclick = function () { S.komn.vernut.push(b.getAttribute("data-vern")); save(); toast("Комната вернётся после публикации"); vKomnaty(); }; });
+    $("kAdd").onclick = function () {
+      var nm = $("kNm").value.trim().replace(/\s+/g, " ");
+      if (!nm) { toast("Напишите название комнаты"); $("kNm").focus(); return; }
+      if (allRooms(false).some(function (x) { return x.nazvanie.toLowerCase() === nm.toLowerCase(); })) { toast("Комната «" + nm + "» уже есть"); return; }
+      nm = nm.charAt(0).toUpperCase() + nm.slice(1);
+      S.komn.novye.push({ id: "k-" + uid(), nazvanie: nm, hint: $("kHint").value.trim(), posle: $("kPos").value });
+      save(); toast("Комната «" + nm + "» добавлена. Теперь выберите её в карточке работы"); vKomnaty();
+    };
+    voiceUp($("main"));
+  }
+  function delRoom(id, kuda) {
+    var rest = allRooms(false).filter(function (x) { return x.id !== id; }), to = kuda || (rest[0] || {}).id || "";
+    S.novye.forEach(function (w) { if (w.komnata === id) w.komnata = to; }); // новые работы черновика - в выбранную комнату (или в первую)
+    var j = -1; S.komn.novye.forEach(function (k, i) { if (k.id === id) j = i; });
+    if (j >= 0) { // своя ещё не опубликованная комната - просто убрать
+      S.komn.novye.splice(j, 1);
+      S.komn.novye.forEach(function (k) { if (k.posle === id) k.posle = ""; });
+    } else {
+      S.komn.vernut = S.komn.vernut.filter(function (x) { return x !== id; });
+      S.komn.udalit.push({ id: id, kuda: kuda, nazvanie: roomName(id) });
+    }
+    save(); toast("Комната удалится после публикации"); vKomnaty();
+  }
+
+  // ---------- Шрифты ----------
+  function shrPub() { return SL().shrift || {}; }
+  function shrVal(a) { return (S.shrift && S.shrift[a]) || shrPub()[a] || "klassika"; }
+  function shriftCh() { return !!S.shrift && ["titul", "kartochki"].some(function (a) { return (S.shrift[a] || "klassika") !== (shrPub()[a] || "klassika"); }); }
+  function vShrift() {
+    var FS = window.D2Shrift;
+    if (!FS) { $("main").innerHTML = '<section role="tabpanel"><h1>Шрифты</h1><p class="lead">Не загрузился список шрифтов. Обновите страницу.</p></section>'; return; }
+    FS.face();
+    var w0 = (D.raboty || [])[0] || {};
+    var AR = [
+      ["titul", "Титульная страница", "Заставка, дом с комнатами, меню и разделы.", M0.imya || "Fактура и Fорма", "Мебель на заказ: кухни, шкафы, гардеробные"],
+      ["kartochki", "Карточки работ", "Комната с работами и экран работы: название, описание, рассказ.", w0.nazvanie || "Кухня с подсветкой цоколя", "Корпус ЛДСП, фасады МДФ в плёнке. Подсветка цоколя - как ночной свет."]
+    ];
+    $("main").innerHTML = '<section role="tabpanel"><h1>Шрифты</h1><p class="lead">Выберите пару шрифтов: для заголовков и для текста. Все шрифты строгие, с русскими буквами. На витрине они поменяются после публикации.</p>' +
+      AR.map(function (a) {
+        var cur = shrVal(a[0]);
+        return '<div class="eyebrow">' + a[1] + '</div><p class="mhs" style="margin:-6px 0 12px">' + a[2] + '</p><div class="shr" role="group" aria-label="' + a[1] + '">' + FS.LIST.map(function (x) {
+          return '<button type="button" data-a="' + a[0] + '" data-id="' + x.id + '" aria-pressed="' + (cur === x.id) + '"><span class="sh-h" style="font-family:' + esc(x.head) + '">' + esc(a[3]) + '</span>' +
+            '<span class="sh-t" style="font-family:' + esc(x.text) + '">' + esc(a[4]) + '</span><span class="sh-n"><b>' + esc(x.nazvanie) + "</b> " + esc(x.opis) + "</span></button>";
+        }).join("") + "</div>";
+      }).join("") + "</section>";
+    [].forEach.call(document.querySelectorAll(".shr button"), function (b) { b.onclick = function () {
+      S.shrift = { titul: shrVal("titul"), kartochki: shrVal("kartochki") };
+      S.shrift[b.getAttribute("data-a")] = b.getAttribute("data-id");
+      if (!shriftCh()) delete S.shrift;
+      save();
+      [].forEach.call(document.querySelectorAll('.shr button[data-a="' + b.getAttribute("data-a") + '"]'), function (x) { x.setAttribute("aria-pressed", x === b); });
+    }; });
   }
 
   // ---------- Водяной знак ----------
@@ -660,8 +906,12 @@
     S.novye.concat(S.k).forEach(function (w) { (w.media || []).forEach(function (m) { if (m.st !== "ok") return; if (m.tip === "video") nv++; else nm++; }); });
     return { m: Object.keys(S.master).length, k: Object.keys(S.kontakty).length, logo: !!S.logo, foto: nm, video: nv,
       raboty: S.novye.filter(function (w) { return (w.media || []).some(function (m) { return m.st === "ok"; }) || w.nazvanie || w.rasskaz || wfHas(w); }).length,
-      pravka: S.k.filter(function (w) { return w.nazvanie != null || w.rasskaz != null || WF.some(function (f) { return w[f[0]] != null; }); }).length,
-      skryt: S.k.filter(function (w) { return w.skryt; }).length, vernut: (S.vernut || []).length, znak: znakChanged(),
+      pravka: S.k.filter(function (w) { return !w.udalitW && (w.nazvanie != null || w.rasskaz != null || w.komnata || WF.some(function (f) { return w[f[0]] != null; })); }).length,
+      skryt: S.k.filter(function (w) { return w.skryt && !w.udalitW; }).length, vernut: (S.vernut || []).length, znak: znakChanged(),
+      komn: S.komn.novye.length + S.komn.udalit.length + S.komn.vernut.length, shrift: shriftCh() ? 1 : 0,
+      udalF: S.k.reduce(function (a, w) { return a + (w.udalitW ? 0 : (w.udalit || []).length); }, 0),
+      tochki: S.novye.concat(S.k).filter(function (w) { return !w.udalitW && w.tochki && Object.keys(w.tochki).length; }).length,
+      udalW: S.k.filter(function (w) { return w.udalitW; }).length,
       fon: fonCh() ? 1 : 0, fonV: fonCh() && S.fon.tip === "video" ? fonVids().length : 0 };
   }
   // знак изменён, если мастер его трогал и он отличается от опубликованного (или опубликованного ещё нет)
@@ -681,6 +931,13 @@
     if (c.foto) L.push("Фото со знаком: " + c.foto);
     if (c.video) L.push("Видео со знаком: " + c.video);
     if (c.skryt) L.push("Скрыть с витрины: " + c.skryt);
+    if (c.udalW) L.push("Удалить работы: " + c.udalW);
+    if (c.udalF) L.push("Удалить фото: " + c.udalF);
+    if (c.tochki) L.push("Точки на фото: " + c.tochki + " " + plural(c.tochki, ["работа", "работы", "работ"]));
+    if (S.komn.novye.length) L.push("Новые комнаты: " + S.komn.novye.map(function (k) { return k.nazvanie; }).join(", "));
+    if (S.komn.udalit.length) L.push("Удалить комнаты: " + S.komn.udalit.map(function (d) { return d.nazvanie || "комната"; }).join(", "));
+    if (S.komn.vernut.length) L.push("Вернуть комнаты: " + S.komn.vernut.length);
+    if (c.shrift) L.push("Шрифты");
     if (c.vernut) L.push("Вернуть на витрину: " + c.vernut);
     if (c.fon) L.push("Фон витрины: " + fonName(S.fon));
     return L;
@@ -763,7 +1020,7 @@
     S.novye.concat(S.k).forEach(function (w) { (w.media || []).forEach(function (m) { del("m:" + m.id); del("o:" + m.id); del("k:" + m.id); }); });
     if (S.logo) del("logo");
     fonVids(true).forEach(function (m) { del("m:" + m.id); del("k:" + m.id); });
-    S = { master: {}, kontakty: {}, znak: S.znak, znakEd: false, novye: [], k: [], logoV: S.logoV || 0 };
+    S = { master: {}, kontakty: {}, znak: S.znak, znakEd: false, novye: [], k: [], logoV: S.logoV || 0, komn: { novye: [], udalit: [], vernut: [] } };
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
     LOGO_RASTER = null; counts();
   }
@@ -789,11 +1046,11 @@
       });
     }
     function media(list) {
-      var out = { foto: [], video: [] };
+      var out = { foto: [], video: [], map: {} }; // map: id фото черновика -> "@id" на сайте (для точек)
       return list.filter(function (m) { return m.st === "ok"; }).reduce(function (p, m) {
         return p.then(function () {
           if (m.tip === "video") return enc("m:" + m.id).then(function (f) { return enc("k:" + m.id).then(function (k) { out.video.push({ fajl: f, oblozhka: k, w: m.w, h: m.h, sek: m.dur }); }); });
-          return enc("m:" + m.id).then(function (f) { out.foto.push({ src: f, znak: true }); });
+          return enc("m:" + m.id).then(function (f) { out.foto.push({ src: f, znak: true }); out.map[m.id] = f; });
         });
       }, Promise.resolve()).then(function () { return out; });
     }
@@ -803,6 +1060,40 @@
     }).then(function (cur) {
       L = cur || {};
       L.v = 1; L.master = L.master || {}; L.kontakty = L.kontakty || {}; L.novye_raboty = L.novye_raboty || []; L.k_rabotam = L.k_rabotam || []; L.skryt = L.skryt || []; L.imena = L.imena || {};
+      // запись работы в правках: своя опубликованная - в novye_raboty, исходная - в k_rabotam (создаём по нужде)
+      function findT(id) { return L.novye_raboty.filter(function (x) { return x.id === id; })[0] || L.k_rabotam.filter(function (x) { return x.rabota === id; })[0] || null; }
+      function target(id) { var t = findT(id); if (!t) { t = { rabota: id, foto: [], video: [] }; L.k_rabotam.push(t); } return t; }
+      function hide(id, nm) { if (L.skryt.indexOf(id) < 0) { L.skryt.push(id); L.imena[id] = nm || wTitle(id) || "Работа"; } }
+      function delFoto(id, ref) {
+        var t = findT(id), hit = false;
+        if (t && t.foto) { var n = t.foto.length; t.foto = t.foto.filter(function (f) { return f.src !== ref; }); hit = t.foto.length < n; } // своё фото - убрать из правок совсем
+        if (!hit) { L.udalit_foto = L.udalit_foto || {}; var a = L.udalit_foto[id] = L.udalit_foto[id] || []; if (a.indexOf(ref) < 0) a.push(ref); }
+        if (L.tochki && L.tochki[id]) delete L.tochki[id][ref];
+      }
+      function setTochki(id, ref, list) { if (!ref) return; L.tochki = L.tochki || {}; (L.tochki[id] = L.tochki[id] || {})[ref] = list; }
+      function delWork(id) {
+        var own = L.novye_raboty.some(function (x) { return x.id === id; });
+        L.novye_raboty = L.novye_raboty.filter(function (x) { return x.id !== id; });
+        L.k_rabotam = L.k_rabotam.filter(function (x) { return x.rabota !== id; });
+        L.skryt = L.skryt.filter(function (x) { return x !== id; }); delete L.imena[id];
+        if (L.udalit_foto) delete L.udalit_foto[id]; if (L.tochki) delete L.tochki[id];
+        if (L.fon && L.fon.tip === "foto" && L.fon.rabota === id) delete L.fon; // фон был фото этой работы - вернётся подборка
+        if (!own) { L.udalit_raboty = L.udalit_raboty || []; if (L.udalit_raboty.indexOf(id) < 0) L.udalit_raboty.push(id); }
+      }
+      // комнаты
+      var KD = S.komn, moves = {};
+      if (KD.novye.length || KD.udalit.length || KD.vernut.length) {
+        var LK = L.komnaty = L.komnaty || {}; LK.novye = LK.novye || []; LK.udalit = LK.udalit || []; LK.imena = LK.imena || {};
+        KD.novye.forEach(function (k) { LK.novye.push({ id: k.id, nazvanie: k.nazvanie, hint: k.hint || "", posle: k.posle || "" }); });
+        KD.udalit.forEach(function (d) {
+          (D.raboty || []).forEach(function (w) { if (roomOf(w.id) === d.id) moves[w.id] = d.kuda || ""; }); // работы удаляемой комнаты
+          var j = -1; LK.novye.forEach(function (k, i) { if (k.id === d.id) j = i; });
+          if (j >= 0) LK.novye.splice(j, 1);
+          else if (LK.udalit.indexOf(d.id) < 0) { LK.udalit.push(d.id); LK.imena[d.id] = d.nazvanie || ""; }
+          LK.novye.forEach(function (k) { if (k.posle === d.id) k.posle = ""; });
+        });
+        KD.vernut.forEach(function (id) { LK.udalit = LK.udalit.filter(function (x) { return x !== id; }); });
+      }
       Object.keys(S.master).forEach(function (k) { L.master[k] = String(S.master[k]).trim(); });
       Object.keys(S.kontakty).forEach(function (k) { L.kontakty[k] = String(S.kontakty[k]).trim(); });
       // знак с этого устройства - только если мастер его менял, иначе остаётся опубликованный (с другого устройства)
@@ -814,10 +1105,12 @@
           var nw = { id: w.id, nazvanie: w.nazvanie || "Новая работа", komnata: w.komnata, rasskaz: w.rasskaz || "", foto: md.foto, video: md.video };
           WF.forEach(function (f) { if (w[f[0]] && String(w[f[0]]).trim()) nw[f[0]] = String(w[f[0]]).trim(); });
           neu.push(nw);
+          Object.keys(w.tochki || {}).forEach(function (key) { if (key.indexOf("m:") === 0) setTochki(w.id, md.map[key.slice(2)], w.tochki[key]); });
         });
       });
       chain = chain.then(function () { L.novye_raboty = neu.concat(L.novye_raboty); });
       S.k.forEach(function (w) {
+        if (w.udalitW) { chain = chain.then(function () { delWork(w.rabota); delete moves[w.rabota]; }); return; }
         chain = chain.then(function () { return media(w.media || []); }).then(function (md) {
           var txt = (w.nazvanie != null && w.nazvanie.trim()) || (w.rasskaz != null && w.rasskaz.trim()) || WF.some(function (f) { return w[f[0]] != null; });
           if (txt || md.foto.length || md.video.length) {
@@ -829,9 +1122,18 @@
             WF.forEach(function (f) { if (w[f[0]] != null) t[f[0]] = String(w[f[0]]).trim(); }); // пустое значение - стереть поле
             t.foto = (t.foto || []).concat(md.foto); t.video = (t.video || []).concat(md.video);
           }
-          if (w.skryt && L.skryt.indexOf(w.rabota) < 0) { L.skryt.push(w.rabota); L.imena[w.rabota] = (w.nazvanie && w.nazvanie.trim()) || wTitle(w.rabota) || "Работа"; }
+          if (w.skryt) hide(w.rabota, w.nazvanie && w.nazvanie.trim());
+          if (w.komnata && !(w.rabota in moves)) target(w.rabota).komnata = w.komnata;
+          (w.udalit || []).forEach(function (ref) { delFoto(w.rabota, ref); });
+          Object.keys(w.tochki || {}).forEach(function (key) {
+            var ref = key.indexOf("m:") === 0 ? md.map[key.slice(2)] : key;
+            if (ref && (w.udalit || []).indexOf(ref) < 0) setTochki(w.rabota, ref, w.tochki[key]);
+          });
         });
       });
+      // работы из удалённых комнат: в выбранную комнату или скрыть
+      chain = chain.then(function () { Object.keys(moves).forEach(function (id) { if (moves[id]) target(id).komnata = moves[id]; else hide(id); }); });
+      if (shriftCh()) L.shrift = { titul: shrVal("titul"), kartochki: shrVal("kartochki") };
       // фон: undefined - не трогаем, null - вернуть подборку, иначе новый фон
       chain = chain.then(function () { return fonOut(function (m) { return enc("m:" + m.id).then(function (f) { return enc("k:" + m.id).then(function (k) { return { f: f, k: k }; }); }); }); })
         .then(function (F) { if (F === null) delete L.fon; else if (F) L.fon = F; });
@@ -857,7 +1159,19 @@
     D.raboty = D.raboty || [];
     S.novye.forEach(function (w) { if (w.nazvanie || w.rasskaz || wfHas(w) || (w.media || []).length) { var x = { id: w.id, komnata: w.komnata, nazvanie: w.nazvanie || "Новая работа", rasskaz: w.rasskaz || "", foto: [] }; WF.forEach(function (f) { if (w[f[0]]) x[f[0]] = String(w[f[0]]).trim(); }); D.raboty.unshift(x); } });
     S.k.forEach(function (w) { var x = workById(w.rabota); if (!x) return; if (w.nazvanie && w.nazvanie.trim()) x.nazvanie = w.nazvanie.trim(); if (w.rasskaz && w.rasskaz.trim()) x.rasskaz = w.rasskaz.trim(); WF.forEach(function (f) { if (w[f[0]] != null) x[f[0]] = String(w[f[0]]).trim(); }); });
-    D.raboty = D.raboty.filter(function (x) { return L.skryt.indexOf(x.id) < 0; });
+    // комната, удалённые фото, точки, удалённые работы - Мастерская сразу показывает их как опубликованные
+    var mv = {}; S.komn.udalit.forEach(function (d) { (D.raboty || []).forEach(function (x) { if (roomOf(x.id) === d.id) mv[x.id] = d.kuda; }); });
+    S.k.forEach(function (w) {
+      var x = workById(w.rabota); if (!x) return;
+      if (w.komnata) x.komnata = w.komnata;
+      if (w.udalit && w.udalit.length) x.foto = (x.foto || []).filter(function (f) { return w.udalit.indexOf(refOf(f.src)) < 0; });
+      if (w.tochki) (x.foto || []).forEach(function (f) { var r = refOf(f.src); if (w.tochki[r]) f.tochki = w.tochki[r]; });
+    });
+    Object.keys(mv).forEach(function (id) { var x = workById(id); if (x && mv[id]) x.komnata = mv[id]; });
+    var gone = {}; S.k.forEach(function (w) { if (w.udalitW) gone[w.rabota] = 1; });
+    D.raboty = D.raboty.filter(function (x) { return !gone[x.id] && L.skryt.indexOf(x.id) < 0; });
+    var kd = {}; S.komn.udalit.forEach(function (d) { kd[d.id] = 1; });
+    D.komnaty = (D.komnaty || []).filter(function (k) { return !kd[k.id]; });
     window.KR_SLOJ = L;
     clearDraft(); banner();
   }
@@ -915,14 +1229,29 @@
       });
       return out;
     }
-    S.novye.forEach(function (w) { var md = media(w.media || []); if (!md.foto.length && !md.video.length && !w.nazvanie && !w.rasskaz && !wfHas(w)) return; var nw = { id: w.id, nazvanie: w.nazvanie || "Новая работа", komnata: w.komnata, rasskaz: w.rasskaz || "", foto: md.foto, video: md.video }; WF.forEach(function (f) { if (w[f[0]] && String(w[f[0]]).trim()) nw[f[0]] = String(w[f[0]]).trim(); }); P.novye_raboty.push(nw); });
+    function tk(id, w) { // точки: "m:<id>" -> путь файла в пакете
+      Object.keys(w.tochki || {}).forEach(function (key) {
+        var ref = key.indexOf("m:") === 0 ? "foto/ms-" + key.slice(2) + ".jpg" : key;
+        if ((w.udalit || []).indexOf(ref) >= 0) return;
+        P.tochki = P.tochki || {}; (P.tochki[id] = P.tochki[id] || {})[ref] = w.tochki[key];
+      });
+    }
+    if (S.komn.novye.length || S.komn.udalit.length) P.komnaty = { novye: S.komn.novye, udalit: S.komn.udalit.map(function (d) { return d.id; }) };
+    var mv = {}; S.komn.udalit.forEach(function (d) { (D.raboty || []).forEach(function (w) { if (roomOf(w.id) === d.id) mv[w.id] = d.kuda || ""; }); });
+    if (shriftCh()) P.shrift = { titul: shrVal("titul"), kartochki: shrVal("kartochki") };
+    S.novye.forEach(function (w) { var md = media(w.media || []); if (!md.foto.length && !md.video.length && !w.nazvanie && !w.rasskaz && !wfHas(w)) return; var nw = { id: w.id, nazvanie: w.nazvanie || "Новая работа", komnata: w.komnata, rasskaz: w.rasskaz || "", foto: md.foto, video: md.video }; WF.forEach(function (f) { if (w[f[0]] && String(w[f[0]]).trim()) nw[f[0]] = String(w[f[0]]).trim(); }); P.novye_raboty.push(nw); tk(w.id, w); });
     S.k.forEach(function (w) {
+      if (w.udalitW) { (P.udalit_raboty = P.udalit_raboty || []).push(w.rabota); delete mv[w.rabota]; return; }
       var md = media(w.media || []), e = { rabota: w.rabota, foto: md.foto, video: md.video };
+      if (w.komnata && !(w.rabota in mv)) e.komnata = w.komnata;
+      if (w.udalit && w.udalit.length) { P.udalit_foto = P.udalit_foto || {}; P.udalit_foto[w.rabota] = w.udalit.slice(); }
+      tk(w.rabota, w);
       if (w.nazvanie != null) e.nazvanie = w.nazvanie; if (w.rasskaz != null) e.rasskaz = w.rasskaz;
       var wf = false; WF.forEach(function (f) { if (w[f[0]] != null) { e[f[0]] = String(w[f[0]]).trim(); wf = true; } });
-      if (md.foto.length || md.video.length || e.nazvanie != null || e.rasskaz != null || wf) P.k_rabotam.push(e);
+      if (md.foto.length || md.video.length || e.nazvanie != null || e.rasskaz != null || wf || e.komnata) P.k_rabotam.push(e);
       if (w.skryt) P.skryt.push(w.rabota);
     });
+    Object.keys(mv).forEach(function (id) { if (mv[id]) P.k_rabotam.push({ rabota: id, komnata: mv[id], foto: [], video: [] }); else P.skryt.push(id); });
     var lg = S.logo ? get("logo").then(function (b) { if (b) { var n = "foto/logo-" + (S.logoV || 1) + (/svg/.test(S.logo.type) ? ".svg" : ".png"); P.logo = n; files.push([n, "logo"]); } }) : Promise.resolve();
     var fn = fonOut(function (m) { var n = "foto/ms-" + m.id + "." + m.ext, k = "foto/ms-" + m.id + "-kadr.jpg"; files.push([n, "m:" + m.id], [k, "k:" + m.id]); return Promise.resolve({ f: n, k: k }); })
       .then(function (F) { if (F === null) P.fon = { tip: "podborka" }; else if (F) P.fon = F; });

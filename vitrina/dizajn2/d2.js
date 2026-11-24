@@ -20,6 +20,8 @@
   var TEMY = { galereya: 1, kino: 1, grafit: 1, liniya: 1 };
   var tema = TEMY[window.D2_TEMA] ? window.D2_TEMA : "galereya";
   H.setAttribute("data-d2", ""); H.setAttribute("data-d2t", tema);
+  // шрифты на выбор мастера (Мастерская - "Шрифты", правки shrift; список - shrifty.js рядом)
+  var SHR = !!(window.D2Shrift && D.shrift && window.D2Shrift.apply(D.shrift));
 
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -509,6 +511,7 @@
       im.decoding = "async"; im.onload = function () { if (im && im.decode) im.decode().then(fin, fin); else fin(); }; im.onerror = fin; im.src = u;
       (home.d2pre = home.d2pre || []).push(im); // держим ссылку, чтобы браузер не выбросил декодированное фото
     });
+    if (SHR) { left++; window.D2Shrift.ready(D.shrift).then(function () { if (--left <= 0) done(); }); } // заставка - уже своими буквами
     if (!left) done();
     setTimeout(done, 3500);
   })();
@@ -742,7 +745,7 @@
     function tileSrc(w) { var f = (w.foto || [])[1]; return f && f.src ? { u: api.src(f), zoom: false } : { u: api.cover(w), zoom: true }; }
     function pad(n) { return (n < 10 ? "0" : "") + n; }
     function textHTML(w, i) {
-      var t = (api.chist ? api.chist(w.rasskaz) : w.rasskaz) || (w.resheniya || []).join(". "), meta = [w.gde, w.material, w.cvet, w.srok ? "Срок: " + w.srok : ""].filter(Boolean);
+      var t = (api.chist ? api.chist(w.rasskaz) : w.rasskaz) || (w.resheniya || []).join(". "), meta = api.meta ? api.meta(w) : [w.gde, w.material, w.cvet, w.srok ? "Срок: " + w.srok : ""].filter(Boolean);
       return '<div class="d2-sxi"><h3>' + e2(w.nazvanie) + "</h3>" + (meta.length ? '<p class="m">' + meta.map(e2).join(" · ") + "</p>" : "") +
         (t ? '<p class="x">' + e2(t) + "</p>" : "") + '<button type="button" class="d2-ln d2-sgo" data-open="' + i + '">Смотреть работу' + ARR + "</button></div>";
     }
@@ -891,8 +894,10 @@
     function capHTML() {
       var t = $("sTitle") ? $("sTitle").textContent : "", ch = [].map.call(document.querySelectorAll("#sChips span"), function (x) { return x.textContent; });
       var st = $("sStoryWrap") && !$("sStoryWrap").hidden ? $("sStory").textContent : "";
-      if (!ch.length && !st) return "";
-      return "<b>" + esc(t) + "</b>" + (ch.length ? '<p class="m">' + ch.map(esc).join(" · ") + "</p>" : "") + (st ? '<p class="x">' + esc(st) + "</p>" : "");
+      var sp = $("sSpecWrap") && !$("sSpecWrap").hidden ? [].map.call(document.querySelectorAll("#sSpec div"), function (d) { return "<span>" + esc(d.firstChild.textContent) + ":</span> " + esc(d.lastChild.textContent); }) : [];
+      if (!ch.length && !st && !sp.length) return "";
+      return "<b>" + esc(t) + "</b>" + (ch.length ? '<p class="m">' + ch.map(esc).join(" · ") + "</p>" : "") + (st ? '<p class="x">' + esc(st) + "</p>" : "") +
+        (sp.length ? '<p class="x sp">' + sp.join("<br>") + "</p>" : "");
     }
     function sync() { // в полноэкранном режиме - есть ли что показать; при смене работы описание прячется
       var on = wk.classList.contains("pano"), h = on ? capHTML() : "";

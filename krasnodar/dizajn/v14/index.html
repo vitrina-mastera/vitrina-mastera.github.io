@@ -472,6 +472,13 @@ body.pn-open #home{transform:scale(.965) translateX(-1.5%);transform-origin:50% 
 .thumbs img{width:100%;height:100%;object-fit:cover}
 .cap{font-size:13px;color:var(--muted);margin-top:8px}
 .story{color:#DDD3C4;font-size:15px}
+/* материал, цвет, размеры, год - то, что мастер заполнил в Мастерской (подписи слева, текст справа; на телефоне - друг под другом) */
+.spec{margin:0;display:grid;gap:0}
+.spec div{display:grid;grid-template-columns:minmax(92px,32%) 1fr;gap:4px 14px;padding:9px 0;border-top:1px solid var(--line)}
+.spec div:first-child{border-top:0;padding-top:2px}
+.spec dt{font-size:12px;letter-spacing:.06em;color:var(--muted)}
+.spec dd{margin:0;font-size:14.5px;line-height:1.45;color:#DDD3C4}
+@media (max-width:420px){.spec div{grid-template-columns:1fr}}
 .sol{list-style:none;display:grid;gap:6px;font-size:14px;color:#DDD3C4}
 .sol li{display:flex;gap:8px}.sol li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--acc);margin-top:9px}
 .review{background:#F1E9DC;color:#211A12;border-radius:16px;padding:16px}
@@ -491,6 +498,9 @@ body.pn-open #home{transform:scale(.965) translateX(-1.5%);transform-origin:50% 
 /* нижняя полоса кнопок: своя зона внизу слева, фото под неё не заходит */
 .work-ui{position:absolute;left:var(--m);bottom:calc(var(--m) + var(--sb));right:calc(var(--sw) + var(--m) * 2);z-index:6;display:flex;gap:10px;align-items:center;flex-wrap:nowrap;min-width:0}
 .grp{display:flex;gap:8px;align-items:center}
+/* счётчик фото между стрелками: стрелки листают фото работы, после последнего - следующая работа (отзыв мастера 2026-11-24) */
+.fcnt{min-width:44px;padding:0 4px;text-align:center;font-size:12.5px;letter-spacing:.12em;font-variant-numeric:tabular-nums;color:#F4EEE4;text-shadow:0 1px 6px rgba(0,0,0,.6);white-space:nowrap}
+.fcnt b{font-weight:500}
 .zoom{gap:0;height:46px;border-radius:99px;background:rgba(17,15,12,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(244,238,228,.22);overflow:hidden;transition:opacity .35s var(--ease),transform .45s var(--ease)}
 .zb{width:44px;height:44px;display:grid;place-items:center;transition:background .2s,opacity .2s}
 .zb svg{width:18px;height:18px}
@@ -767,6 +777,7 @@ body[data-vp=work] .toast.on{transform:translate(-50%,0)}
   <div class="work-ui fade-ui chrome" id="workUi">
     <div class="grp nav-g">
       <button type="button" class="ic" id="wPrev" aria-label="Предыдущая работа"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <span class="fcnt" id="wCnt" aria-live="polite" hidden></span>
       <button type="button" class="ic" id="wNext" aria-label="Следующая работа"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
     </div>
     <div class="grp zoom" role="group" aria-label="Масштаб фото">
@@ -795,6 +806,7 @@ body[data-vp=work] .toast.on{transform:translate(-50%,0)}
         <div class="sec" id="sDetWrap"><h4>Детали крупным планом</h4><div class="details" id="sDetails"></div></div>
         <div class="sec" id="sFotoWrap"><h4>Фото работы</h4><div class="thumbs" id="sThumbs"></div><p class="cap" id="sCap"></p></div>
         <div class="sec" id="sStoryWrap"><h4>Рассказ мастера</h4><p class="story" id="sStory"></p></div>
+        <div class="sec" id="sSpecWrap"><h4>О работе</h4><dl class="spec" id="sSpec"></dl></div>
         <div class="sec" id="sSolWrap"><h4>Что придумали</h4><ul class="sol" id="sSol"></ul></div>
         <div class="sec" id="sRevWrap"><h4>Отзыв хозяев</h4><div id="sRev"></div></div>
       </div>
@@ -828,6 +840,6 @@ body[data-vp=work] .toast.on{transform:translate(-50%,0)}
 <script>window.MEBEL_TOOL = "kr-dizajn";</script>
 <script src="../../../shared/site.js"></script>
 <script src="../../zamok.js"></script>
-<script>KrZamok.page({ scripts: ["../../../vitrina/risunki.js", "../../../vitrina/dizajn2/d2.js", "../../../vitrina/puteshestvie/puteshestvie.js"], back: "none" });</script>
+<script>KrZamok.page({ scripts: ["../../../vitrina/risunki.js", "../../../vitrina/dizajn2/shrifty.js", "../../../vitrina/dizajn2/d2.js", "../../../vitrina/puteshestvie/puteshestvie.js"], back: "none" });</script>
 </body>
 </html>

@@ -869,7 +869,7 @@
   function pim(w, i) { return '<div class="pim" data-open="' + i + '"><img src="' + esc(cover(w)) + '" alt="" draggable="false" decoding="async">' + wmHTML(fotos(w)[0]) + "</div>"; }
   function jText(w) {
     var t = chist(w.rasskaz) || (w.resheniya || []).join(". "), ov = otzyvy(w)[0];
-    return '<h3 class="ttl">' + esc(w.nazvanie) + '</h3><div class="mt">' + [w.gde, w.material, w.cvet, w.srok ? "Срок: " + w.srok : ""].filter(Boolean).map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("") + "</div>" +
+    return '<h3 class="ttl">' + esc(w.nazvanie) + '</h3><div class="mt">' + metaShort(w).map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("") + "</div>" +
       '<div class="txt">' + esc(t) + (ov ? "<q>" + esc(ov.tekst) + "</q>" : "") + "</div>";
   }
   function jGo(i) { return '<button type="button" class="jgo" data-open="' + i + '">Смотреть работу' + ARR + "</button>"; }
@@ -927,7 +927,7 @@
   var ZAPI = {
     turn: function (dir) { turn(dir); },
     open: function (i) { var w = S.room && S.room.works[i]; if (w) { JP = i; S.ri = i; nav({ s: "work", w: w }); } },
-    cover: cover, fotos: fotos, src: srcOf, wm: wmHTML, otzyvy: otzyvy, esc: esc, chist: chist,
+    cover: cover, fotos: fotos, src: srcOf, wm: wmHTML, otzyvy: otzyvy, esc: esc, chist: chist, meta: metaShort,
     lite: function () { return LITE || reduce; }
   };
   function buildBook(idx, anim) {
@@ -1230,14 +1230,24 @@
     t = String(t || "").trim(); if (!t) return "";
     return (t.match(/[^.!?]+[.!?]*/g) || [t]).filter(function (x) { return x.trim() && !SLUZH.test(x); }).join("").trim();
   }
+  // поля описания из Мастерской: [подпись, текст], пустые не показываем
+  function godT(w) { var g = String(w.god || "").trim(); return g ? g + (/^\d{4}$/.test(g) ? " год" : "") : ""; }
+  function spec(w) {
+    return [["Материалы", w.material], ["Цвет и отделка", w.cvet], ["Размеры", w.razmery], ["Год", godT(w)]]
+      .map(function (r) { return [r[0], chist(r[1])]; }).filter(function (r) { return r[1]; });
+  }
+  // короткая строка под названием в журнале: длинные описания (целое предложение про материалы) туда не идут
+  function metaShort(w) { return [w.gde, w.material, w.cvet, w.razmery, godT(w), w.srok ? "Срок: " + w.srok : ""].filter(function (x) { return x && String(x).length <= 40; }); }
   function renderSheet(w) {
     $("sheetSc").scrollTop = 0;
     $("sVid").textContent = w._k.nazvanie;
     $("sTitle").textContent = w.nazvanie;
-    $("sChips").innerHTML = [w.gde, w.material, w.cvet, w.razmery, w.god ? String(w.god) + (/^\d{4}$/.test(String(w.god).trim()) ? " год" : "") : "", w.srok ? "Срок: " + w.srok : ""].filter(Boolean).map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("");
+    $("sChips").innerHTML = [w.gde, w.srok ? "Срок: " + w.srok : ""].filter(Boolean).map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("");
     $("sChips").hidden = !$("sChips").innerHTML;
     var rk = chist(w.rasskaz);
     $("sStory").textContent = rk; $("sStoryWrap").hidden = !rk;
+    var sp = spec(w);
+    $("sSpec").innerHTML = sp.map(function (r) { return "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join(""); $("sSpecWrap").hidden = !sp.length;
     var rs = w.resheniya || [];
     $("sSol").innerHTML = rs.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join(""); $("sSolWrap").hidden = !rs.length;
     var ov = otzyvy(w);
@@ -1266,6 +1276,7 @@
     [].forEach.call($("sThumbs").children, function (b, i) { b.classList.toggle("on", i === S.foto); });
     var f = fotos(S.work)[S.foto];
     $("sCap").textContent = (S.work.foto || []).length > 1 ? "Фото " + (S.foto + 1) + " из " + S.work.foto.length + (f && f.podpis ? ": " + f.podpis : "") : "";
+    navArrows();
   }
   $("sThumbs").addEventListener("click", function (e) { var b = e.target.closest("[data-foto]"); if (b) showFoto(+b.getAttribute("data-foto")); });
   function showFoto(i) {
@@ -1466,7 +1477,7 @@
   });
 
   function fillWork(w) {
-    S.work = w; S.room = w._k; S.foto = 0; note = -1;
+    S.work = w; S.room = w._k; S.foto = Math.min(NEXT_FOTO || 0, Math.max(0, (w.foto || []).length - 1)); NEXT_FOTO = 0; note = -1;
     if (cur !== "work") { pano = false; $("work").classList.remove("pano"); panoHint(false); } // в обзоре листаем работы, не выходя из него
     $("note").classList.remove("on");
     renderSheet(w); renderSpots(); crumbs($("crumbsW"), 2); mini($("miniW"));
@@ -1491,7 +1502,7 @@
   // открыть работу: из карточки ленты (разворот рамки на весь экран) или просто проявлением
   function openWork(w, fromCard, done) {
     fillWork(w);
-    setFotoImg(fotos(w)[0], function (sz) {
+    setFotoImg(fotos(w)[S.foto], function (sz) {
       measureSheet();
       var r = restSt();
       zoomHint();
@@ -1537,7 +1548,7 @@
     sg.getAnimations().forEach(function (a) { a.cancel(); });
     sg.animate([{ opacity: 1, transform: sg.style.transform }, { opacity: 0, transform: "translateX(" + (-dx) + "px) " + sg.style.transform }], { duration: T(240), easing: "ease-in", fill: "forwards" }).onfinish = function () {
       fillWork(w);
-      setFotoImg(fotos(w)[0], function () {
+      setFotoImg(fotos(w)[S.foto], function () {
         var r = restSt(); st.s = r.s; st.x = r.x; st.y = r.y; applySt();
         sg.getAnimations().forEach(function (a) { a.cancel(); });
         sg.animate([{ opacity: 0, transform: "translateX(" + dx + "px) " + sg.style.transform }, { opacity: 1, transform: sg.style.transform }], { duration: T(520), easing: EASE });
@@ -1547,8 +1558,28 @@
     };
   }
   function stepWork(dir) { if (!S.work || WORKS.length < 2) return; var i = WORKS.indexOf(S.work); nav({ s: "work", w: WORKS[(i + dir + WORKS.length) % WORKS.length] }, { dir: dir }); }
-  $("wNext").onclick = function () { stepWork(1); };
-  $("wPrev").onclick = function () { stepWork(-1); };
+  // Стрелки (кнопки и клавиши) листают фото внутри работы, а свайп по фото - работы (просьба мастера 2026-11-24:
+  // клиент листает работы и не догадывается открыть описание, чтобы увидеть остальные фото).
+  // После последнего фото стрелка ведёт к следующей работе, с первого фото назад - к последнему фото предыдущей.
+  var NEXT_FOTO = 0;
+  function stepFoto(dir) {
+    var n = (S.work && S.work.foto || []).length, j = S.foto + dir;
+    if (n > 1 && j >= 0 && j < n) { showFoto(j); return; }
+    if (!S.work || WORKS.length < 2) { if (n > 1) showFoto(j); return; }
+    var i = WORKS.indexOf(S.work), w = WORKS[(i + dir + WORKS.length) % WORKS.length];
+    NEXT_FOTO = dir < 0 ? Math.max(0, (w.foto || []).length - 1) : 0;
+    nav({ s: "work", w: w }, { dir: dir });
+  }
+  function navArrows() {
+    var n = (S.work && S.work.foto || []).length, c = $("wCnt");
+    c.hidden = n < 2; c.innerHTML = n < 2 ? "" : "<b>" + (S.foto + 1) + "</b> / " + n;
+    var more = WORKS.length > 1;
+    $("wNext").setAttribute("aria-label", n > 1 && S.foto < n - 1 ? "Следующее фото" : more ? "Следующая работа" : "Следующее фото");
+    $("wPrev").setAttribute("aria-label", n > 1 && S.foto > 0 ? "Предыдущее фото" : more ? "Предыдущая работа" : "Предыдущее фото");
+    $("wNext").title = $("wNext").getAttribute("aria-label"); $("wPrev").title = $("wPrev").getAttribute("aria-label");
+  }
+  $("wNext").onclick = function () { stepFoto(1); };
+  $("wPrev").onclick = function () { stepFoto(-1); };
   $("workBack").onclick = function () { up(); };
 
   // Просмотр на весь экран (кнопка "На весь экран"): фото сразу целиком на тёмном фоне, крестик сверху и Esc - закрыть,
@@ -1737,8 +1768,8 @@
       if (k === "+" || k === "=") zoomStep(1);
       else if (k === "-" || k === "_") zoomStep(-1);
       else if (k === "0") animTo(restSt(), 450, eEase);
-      else if (k === "ArrowRight") stepWork(1);
-      else if (k === "ArrowLeft") stepWork(-1);
+      else if (k === "ArrowRight") stepFoto(1);
+      else if (k === "ArrowLeft") stepFoto(-1);
       else if (k === "ArrowDown" && (S.work.foto || []).length > 1 && !e.target.closest(".sheet-sc")) { showFoto(S.foto + 1); e.preventDefault(); }
       else if (k === "ArrowUp" && (S.work.foto || []).length > 1 && !e.target.closest(".sheet-sc")) { showFoto(S.foto - 1); e.preventDefault(); }
     }

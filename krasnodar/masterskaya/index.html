@@ -142,6 +142,48 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
 .banner[hidden]{display:none}
 .small-link{background:none;border:0;padding:0;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;min-height:36px}
 .hidden-w{opacity:.55}
+/* фото работы: на витрине и новые; точки, удаление (2026-11-24) */
+.mh{font-weight:500;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:22px 0 0}
+.mhs{font-size:13px;color:var(--muted);margin:4px 0 0;max-width:620px}
+.m .pt{position:absolute;left:6px;bottom:6px;min-height:32px;padding:0 10px;background:rgba(20,20,19,.82);color:#fff;font-weight:500;font-size:10px;letter-spacing:.12em;text-transform:uppercase;border:1px solid rgba(255,255,255,.25)}
+.m.del img{opacity:.3;filter:grayscale(1)}
+.m.del .st{bottom:44px;background:none}
+.m .st~.pt{bottom:6px}
+/* окно точек на фото */
+html.pe-on,html.pe-on body{overflow:hidden}
+.pe{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column}
+.pe-top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) var(--pad) 10px;border-bottom:1px solid var(--line)}
+.pe-top b{font-family:var(--serif);font-weight:400;font-size:20px}
+.pe-top .sp{flex:1}
+.pe-sc{flex:1;overflow:auto;padding:14px var(--pad) calc(30px + var(--sb));-webkit-overflow-scrolling:touch}
+.pe-h{font-size:13.5px;color:var(--muted);max-width:640px;margin-bottom:12px}
+.pe-ph{display:flex;justify-content:center;background:#0c0c0b;border:1px solid var(--line);padding:8px}
+.pe-in{position:relative;display:inline-block;touch-action:none;cursor:crosshair;user-select:none;-webkit-user-select:none}
+.pe-in img{display:block;max-width:100%;max-height:min(58vh,620px);width:auto;height:auto}
+.pe-p{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#F1EEE8;color:#121211;font-weight:500;font-size:13px;display:grid;place-items:center;box-shadow:0 0 0 6px rgba(241,238,232,.28),0 2px 10px rgba(0,0,0,.5);cursor:grab;touch-action:none}
+.pe-list{display:grid;gap:10px;margin-top:14px;max-width:760px}
+.pe-r{display:grid;grid-template-columns:30px 1fr 40px;gap:10px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+.pe-r i{font-style:normal;width:28px;height:28px;border-radius:50%;border:1px solid var(--kr-line2);display:grid;place-items:center;font-size:13px;margin-top:8px}
+.pe-f{display:grid;gap:8px;min-width:0}
+.pe-f textarea{min-height:0;resize:vertical}
+.pe-d{width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line);color:var(--muted)}
+.pe-d svg{width:16px;height:16px}
+.pe-e{color:var(--muted);font-size:14px;padding:6px 0}
+@media (min-width:900px){.pe-sc{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:0 28px;align-content:start}
+  .pe-h{grid-column:1/-1}.pe-ph{position:sticky;top:0;align-self:start}.pe-in img{max-height:calc(100vh - 190px)}.pe-list{margin-top:0}}
+/* комнаты */
+.kdel{padding:4px 0 14px;border-top:0}
+.kdel p{font-size:14px;margin:0 0 8px}
+/* шрифты: пары на выбор */
+.shr{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:8px}
+.shr button{display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;padding:18px 18px 16px;border:1px solid var(--line);background:var(--card);color:var(--ink);min-height:150px}
+.shr button[aria-pressed=true]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.shr .sh-h{font-size:24px;line-height:1.12;font-weight:400}
+.shr .sh-t{font-size:14px;line-height:1.45;font-weight:300;color:var(--muted)}
+.shr .sh-n{margin-top:auto;font-size:12px;color:var(--muted);line-height:1.4}
+.shr .sh-n b{display:block;color:var(--ink);font-weight:500;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:2px}
+.shr button[aria-pressed=true] .sh-n b::after{content:" - выбрано";letter-spacing:.1em}
+@media (hover:hover){.shr button:hover{border-color:var(--kr-line2)}}
 .how{margin:0 0 8px;padding:0;list-style:none;counter-reset:h;max-width:640px}
 .how li{counter-increment:h;position:relative;padding:10px 0 10px 42px;border-top:1px solid var(--line);color:var(--muted);font-size:15px}
 .how li::before{content:counter(h);position:absolute;left:0;top:9px;width:28px;height:28px;border:1px solid var(--kr-line2);border-radius:50%;display:grid;place-items:center;font-size:13px;color:var(--ink)}
@@ -177,8 +219,10 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
     <nav class="tabs" role="tablist" aria-label="Разделы Мастерской">
       <button type="button" role="tab" aria-selected="true" data-t="master">О мастере</button>
       <button type="button" role="tab" aria-selected="false" data-t="lenta">Работы<i id="cntL"></i></button>
+      <button type="button" role="tab" aria-selected="false" data-t="komnaty">Комнаты</button>
       <button type="button" role="tab" aria-selected="false" data-t="znak">Знак</button>
       <button type="button" role="tab" aria-selected="false" data-t="fon">Фон</button>
+      <button type="button" role="tab" aria-selected="false" data-t="shrift">Шрифты</button>
       <button type="button" role="tab" aria-selected="false" data-t="paket">Опубликовать<i id="cntP"></i></button>
       <button type="button" role="tab" aria-selected="false" data-t="pomosh">Помощь</button>
     </nav>
@@ -191,6 +235,6 @@ h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);lin
 <script>window.MEBEL_TOOL = "kr-masterskaya";</script>
 <script src="../../shared/site.js"></script>
 <script src="../zamok.js"></script>
-<script>KrZamok.page({ scripts: ["publik.js", "pomosh.js", "masterskaya.js"], back: "none" });</script>
+<script>KrZamok.page({ scripts: ["publik.js", "pomosh.js", "../../vitrina/dizajn2/shrifty.js", "masterskaya.js"], back: "none" });</script>
 </body>
 </html>

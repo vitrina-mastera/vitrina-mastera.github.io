@@ -12,11 +12,22 @@
      fon               - фон первого экрана: { tip: "video", video?, video_tel?, kadr?, kadr_tel? } - своё видео (для
                          компьютера / для телефона, нет одного - берётся другое), { tip: "foto", rabota, foto } - фото
                          работы (номер фото с 0), { tip: "podborka" } или нет поля - подборка из данных витрины.
+   С 2026-11-24 (отзыв мастера):
+     komnaty           - { novye: [{ id, nazvanie, hint?, posle? }], udalit: [id, ...] } - свои комнаты (posle - id комнаты,
+                         после которой стоит новая; нет - в конце) и удалённые. Работы удалённой комнаты, которые мастер
+                         не перенёс, уходят в первую оставшуюся комнату - ничего не пропадает молча. Новая комната без работ
+                         клиенту не показывается (в доме не висит пустая), Мастерская видит её через KR_SLOJ.
+     k_rabotam[].komnata, novye_raboty[].komnata - перенос работы в другую комнату;
+     udalit_raboty     - [id, ...] - удалённые работы (в Мастерской их больше нет, вернуть может только Александр);
+     udalit_foto       - { id работы: [src, ...] } - удалённые фото (src как в данных: "@id" или путь);
+     tochki            - { id работы: { src фото: [{ x, y, nazvanie, tekst }] } } - точки-детали на фото (x, y в %);
+                         пустой список - убрать точки. Точки 1-го фото живут и в w.tochki (так их читает витрина);
+     shrift            - { titul, kartochki } - шрифты титульной страницы и карточек работ (список - vitrina/dizajn2/shrifty.js).
    Функция меняет V на месте и возвращает счётчики. */
 (function (root) {
   "use strict";
   function apply(V, P, warn) {
-    var cnt = { raboty: 0, foto: 0, video: 0, skryto: 0 };
+    var cnt = { raboty: 0, foto: 0, video: 0, skryto: 0, udaleno: 0 };
     if (!V || !P) return cnt;
     var keep = function (o, src) {
       Object.keys(src || {}).forEach(function (k) { if (typeof src[k] === "string" && src[k].trim() !== "") o[k] = src[k].trim(); });
@@ -24,7 +35,29 @@
     V.master = V.master || {}; V.kontakty = V.kontakty || {}; V.video = V.video || []; V.raboty = V.raboty || [];
     keep(V.master, P.master); keep(V.kontakty, P.kontakty);
     if (P.logo) V.master.logo = P.logo;
-    var rooms = {}; (V.komnaty || []).forEach(function (k) { rooms[k.id] = k; });
+    V.komnaty = V.komnaty || [];
+    // точки 1-го фото: в исходных данных они у работы (w.tochki) - переносим на само фото, чтобы удаление и перестановка
+    // фото не пересаживали их на другое фото; в конце возвращаем в w.tochki
+    V.raboty.forEach(function (w) { var f0 = w && w.foto && w.foto[0]; if (f0 && !f0.tochki && w.tochki && w.tochki.length) f0.tochki = w.tochki; });
+    var KM = P.komnaty && typeof P.komnaty === "object" ? P.komnaty : null, svoi = {};
+    if (KM) {
+      var changed = false;
+      (KM.novye || []).forEach(function (k) {
+        if (!k || !k.id || !String(k.nazvanie || "").trim()) return;
+        if (V.komnaty.some(function (x) { return x.id === k.id; })) return;
+        var nk = { id: k.id, nazvanie: String(k.nazvanie).trim(), hint: String(k.hint || "").trim() };
+        var at = -1; if (k.posle) V.komnaty.forEach(function (x, j) { if (x.id === k.posle) at = j; });
+        if (k.posle === "^") V.komnaty.unshift(nk); else if (at >= 0) V.komnaty.splice(at + 1, 0, nk); else V.komnaty.push(nk);
+        svoi[k.id] = 1; changed = true;
+      });
+      var del = {}; (KM.udalit || []).forEach(function (id) { del[id] = 1; });
+      if (Object.keys(del).length && V.komnaty.some(function (k) { return !del[k.id]; })) {
+        var n0 = V.komnaty.length; V.komnaty = V.komnaty.filter(function (k) { return !del[k.id]; }); if (V.komnaty.length !== n0) changed = true;
+      }
+      // раскладка этажей посчитается заново по порядку списка (у старых комнат были свои col/row)
+      if (changed) V.komnaty.forEach(function (k) { delete k.col; delete k.row; delete k.span; });
+    }
+    var rooms = {}; V.komnaty.forEach(function (k) { rooms[k.id] = k; });
     var vids = {}; V.video.forEach(function (v) { if (v.fajl) vids[v.fajl] = 1; });
     function addVideo(list, w) {
       (list || []).forEach(function (v) {
@@ -50,6 +83,7 @@
       if (!w) { if (warn) warn("нет работы " + r.rabota + " - пропускаю"); return; }
       if (typeof r.nazvanie === "string" && r.nazvanie.trim()) w.nazvanie = r.nazvanie.trim();
       if (typeof r.rasskaz === "string" && r.rasskaz.trim()) w.rasskaz = r.rasskaz.trim();
+      if (r.komnata && rooms[r.komnata]) { w.komnata = r.komnata; w.vid = rooms[r.komnata].nazvanie; }
       ["material", "cvet", "razmery", "god"].forEach(function (k) { if (typeof r[k] === "string") { if (r[k].trim()) w[k] = r[k].trim(); else delete w[k]; } });
       w.foto = w.foto || [];
       var have = {}; w.foto.forEach(function (f) { have[f.src] = 1; });
@@ -63,6 +97,38 @@
       V.video = V.video.filter(function (v) { return !hide[v.rabota]; });
       cnt.skryto = n - V.raboty.length;
     }
+    if (P.udalit_raboty && P.udalit_raboty.length) {
+      var gone = {}; P.udalit_raboty.forEach(function (id) { gone[id] = 1; });
+      var n1 = V.raboty.length;
+      V.raboty = V.raboty.filter(function (w) { return !gone[w.id]; });
+      V.video = V.video.filter(function (v) { return !gone[v.rabota]; });
+      cnt.udaleno = n1 - V.raboty.length;
+    }
+    var UF = P.udalit_foto && typeof P.udalit_foto === "object" ? P.udalit_foto : null;
+    if (UF) V.raboty.forEach(function (w) {
+      var d = UF[w.id]; if (!d || !d.length || !w.foto) return;
+      var dd = {}; d.forEach(function (s) { dd[s] = 1; });
+      w.foto = w.foto.filter(function (f) { return !(f && dd[f.src]); });
+    });
+    var TP = P.tochki && typeof P.tochki === "object" ? P.tochki : null;
+    if (TP) V.raboty.forEach(function (w) {
+      var m = TP[w.id]; if (!m || typeof m !== "object") return;
+      (w.foto || []).forEach(function (f) {
+        if (!f || !f.src || !Array.isArray(m[f.src])) return;
+        f.tochki = m[f.src].filter(function (t) { return t && isFinite(t.x) && isFinite(t.y) && String(t.nazvanie || "").trim(); }).map(function (t) {
+          return { x: Math.max(0, Math.min(100, +t.x)), y: Math.max(0, Math.min(100, +t.y)), nazvanie: String(t.nazvanie).trim(), tekst: String(t.tekst || "").trim() };
+        });
+      });
+    });
+    V.raboty.forEach(function (w) { var f0 = w.foto && w.foto[0]; w.tochki = (f0 && f0.tochki) || []; });
+    if (KM) {
+      // работы из удалённых комнат (не перенесённые мастером) - в первую комнату; свои пустые комнаты клиенту не показываем
+      var first = V.komnaty[0];
+      V.raboty.forEach(function (w) { if (first && !rooms[w.komnata]) { w.komnata = first.id; w.vid = first.nazvanie; } });
+      var used = {}; V.raboty.forEach(function (w) { used[w.komnata] = 1; });
+      V.komnaty = V.komnaty.filter(function (k) { return !svoi[k.id] || used[k.id]; });
+    }
+    if (P.shrift && typeof P.shrift === "object") V.shrift = { titul: String(P.shrift.titul || ""), kartochki: String(P.shrift.kartochki || "") };
     var F = P.fon;
     if (F && typeof F === "object") {
       if (F.tip === "video" && (F.video || F.video_tel)) {
