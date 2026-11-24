@@ -119,7 +119,7 @@
       "<h1>Закрытая витрина</h1><p>Вход только по пин-коду. Его выдаёт тот, кто прислал вам эту ссылку.</p>" +
       '<input id="krPin" type="password" inputmode="numeric" enterkeyhint="go" pattern="[0-9]*" autocomplete="one-time-code" maxlength="16" placeholder="••••••••" aria-label="Пин-код">' +
       '<button type="submit" id="krGo">Войти</button><div class="msg" id="krMsg" role="status" aria-live="polite"></div>' +
-      (window.MEBEL_TOOL === "kr-klient" ? "" : '<div class="foot">Разработка в тестовом режиме. Все права защищены.</div>') + "</form>"; // клиенту пометка о тесте не нужна
+      (/^kr-(klient|proba|raschet)$/.test(window.MEBEL_TOOL) ? "" : '<div class="foot">Разработка в тестовом режиме. Все права защищены.</div>') + "</form>"; // клиенту пометка о тесте не нужна
     (document.body || document.documentElement).appendChild(el);
     var vv = window.visualViewport;
     if (vv) { var f = function () { if (!el.isConnected) { vv.removeEventListener("resize", f); vv.removeEventListener("scroll", f); return; } el.style.top = vv.offsetTop + "px"; el.style.height = vv.height + "px"; el.style.bottom = "auto"; }; vv.addEventListener("resize", f); vv.addEventListener("scroll", f); f(); }
@@ -340,7 +340,7 @@
       }, Promise.resolve()).then(function () {
         hide.remove();
         // чистая версия для клиентов: скрытый вход мастера удержанием знака (master-vhod.js)
-        if (window.MEBEL_TOOL === "kr-klient") loadScript(BASE + "master-vhod.js").catch(function () {});
+        if (window.MEBEL_TOOL === "kr-klient" || window.MEBEL_TOOL === "kr-proba") loadScript(BASE + "master-vhod.js").catch(function () {});
         if (opts && opts.back === "none") return; // главная (дом): возвращаться некуда
         var a = document.createElement("a"); a.id = "krBack"; a.href = BASE; a.textContent = "← Назад"; a.title = "Назад к дому"; if (opts && opts.back === "bl") a.className = "bl";
         document.body.appendChild(a);

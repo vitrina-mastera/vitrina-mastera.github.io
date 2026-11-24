@@ -23,6 +23,8 @@
      tochki            - { id работы: { src фото: [{ x, y, nazvanie, tekst }] } } - точки-детали на фото (x, y в %);
                          пустой список - убрать точки. Точки 1-го фото живут и в w.tochki (так их читает витрина);
      shrift            - { titul, kartochki } - шрифты титульной страницы и карточек работ (список - vitrina/dizajn2/shrifty.js).
+   С 2026-11-24 (быстрый расчёт):
+     kalk              - цены быстрого расчёта для клиента (Мастерская, "Цены"; формат и формулы - vitrina/kalk/kalk-ceny.js).
    Функция меняет V на месте и возвращает счётчики. */
 (function (root) {
   "use strict";
@@ -128,6 +130,7 @@
       var used = {}; V.raboty.forEach(function (w) { used[w.komnata] = 1; });
       V.komnaty = V.komnaty.filter(function (k) { return !svoi[k.id] || used[k.id]; });
     }
+    if (P.kalk && typeof P.kalk === "object") V.kalk = JSON.parse(JSON.stringify(P.kalk));
     if (P.shrift && typeof P.shrift === "object") V.shrift = { titul: String(P.shrift.titul || ""), kartochki: String(P.shrift.kartochki || "") };
     var F = P.fon;
     if (F && typeof F === "object") {

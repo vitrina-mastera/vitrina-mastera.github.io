@@ -8,6 +8,8 @@
        поставить на фото точки-детали с подписями, скрыть с сайта (и вернуть) или удалить работу.
    - "Комнаты": свои комнаты (гараж, подвал, мансарда) и удаление ненужных - работы при этом переносятся.
    - "Шрифты": пары шрифтов для титульной страницы и для карточек работ (список - vitrina/dizajn2/shrifty.js).
+   - "Цены": цены для быстрого расчёта клиента (krasnodar/raschet/; формулы и список - vitrina/kalk/kalk-ceny.js),
+       в правках поле kalk; показывать ли расчёт клиентам; живые примеры, как посчитается.
    - Голос: у текстовых полей "Надиктовать" (Web Speech API, где браузер умеет) и "Вставить" (текст из буфера -
        например, продиктованный в другой программе).
    - "Опубликовать": если Александр включил публикацию (publik.js) и мастер ввёл код мастера - правки уходят на сайт
@@ -243,13 +245,13 @@
     [].forEach.call(document.querySelectorAll(".tabs button"), function (b) { b.setAttribute("aria-selected", b.getAttribute("data-t") === t); });
     var nav = document.querySelector(".tabs"), sb = nav && nav.querySelector('[aria-selected="true"]'); // на телефоне вкладки не влезают - показать выбранную
     if (sb && (sb.offsetLeft < nav.scrollLeft || sb.offsetLeft + sb.offsetWidth > nav.scrollLeft + nav.clientWidth)) nav.scrollLeft = sb.offsetLeft - 16;
-    ({ master: vMaster, lenta: vLenta, komnaty: vKomnaty, znak: vZnak, fon: vFon, shrift: vShrift, paket: vPaket, pomosh: vPomosh })[t]();
+    ({ master: vMaster, lenta: vLenta, komnaty: vKomnaty, znak: vZnak, fon: vFon, shrift: vShrift, ceny: vCeny, paket: vPaket, pomosh: vPomosh })[t]();
     scrollTo(0, 0);
   }
   function counts() {
     var n = 0; S.novye.concat(S.k).forEach(function (w) { n += (w.media || []).filter(function (m) { return m.st === "ok"; }).length; });
     $("cntL").textContent = n || "";
-    var c = changes(), ch = c.m + c.k + (c.logo ? 1 : 0) + n + c.raboty + c.pravka + c.skryt + c.vernut + (c.znak ? 1 : 0) + c.fon + c.komn + c.shrift + c.udalF + c.tochki + c.udalW;
+    var c = changes(), ch = c.m + c.k + (c.logo ? 1 : 0) + n + c.raboty + c.pravka + c.skryt + c.vernut + (c.znak ? 1 : 0) + c.fon + c.komn + c.shrift + c.kalk + c.udalF + c.tochki + c.udalW;
     $("cntP").textContent = ch || "";
   }
 
@@ -606,6 +608,74 @@
     }; });
   }
 
+  // ---------- Цены быстрого расчёта ----------
+  // Черновик S.kalk - полный набор цен (как KalkCeny.conf), опубликованные - D.kalk (слой правок уже подмешан).
+  function KC() { return window.KalkCeny; }
+  function kalkOut(c) { // только то, что хранится в правках
+    var o = { v: 1, primerno: !!c.primerno, vkl: c.vkl !== false, razbros: c.razbros, montazh: c.montazh, skryt: (c.skryt || []).slice() };
+    ["izd", "fasad", "dver", "furn", "stol", "fartuk", "k", "sht"].forEach(function (g) { o[g] = Object.assign({}, c[g]); });
+    return o;
+  }
+  function kalkPub() { return kalkOut(KC().conf(D)); }
+  function kalkCur() { return S.kalk ? KC().conf({ valyuta: D.valyuta, kalk: S.kalk }) : KC().conf(D); }
+  function kalkCh() { return !!S.kalk && !!KC() && JSON.stringify(kalkOut(KC().conf({ valyuta: D.valyuta, kalk: S.kalk }))) !== JSON.stringify(kalkPub()); }
+  function vCeny() {
+    var K = KC();
+    if (!K) { $("main").innerHTML = '<section role="tabpanel"><h1>Цены</h1><p class="lead">Не загрузился расчёт. Обновите страницу.</p></section>'; return; }
+    var c = kalkCur(), sym = K.cur(D);
+    var h = '<section role="tabpanel"><h1>Цены</h1><p class="lead">Клиент на витрине может сам прикинуть стоимость: выбирает мебель, размеры, фасады и фурнитуру - и видит вилку «от - до». Здесь - ваши цены для этого расчёта. Ставьте средние, как вы обычно считаете: клиенту честно написано, что это предварительно, а точная цена - после замера.</p>' +
+      '<p class="note" style="margin-top:-6px">Расчёт пока пробный: клиенты видят его только по ссылке <a href="../proba/">пробного входа</a>. <a href="../raschet/" target="_blank" rel="noopener">Открыть расчёт</a> - там опубликованные цены, ваши правки появятся после публикации.</p>' +
+      (c.primerno ? '<div class="card" id="cnPrim" style="border-color:var(--kr-line2)"><b style="font-weight:500">Сейчас стоят примерные цены</b><p class="mhs" style="margin-top:6px;color:var(--muted)">Это средние цены по Краснодару, а не ваши. Поменяйте хотя бы цены изделий - и после публикации клиент перестанет видеть пометку «цены примерные».</p></div>' : "") +
+      '<div class="card"><div class="cn" style="border:0;padding:0"><span><b>Показывать расчёт клиентам</b><small>Выключите - и кнопки расчёта пропадут с витрины</small></span><span class="in"><input type="checkbox" id="cnVkl" style="width:22px;height:22px;accent-color:var(--ink)"' + (c.vkl !== false ? " checked" : "") + "></span></div></div>" +
+      '<div class="eyebrow">Как посчитается</div><div class="card"><ul class="cn-ex" id="cnEx"></ul></div>';
+    K.SCHEMA.forEach(function (g) {
+      h += '<div class="eyebrow">' + esc(g.zag) + "</div>" + (g.opis ? '<p class="mhs" style="margin:-6px 0 12px;color:var(--muted);font-size:13.5px">' + esc(g.opis) + "</p>" : "") + '<div class="card">';
+      g.rows.forEach(function (r) {
+        var v = K.get(c, r.k), off = r.izd && c.skryt.indexOf(r.izd) >= 0;
+        h += '<div class="cn' + (off ? " off" : "") + '"><span><b>' + esc(r.nazv) + "</b>" + (r.hint ? "<small>" + esc(r.hint) + "</small>" : "") +
+          (r.izd ? '<label class="chk"><input type="checkbox" data-izd="' + r.izd + '"' + (off ? "" : " checked") + "> делаю такое</label>" : "") + "</span>" +
+          '<span class="in"><input ' + (r.ed === "%" ? 'type="number" step="1"' : 'type="text" inputmode="numeric"') + ' data-ck="' + r.k + '" value="' + esc(r.ed === "%" ? v : fmtR(v)) + '" aria-label="' + esc(r.nazv) + '"><span>' + (r.ed === "%" ? "%" : esc(sym + (r.za ? " " + r.za : ""))) + "</span></span></div>";
+      });
+      h += "</div>";
+    });
+    h += '<div class="btns"><button type="button" class="btn l" id="cnDef">Вернуть примерные цены</button></div></section>';
+    $("main").innerHTML = h;
+    ex();
+    function own() { if (!S.kalk) S.kalk = kalkOut(kalkCur()); return S.kalk; }
+    function done() { if (!kalkCh()) delete S.kalk; save(); ex(); var pr = $("cnPrim"); if (pr) pr.hidden = !kalkCur().primerno; }
+    [].forEach.call(document.querySelectorAll("[data-ck]"), function (inp) {
+      inp.oninput = function () {
+        var raw = String(inp.value).replace(/\s/g, "").replace(",", "."), n = parseFloat(raw);
+        if (!isFinite(n)) return;
+        var o = own(); K.set(o, inp.getAttribute("data-ck"), n); o.primerno = false; done();
+      };
+      inp.onblur = function () { var v = K.get(kalkCur(), inp.getAttribute("data-ck")); inp.value = inp.type === "number" ? v : fmtR(v); };
+    });
+    [].forEach.call(document.querySelectorAll("[data-izd]"), function (cb) {
+      cb.onchange = function () {
+        var o = own(), id = cb.getAttribute("data-izd"); o.skryt = (o.skryt || []).filter(function (x) { return x !== id; });
+        if (!cb.checked) o.skryt.push(id);
+        cb.closest(".cn").classList.toggle("off", !cb.checked); done();
+      };
+    });
+    $("cnVkl").onchange = function () { own().vkl = this.checked; done(); toast(this.checked ? "Расчёт будет виден клиентам после публикации" : "Кнопки расчёта пропадут после публикации"); };
+    $("cnDef").onclick = function () {
+      if (!confirm("Вернуть примерные цены вместо ваших? Это можно поменять снова в любой момент.")) return;
+      var d = K.defaults(D); d.vkl = kalkCur().vkl; S.kalk = kalkOut(d); done(); vCeny();
+    };
+  }
+  function fmtR(v) { return String(Math.round(+v || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
+  function ex() {
+    var K = KC(), c = kalkCur(), sym = K.cur(D), box = $("cnEx"); if (!box) return;
+    var L = [
+      ["Кухня угловая 3 + 2 м, МДФ в плёнке, с доводчиками", K.novoe("kuhnya")],
+      ["Шкаф-купе 2,4 x 2,6 м, зеркальные двери", K.novoe("kupe")],
+      ["Гардеробная 4 м, открытая", K.novoe("garderob")],
+      ["Прихожая 1,8 м, МДФ в плёнке", K.novoe("prihozhaya")]
+    ];
+    box.innerHTML = L.filter(function (x) { return c.skryt.indexOf(x[1].iz) < 0; }).map(function (x) { var r = K.schet(x[1], c); return "<li><span>" + esc(x[0]) + "</span><span>" + esc(K.vilka(r.lo, r.hi, sym)) + "</span></li>"; }).join("") || "<li><span>Все изделия выключены</span><span></span></li>";
+  }
+
   // ---------- Водяной знак ----------
   var PV = null; // картинка для предпросмотра
   // фон предпросмотра: своё фото мастера из черновика (оригинал, без знака) или нарисованный образец.
@@ -908,7 +978,7 @@
       raboty: S.novye.filter(function (w) { return (w.media || []).some(function (m) { return m.st === "ok"; }) || w.nazvanie || w.rasskaz || wfHas(w); }).length,
       pravka: S.k.filter(function (w) { return !w.udalitW && (w.nazvanie != null || w.rasskaz != null || w.komnata || WF.some(function (f) { return w[f[0]] != null; })); }).length,
       skryt: S.k.filter(function (w) { return w.skryt && !w.udalitW; }).length, vernut: (S.vernut || []).length, znak: znakChanged(),
-      komn: S.komn.novye.length + S.komn.udalit.length + S.komn.vernut.length, shrift: shriftCh() ? 1 : 0,
+      komn: S.komn.novye.length + S.komn.udalit.length + S.komn.vernut.length, shrift: shriftCh() ? 1 : 0, kalk: kalkCh() ? 1 : 0,
       udalF: S.k.reduce(function (a, w) { return a + (w.udalitW ? 0 : (w.udalit || []).length); }, 0),
       tochki: S.novye.concat(S.k).filter(function (w) { return !w.udalitW && w.tochki && Object.keys(w.tochki).length; }).length,
       udalW: S.k.filter(function (w) { return w.udalitW; }).length,
@@ -938,6 +1008,7 @@
     if (S.komn.udalit.length) L.push("Удалить комнаты: " + S.komn.udalit.map(function (d) { return d.nazvanie || "комната"; }).join(", "));
     if (S.komn.vernut.length) L.push("Вернуть комнаты: " + S.komn.vernut.length);
     if (c.shrift) L.push("Шрифты");
+    if (c.kalk) L.push("Цены для расчёта");
     if (c.vernut) L.push("Вернуть на витрину: " + c.vernut);
     if (c.fon) L.push("Фон витрины: " + fonName(S.fon));
     return L;
@@ -1134,6 +1205,7 @@
       // работы из удалённых комнат: в выбранную комнату или скрыть
       chain = chain.then(function () { Object.keys(moves).forEach(function (id) { if (moves[id]) target(id).komnata = moves[id]; else hide(id); }); });
       if (shriftCh()) L.shrift = { titul: shrVal("titul"), kartochki: shrVal("kartochki") };
+      if (kalkCh()) L.kalk = S.kalk;
       // фон: undefined - не трогаем, null - вернуть подборку, иначе новый фон
       chain = chain.then(function () { return fonOut(function (m) { return enc("m:" + m.id).then(function (f) { return enc("k:" + m.id).then(function (k) { return { f: f, k: k }; }); }); }); })
         .then(function (F) { if (F === null) delete L.fon; else if (F) L.fon = F; });
@@ -1172,6 +1244,7 @@
     D.raboty = D.raboty.filter(function (x) { return !gone[x.id] && L.skryt.indexOf(x.id) < 0; });
     var kd = {}; S.komn.udalit.forEach(function (d) { kd[d.id] = 1; });
     D.komnaty = (D.komnaty || []).filter(function (k) { return !kd[k.id]; });
+    if (kalkCh()) D.kalk = S.kalk;
     window.KR_SLOJ = L;
     clearDraft(); banner();
   }
@@ -1239,6 +1312,7 @@
     if (S.komn.novye.length || S.komn.udalit.length) P.komnaty = { novye: S.komn.novye, udalit: S.komn.udalit.map(function (d) { return d.id; }) };
     var mv = {}; S.komn.udalit.forEach(function (d) { (D.raboty || []).forEach(function (w) { if (roomOf(w.id) === d.id) mv[w.id] = d.kuda || ""; }); });
     if (shriftCh()) P.shrift = { titul: shrVal("titul"), kartochki: shrVal("kartochki") };
+    if (kalkCh()) P.kalk = S.kalk;
     S.novye.forEach(function (w) { var md = media(w.media || []); if (!md.foto.length && !md.video.length && !w.nazvanie && !w.rasskaz && !wfHas(w)) return; var nw = { id: w.id, nazvanie: w.nazvanie || "Новая работа", komnata: w.komnata, rasskaz: w.rasskaz || "", foto: md.foto, video: md.video }; WF.forEach(function (f) { if (w[f[0]] && String(w[f[0]]).trim()) nw[f[0]] = String(w[f[0]]).trim(); }); P.novye_raboty.push(nw); tk(w.id, w); });
     S.k.forEach(function (w) {
       if (w.udalitW) { (P.udalit_raboty = P.udalit_raboty || []).push(w.rabota); delete mv[w.rabota]; return; }
