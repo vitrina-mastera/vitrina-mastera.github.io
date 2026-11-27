@@ -248,13 +248,13 @@
     [].forEach.call(document.querySelectorAll(".tabs button"), function (b) { b.setAttribute("aria-selected", b.getAttribute("data-t") === t); });
     var nav = document.querySelector(".tabs"), sb = nav && nav.querySelector('[aria-selected="true"]'); // на телефоне вкладки не влезают - показать выбранную
     if (sb && (sb.offsetLeft < nav.scrollLeft || sb.offsetLeft + sb.offsetWidth > nav.scrollLeft + nav.clientWidth)) nav.scrollLeft = sb.offsetLeft - 16;
-    ({ master: vMaster, lenta: vLenta, komnaty: vKomnaty, znak: vZnak, fon: vFon, shrift: vShrift, ceny: vCeny, paket: vPaket, pomosh: vPomosh })[t]();
+    ({ master: vMaster, lenta: vLenta, komnaty: vKomnaty, otzyvy: vOtzyvy, znak: vZnak, fon: vFon, shrift: vShrift, ceny: vCeny, paket: vPaket, pomosh: vPomosh })[t]();
     scrollTo(0, 0);
   }
   function counts() {
     var n = 0; S.novye.concat(S.k).forEach(function (w) { n += (w.media || []).filter(function (m) { return m.st === "ok"; }).length; });
     $("cntL").textContent = n || "";
-    var c = changes(), ch = c.m + c.k + (c.logo ? 1 : 0) + n + c.raboty + c.pravka + c.skryt + c.vernut + (c.znak ? 1 : 0) + c.fon + c.komn + c.shrift + c.kalk + c.udalF + c.tochki + c.udalW;
+    var c = changes(), ch = c.m + c.k + (c.logo ? 1 : 0) + n + c.raboty + c.pravka + c.skryt + c.vernut + (c.znak ? 1 : 0) + c.fon + c.komn + c.shrift + c.kalk + c.udalF + c.tochki + c.udalW + c.otz;
     $("cntP").textContent = ch || "";
   }
 
@@ -631,6 +631,96 @@
       S.komn.udalit.push({ id: id, kuda: kuda, nazvanie: roomName(id) });
     }
     save(); toast("Комната удалится после публикации"); vKomnaty();
+  }
+
+  // ---------- Отзывы ----------
+  // Клиент пишет отзыв на сайте (vitrina/dizajn2/otzyv-forma.js), он приходит мастеру в WhatsApp текстом с метками
+  // ("Имя:", "Отзыв:" ...) и фото. Здесь мастер вставляет сообщение - поля заполняются сами; правит, удаляет, отвечает.
+  // Черновик - S.otz: весь список отзывов мастера (как будет на сайте). Нет S.otz - список не трогали.
+  // Контакт (kontakt) живёт только в черновике этого устройства и на сайт не уходит.
+  function otzPub() { return (D.otzyvy || []).filter(function (o) { return o && o.id; }); }
+  function otzList() {
+    if (!S.otz) S.otz = otzPub().map(function (o) { return { id: o.id, imya: o.imya || "", tekst: o.tekst || "", data: o.data || "", otkuda: o.otkuda || "", otvet: o.otvet || "", rabota: o.rabota || "",
+      foto: (o.foto || []).map(function (f) { return { src: f.src }; }), video: (o.video || []).map(function (v) { return { fajl: v.fajl, oblozhka: v.oblozhka || "" }; }), media: [] }; });
+    return S.otz;
+  }
+  function otzSig(L) { return JSON.stringify(L.map(function (o) { return [o.id, o.imya, o.tekst, o.data, o.otkuda, o.otvet, (o.foto || []).map(function (f) { return refOf(f.src); }), (o.video || []).map(function (v) { return refOf(v.fajl); }), (o.media || []).filter(function (m) { return m.st === "ok"; }).length]; })); }
+  function otzCh() { return S.otz ? (otzSig(S.otz) !== otzSig(otzPub().map(function (o) { return Object.assign({ media: [] }, o); })) ? 1 : 0) : 0; }
+  function today() { var d = new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  // разбор сообщения из формы сайта; без меток - весь текст в отзыв
+  function parseOtz(t) {
+    t = String(t || "").replace(/\r/g, "");
+    var i = t.indexOf("Отзыв для сайта"); if (i > 0) t = t.slice(i);
+    var o = { imya: "", otkuda: "", kontakt: "", tekst: "" }, lines = t.split("\n"), body = -1;
+    lines.forEach(function (l, j) {
+      if (body >= 0) return;
+      var m = /^\s*(Имя|Откуда узнал\(а\)|Контакт|Отзыв)\s*:\s*(.*)$/.exec(l);
+      if (!m) return;
+      if (m[1] === "Имя") o.imya = m[2].trim(); else if (m[1] === "Контакт") o.kontakt = m[2].trim(); else if (m[1] === "Отзыв") { body = j; if (m[2].trim()) o.tekst = m[2].trim(); }
+      else o.otkuda = m[2].trim();
+    });
+    if (body >= 0) o.tekst = (o.tekst ? o.tekst + "\n" : "") + lines.slice(body + 1).join("\n").trim();
+    else if (!o.imya) o.tekst = t.trim();
+    o.tekst = o.tekst.replace(/\n{3,}/g, "\n\n").trim();
+    return o;
+  }
+  var OTZ_OPEN = null;
+  function vOtzyvy() {
+    var L = otzList();
+    var h = '<section role="tabpanel"><h1>Отзывы</h1><p class="lead">Клиент пишет отзыв на сайте - он приходит вам в WhatsApp вместе с фото. Скопируйте сообщение и вставьте сюда: имя и текст заполнятся сами. Фото и видео из чата добавьте кнопкой. На сайте отзыв появится после публикации.</p>' +
+      '<div class="eyebrow">Новый отзыв</div><div class="card"><div class="f"><label for="oPaste">Сообщение из WhatsApp</label><textarea id="oPaste" rows="4" placeholder="Нажмите на сообщение в WhatsApp - «Копировать» - и вставьте сюда"></textarea></div>' +
+      '<div class="btns"><button type="button" class="btn" id="oParse">Разобрать и добавить</button><button type="button" class="btn l" id="oNew">Написать вручную</button></div></div>' +
+      '<div class="eyebrow">Отзывы на сайте' + (L.length ? " · " + L.length : "") + '</div>' +
+      (L.length ? "" : '<p class="mhs">Пока нет ни одного. Первый отзыв можно попросить у довольного клиента: ссылка на сайт - раздел «Отзывы» - «Оставить отзыв».</p>') +
+      L.map(function (o, i) {
+        var nm = (o.media || []).filter(function (m) { return m.st === "ok"; }).length + (o.foto || []).length + (o.video || []).length;
+        if (OTZ_OPEN !== o.id) return '<div class="card otzc otzs" data-oi="' + i + '"><button type="button" class="otzh" data-oo="' + esc(o.id) + '"><b>' + esc(o.imya || "Без имени") + "</b><span>" + esc((o.tekst || "").slice(0, 120)) + ((o.tekst || "").length > 120 ? "..." : "") + "</span><small>" +
+          [o.data ? o.data.split("-").reverse().join(".") : "", nm ? nm + " фото/видео" : "", o.otvet ? "есть ответ" : "без ответа"].filter(Boolean).join(" · ") + "</small></button></div>";
+        return '<div class="card otzc" data-oi="' + i + '"><div class="g2">' +
+          '<div class="f"><label>Имя и фамилия</label><input data-o="imya" value="' + esc(o.imya) + '"></div>' +
+          '<div class="f"><label>Дата</label><input type="date" data-o="data" value="' + esc(o.data) + '"></div>' +
+          '<div class="f"><label>Откуда узнал(а)</label><input data-o="otkuda" value="' + esc(o.otkuda) + '" placeholder="По рекомендации знакомых"></div>' +
+          '<div class="f"><label>Контакт</label><input data-o="kontakt" value="' + esc(o.kontakt || "") + '"><small>Только для вас, на сайт не попадает.</small></div></div>' +
+          '<div class="f"><label>Отзыв</label><textarea data-o="tekst" rows="6">' + esc(o.tekst) + "</textarea></div>" +
+          ((o.foto || []).length || (o.video || []).length ? '<div class="mh">Фото и видео на сайте</div><div class="media cur">' +
+            (o.foto || []).map(function (f, j) { return '<div class="m"><img src="' + esc(f.src) + '" alt=""><button type="button" class="x" data-ofx="' + j + '" aria-label="Убрать фото">' + IC_X + "</button></div>"; }).join("") +
+            (o.video || []).map(function (v, j) { return '<div class="m">' + (v.oblozhka ? '<img src="' + esc(v.oblozhka) + '" alt="">' : "") + '<span class="tip">Видео</span><button type="button" class="x" data-ovx="' + j + '" aria-label="Убрать видео">' + IC_X + "</button></div>"; }).join("") + "</div>" : "") +
+          '<div class="mh">' + ((o.foto || []).length || (o.video || []).length ? "Добавить ещё" : "Фото и видео от клиента") + '</div><div class="media"></div><div class="btns"><span class="btn sm l file">Добавить фото и видео<input type="file" accept="image/*,video/*" multiple data-oadd></span></div>' +
+          '<div class="f" style="margin-top:16px"><label>Ваш ответ</label><textarea data-o="otvet" rows="3" placeholder="Спасибо за отзыв! ...">' + esc(o.otvet) + "</textarea><small>Ответ будет виден под отзывом. Можно не писать.</small></div>" +
+          '<div class="btns"><button type="button" class="btn sm" data-oc>Свернуть</button><button type="button" class="btn l sm" data-odel>Удалить отзыв</button></div></div>';
+      }).join("") + "</section>";
+    $("main").innerHTML = h;
+    $("oParse").onclick = function () {
+      var t = $("oPaste").value; if (!t.trim()) { toast("Сначала вставьте сообщение"); $("oPaste").focus(); return; }
+      var p = parseOtz(t); if (!p.tekst) { toast("Не нашёл текст отзыва - проверьте сообщение"); return; }
+      addOtz(p); toast(p.imya ? "Отзыв от " + p.imya + " добавлен. Добавьте фото из чата и опубликуйте" : "Отзыв добавлен - впишите имя");
+    };
+    $("oNew").onclick = function () { addOtz({ imya: "", otkuda: "", kontakt: "", tekst: "" }); };
+    [].forEach.call(document.querySelectorAll("[data-oo]"), function (b) { b.onclick = function () { OTZ_OPEN = b.getAttribute("data-oo"); vOtzyvy(); var c = document.querySelector(".otzc:not(.otzs)"); if (c) c.scrollIntoView({ block: "start" }); }; });
+    [].forEach.call(document.querySelectorAll(".otzc:not(.otzs)"), function (card) {
+      var o = L[+card.getAttribute("data-oi")]; card._w = o; o.media = o.media || [];
+      drawMedia(card, o.media);
+      [].forEach.call(card.querySelectorAll("[data-o]"), function (e) { e.addEventListener("input", function () { o[e.getAttribute("data-o")] = e.value; save(); }); });
+      [].forEach.call(card.querySelectorAll("[data-ofx]"), function (b) { b.onclick = function () { o.foto.splice(+b.getAttribute("data-ofx"), 1); save(); vOtzyvy(); }; });
+      [].forEach.call(card.querySelectorAll("[data-ovx]"), function (b) { b.onclick = function () { o.video.splice(+b.getAttribute("data-ovx"), 1); save(); vOtzyvy(); }; });
+      card.querySelector("[data-oadd]").onchange = function () {
+        var fs = [].slice.call(this.files); this.value = "";
+        fs.reduce(function (p, f) { return p.then(function () { return /^video\//.test(f.type) ? addVideo(f, o.media, card) : addPhoto(f, o.media, card); }); }, Promise.resolve())
+          .then(function () { toast(o.media.some(function (m) { return m.st === "err"; }) ? "Готово, но не всё получилось - см. отметки" : "Добавлено"); });
+      };
+      card.querySelector("[data-oc]").onclick = function () { OTZ_OPEN = null; vOtzyvy(); };
+      card.querySelector("[data-odel]").onclick = function () {
+        if (!confirm("Удалить отзыв" + (o.imya ? " от " + o.imya : "") + "? С сайта он пропадёт после публикации.")) return;
+        (o.media || []).forEach(function (m) { del("m:" + m.id); del("o:" + m.id); del("k:" + m.id); });
+        L.splice(L.indexOf(o), 1); OTZ_OPEN = null; save(); vOtzyvy(); toast("Отзыв удалится с сайта после публикации");
+      };
+    });
+    voiceUp($("main"));
+  }
+  function addOtz(p) {
+    var L = otzList(), o = { id: "o-" + uid(), imya: p.imya || "", tekst: p.tekst || "", data: today(), otkuda: p.otkuda || "", kontakt: p.kontakt || "", otvet: "", foto: [], video: [], media: [] };
+    L.unshift(o); OTZ_OPEN = o.id; save(); vOtzyvy();
+    var c = document.querySelector(".otzc:not(.otzs)"); if (c) { c.scrollIntoView({ block: "start" }); var n = c.querySelector('[data-o="' + (o.imya ? "tekst" : "imya") + '"]'); if (n) n.focus({ preventScroll: true }); }
   }
 
   // ---------- Шрифты ----------
@@ -1037,7 +1127,8 @@
       udalF: S.k.reduce(function (a, w) { return a + (w.udalitW ? 0 : (w.udalit || []).length); }, 0),
       tochki: S.novye.concat(S.k).filter(function (w) { return !w.udalitW && w.tochki && Object.keys(w.tochki).length; }).length,
       udalW: S.k.filter(function (w) { return w.udalitW; }).length,
-      fon: fonCh() ? 1 : 0, fonV: fonCh() && S.fon.tip === "video" ? fonVids().length : 0 };
+      fon: fonCh() ? 1 : 0, fonV: fonCh() && S.fon.tip === "video" ? fonVids().length : 0, otz: otzCh(),
+      otzF: S.otz ? S.otz.reduce(function (a, o) { return a + (o.media || []).filter(function (m) { return m.st === "ok"; }).reduce(function (b, m) { return b + (m.tip === "video" ? 2 : 1); }, 0); }, 0) : 0 };
   }
   // знак изменён, если мастер его трогал и он отличается от опубликованного (или опубликованного ещё нет)
   function znakChanged() {
@@ -1064,6 +1155,7 @@
     if (S.komn.vernut.length) L.push("Вернуть комнаты: " + S.komn.vernut.length);
     if (poryCh()) L.push("Порядок комнат в доме");
     if (titulCh()) L.push("Титульные фото комнат: " + titulCh());
+    if (c.otz) L.push("Отзывы: " + S.otz.length + " на сайте");
     if (c.shrift) L.push("Шрифты");
     if (c.kalk) L.push("Цены для расчёта");
     if (c.vernut) L.push("Вернуть на витрину: " + c.vernut);
@@ -1148,6 +1240,7 @@
     S.novye.concat(S.k).forEach(function (w) { (w.media || []).forEach(function (m) { del("m:" + m.id); del("o:" + m.id); del("k:" + m.id); }); });
     if (S.logo) del("logo");
     fonVids(true).forEach(function (m) { del("m:" + m.id); del("k:" + m.id); });
+    (S.otz || []).forEach(function (o) { (o.media || []).forEach(function (m) { del("m:" + m.id); del("o:" + m.id); del("k:" + m.id); }); });
     S = { master: {}, kontakty: {}, znak: S.znak, znakEd: false, novye: [], k: [], logoV: S.logoV || 0, komn: { novye: [], udalit: [], vernut: [] } };
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
     LOGO_RASTER = null; counts();
@@ -1158,7 +1251,7 @@
 
   // Публикация: свежие правки с GitHub + черновик -> новые зашифрованные файлы и m.bin одним коммитом.
   function publish() {
-    var B = PB, key, L, files = [], c = changes(), nF = c.foto + c.video * 2 + (c.logo ? 1 : 0) + c.fonV * 2, iF = 0;
+    var B = PB, key, L, files = [], c = changes(), nF = c.foto + c.video * 2 + (c.logo ? 1 : 0) + c.fonV * 2 + c.otzF, iF = 0;
     var MAX = 95 * 1048576; // GitHub не принимает файлы больше 100 МБ
     busy("Публикую", "Проверяю доступ", .02);
     function enc(id) {
@@ -1264,6 +1357,18 @@
       if (shriftCh()) L.shrift = { titul: shrVal("titul"), kartochki: shrVal("kartochki") };
       if (kalkCh()) L.kalk = S.kalk;
       if (poryCh()) L.poryadok = S.poryadok.slice();
+      // отзывы: весь список; фото, что уже на сайте, - их "@id", новые - шифруем (контакт не публикуем)
+      if (otzCh()) {
+        var oz = [];
+        S.otz.forEach(function (o) {
+          chain = chain.then(function () { return media(o.media || []); }).then(function (md) {
+            oz.push({ id: o.id, imya: (o.imya || "").trim(), tekst: (o.tekst || "").trim(), data: o.data || "", otkuda: (o.otkuda || "").trim(), otvet: (o.otvet || "").trim(), rabota: o.rabota || "",
+              foto: (o.foto || []).map(function (f) { return { src: refOf(f.src) }; }).concat(md.foto.map(function (f) { return { src: f.src }; })),
+              video: (o.video || []).map(function (v) { return { fajl: refOf(v.fajl), oblozhka: v.oblozhka ? refOf(v.oblozhka) : "" }; }).concat(md.video.map(function (v) { return { fajl: v.fajl, oblozhka: v.oblozhka }; })) });
+          });
+        });
+        chain = chain.then(function () { L.otzyvy = oz.filter(function (o) { return o.tekst; }); });
+      }
       if (titulCh()) { L.titul = L.titul || {}; Object.keys(S.titul).forEach(function (id) { if (S.titul[id]) L.titul[id] = S.titul[id]; else delete L.titul[id]; }); }
       // фон: undefined - не трогаем, null - вернуть подборку, иначе новый фон
       chain = chain.then(function () { return fonOut(function (m) { return enc("m:" + m.id).then(function (f) { return enc("k:" + m.id).then(function (k) { return { f: f, k: k }; }); }); }); })
@@ -1373,6 +1478,9 @@
     if (shriftCh()) P.shrift = { titul: shrVal("titul"), kartochki: shrVal("kartochki") };
     if (kalkCh()) P.kalk = S.kalk;
     if (poryCh()) P.poryadok = S.poryadok.slice();
+    if (otzCh()) P.otzyvy = S.otz.map(function (o) { var md = media(o.media || []); return { id: o.id, imya: (o.imya || "").trim(), tekst: (o.tekst || "").trim(), data: o.data || "", otkuda: (o.otkuda || "").trim(), otvet: (o.otvet || "").trim(), rabota: o.rabota || "",
+      foto: (o.foto || []).map(function (f) { return { src: refOf(f.src) }; }).concat(md.foto.map(function (f) { return { src: f.src }; })),
+      video: (o.video || []).map(function (v) { return { fajl: refOf(v.fajl), oblozhka: v.oblozhka ? refOf(v.oblozhka) : "" }; }).concat(md.video.map(function (v) { return { fajl: v.fajl, oblozhka: v.oblozhka }; })) }; }).filter(function (o) { return o.tekst; });
     if (titulCh()) { P.titul = {}; Object.keys(S.titul).forEach(function (id) { P.titul[id] = S.titul[id] || ""; }); }
     S.novye.forEach(function (w) { var md = media(w.media || []); if (!md.foto.length && !md.video.length && !w.nazvanie && !w.rasskaz && !wfHas(w)) return; var nw = { id: w.id, nazvanie: w.nazvanie || "Новая работа", komnata: w.komnata, rasskaz: w.rasskaz || "", foto: md.foto, video: md.video }; WF.forEach(function (f) { if (w[f[0]] && String(w[f[0]]).trim()) nw[f[0]] = String(w[f[0]]).trim(); }); P.novye_raboty.push(nw); tk(w.id, w); });
     S.k.forEach(function (w) {
@@ -1420,7 +1528,7 @@
 
   // ---------- старт ----------
   // незаконченные записи (закрыли страницу посреди обработки) - помечаем ошибкой
-  S.novye.concat(S.k).forEach(function (w) { (w.media || []).forEach(function (m) { if (m.st === "work") { m.st = "err"; m.err = "Обработка прервалась - добавьте файл ещё раз"; } }); });
+  S.novye.concat(S.k, S.otz || []).forEach(function (w) { (w.media || []).forEach(function (m) { if (m.st === "work") { m.st = "err"; m.err = "Обработка прервалась - добавьте файл ещё раз"; } }); });
   if (S.fon) ["t", "w"].forEach(function (k) { var m = S.fon[k]; if (m && m.st === "work") { m.st = "err"; m.err = "Обработка прервалась - выберите видео ещё раз"; } });
   // мастер пришёл из клиентской версии (вход удержанием знака) - "назад" ведёт туда, а не на черновик
   try { if (sessionStorage.getItem("kr-iz-klienta")) setTimeout(function () { [].forEach.call(document.querySelectorAll("nav.kn a"), function (a) { if (/krasnodar\/?$/.test(a.pathname)) a.href = "../klient/"; }); }, 0); } catch (e) {}

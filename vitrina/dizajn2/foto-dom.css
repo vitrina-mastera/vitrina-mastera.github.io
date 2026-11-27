@@ -19,11 +19,11 @@ html[data-fd] .d2-kino{height:100vh!important;height:100lvh!important}
 /* затемнение как на первом экране + плавный вход из тёмной шапки сверху и выход в белый низ страницы */
 .fd-veil{position:absolute;inset:0;pointer-events:none;background:
   linear-gradient(180deg,rgba(15,15,14,.55) 0%,rgba(15,15,14,.2) 8%,rgba(15,15,14,0) 13%,rgba(15,15,14,0) 93%,rgba(255,255,255,0) 97.6%,#fff 100%),
-  rgba(12,11,10,.34)}
+  rgba(12,11,10,.54)}
 @media (min-width:601px){.fd-veil{background:
   linear-gradient(180deg,rgba(15,15,14,.55) 0%,rgba(15,15,14,.2) 8%,rgba(15,15,14,0) 13%,rgba(15,15,14,0) 100%),
   linear-gradient(90deg,rgba(15,15,14,.5),rgba(15,15,14,0) 12%,rgba(15,15,14,0) 88%,rgba(15,15,14,.5)),
-  rgba(12,11,10,.34)}}
+  rgba(12,11,10,.54)}}
 
 /* комнаты: по очереди слева и справа, место по высоте - в foto-dom.js (доля высоты фото) */
 .fd-rooms{position:absolute;inset:0}

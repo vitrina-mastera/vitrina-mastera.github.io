@@ -179,6 +179,15 @@ body.pn-open #home{transform:scale(.965) translateX(-1.5%);transform-origin:50% 
 .prev p{margin:8px 0 10px;font-size:15.5px}
 .prev .by{display:flex;gap:6px 12px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
 .prev .by b{color:var(--ink)}
+.potz-add{margin:0 0 16px}.potz-add .btn{width:100%;justify-content:center}
+.pempty+.potz-add{margin-top:16px}
+.potz-m{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;margin:0 0 12px}
+.potz-m a,.potz-m video{display:block;aspect-ratio:1;width:100%;overflow:hidden;background:#000;object-fit:cover}
+.potz-m a img{width:100%;height:100%;object-fit:cover;display:block}
+.potz-m video{grid-column:span 2;aspect-ratio:16/10}
+.potz-o{margin:12px 0 0;padding:10px 0 0 14px;border-left:1px solid var(--line)}
+.potz-o b{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.potz-o p{margin:4px 0 0;font-size:14.5px}
 .prev .ok{color:#8FC2A6;font-weight:600}
 .prev .go{margin-left:auto;color:var(--acc);font-weight:700;font-size:13.5px;padding:6px 0}
 .pnote{font-size:13px;color:var(--muted);margin-top:14px}
@@ -392,6 +401,9 @@ body.pn-open #home{transform:scale(.965) translateX(-1.5%);transform-origin:50% 
 .wcard.ph b{display:block;font-family:var(--serif);font-size:26px;line-height:1.1;color:var(--ink);margin-bottom:6px;font-weight:600}
 .wm{position:absolute;inset:0;pointer-events:none;background-repeat:repeat;background-size:420px 260px}
 .deck-ui{flex:none;position:relative;padding:8px 0 calc(clamp(16px,3.4vh,34px) + var(--sb));display:flex;justify-content:center;align-items:center;gap:14px;z-index:3}
+/* VP_VNUTRI: в комнате работы только свайпом (стрелок нет), внутри работы стрелки листают её фото; одно фото - без стрелок */
+html[data-vnutri] #dPrev,html[data-vnutri] #dNext{display:none}
+html[data-vnutri] #work.odno .nav-g{display:none}
 .dots{display:flex;gap:7px}
 .dots i{width:8px;height:8px;border-radius:99px;background:rgba(244,238,228,.3);transition:width .4s var(--ease),background .3s}
 .dots i.on{width:26px;background:var(--acc)}

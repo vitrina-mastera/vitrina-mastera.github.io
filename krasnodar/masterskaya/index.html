@@ -191,6 +191,12 @@ html.pe-on,html.pe-on body{overflow:hidden}
 .ktit{flex:none;width:52px;height:52px;padding:0;border:1px solid var(--line);background:var(--bg2);overflow:hidden;cursor:pointer}
 .ktit img{width:100%;height:100%;object-fit:cover;display:block}
 .ktit[aria-expanded=true]{outline:2px solid var(--ink);outline-offset:2px}
+.otzs{padding:0}
+.otzh{display:block;width:100%;padding:clamp(14px,2.4vw,22px);border:0;background:none;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.otzh b{display:block;font-weight:600;margin-bottom:4px}
+.otzh span{display:block;color:var(--muted);line-height:1.45;overflow-wrap:anywhere}
+.otzh small{display:block;margin-top:8px;font-size:12px;letter-spacing:.04em;color:var(--muted)}
+.otzh:hover b{text-decoration:underline;text-underline-offset:3px}
 .kmv{display:flex;gap:4px}
 .kl .row{flex-wrap:wrap}
 .kl .row>.sp{flex:1 1 150px;min-width:0}
@@ -244,6 +250,7 @@ html.pe-on,html.pe-on body{overflow:hidden}
       <button type="button" role="tab" aria-selected="true" data-t="master">О мастере</button>
       <button type="button" role="tab" aria-selected="false" data-t="lenta">Работы<i id="cntL"></i></button>
       <button type="button" role="tab" aria-selected="false" data-t="komnaty">Комнаты</button>
+      <button type="button" role="tab" aria-selected="false" data-t="otzyvy">Отзывы</button>
       <button type="button" role="tab" aria-selected="false" data-t="znak">Знак</button>
       <button type="button" role="tab" aria-selected="false" data-t="fon">Фон</button>
       <button type="button" role="tab" aria-selected="false" data-t="shrift">Шрифты</button>

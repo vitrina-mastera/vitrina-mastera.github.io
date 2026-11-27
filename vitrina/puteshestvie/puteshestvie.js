@@ -328,14 +328,20 @@
     return h;
   }
   function stars(n) { n = Math.max(0, Math.min(5, Math.round(+n || 0))); return n ? new Array(n + 1).join("★") + '<span style="opacity:.25">' + new Array(6 - n).join("★") + "</span>" : ""; }
+  // отзыв: текст, имя, откуда узнал(а), фото и видео готовой мебели (o.foto [{src}], o.video [{fajl, oblozhka}]),
+  // ответ мастера (o.otvet). Кнопка "Оставить отзыв" - если на странице есть форма (dizajn2/otzyv-forma.js, window.KrOtzyv).
   function pOtzyvy() {
-    var L = (D.otzyvy || []).filter(function (o) { return o && o.tekst; });
-    if (!L.length) return '<div class="pempty"><b>Отзывов пока нет</b>Они появятся здесь после первых заказов: мастер даёт клиенту ссылку с кодом заказа, и клиент пишет отзыв сам.</div>';
-    var h = L.map(function (o) {
-      var w = BYID[o.rabota];
-      return '<div class="prev">' + (o.ocenka ? '<div class="st" aria-label="Оценка ' + esc(o.ocenka) + ' из 5">' + stars(o.ocenka) + "</div>" : "") + "<p>" + esc(o.tekst) + '</p><div class="by"><b>' + esc(o.imya || "Клиент") + "</b>" +
-        (o.data ? "<span>" + esc(day(o.data)) + "</span>" : "") + (o.kod ? '<span class="ok">✓ заказ подтверждён</span>' : "") +
-        (w ? '<button type="button" class="go" data-w="' + esc(w.id) + '">Смотреть работу →</button>' : "") + "</div></div>";
+    var L = (D.otzyvy || []).filter(function (o) { return o && o.tekst; }), F = !!window.KrOtzyv;
+    var add = F ? '<div class="potz-add"><button type="button" class="btn main" data-otz-new>Оставить отзыв</button></div>' : "";
+    if (!L.length) return (F ? '<div class="pempty"><b>Отзывов пока нет</b>Будьте первым: расскажите, как вам мебель, и приложите фото.</div>' : '<div class="pempty"><b>Отзывов пока нет</b>Они появятся здесь после первых заказов: мастер даёт клиенту ссылку с кодом заказа, и клиент пишет отзыв сам.</div>') + add;
+    var h = add + L.map(function (o) {
+      var w = BYID[o.rabota], fs = (o.foto || []).filter(function (f) { return f && f.src; }), vs = (o.video || []).filter(function (v) { return v && v.fajl; });
+      var med = fs.length || vs.length ? '<div class="potz-m">' + fs.map(function (f) { var u = srcOf(f); return '<a href="' + esc(u) + '" target="_blank" rel="noopener" data-otz-ph><img src="' + esc(u) + '" alt="Фото от клиента" loading="lazy" decoding="async"></a>'; }).join("") +
+        vs.map(function (v) { return '<video src="' + esc(srcOf({ src: v.fajl })) + '"' + (v.oblozhka ? ' poster="' + esc(srcOf({ src: v.oblozhka })) + '"' : "") + ' controls playsinline preload="none"></video>'; }).join("") + "</div>" : "";
+      return '<div class="prev">' + (o.ocenka ? '<div class="st" aria-label="Оценка ' + esc(o.ocenka) + ' из 5">' + stars(o.ocenka) + "</div>" : "") + "<p>" + esc(o.tekst) + "</p>" + med + '<div class="by"><b>' + esc(o.imya || "Клиент") + "</b>" +
+        (o.data ? "<span>" + esc(day(o.data)) + "</span>" : "") + (o.otkuda ? "<span>" + esc(o.otkuda) + "</span>" : "") + (o.kod ? '<span class="ok">✓ заказ подтверждён</span>' : "") +
+        (w ? '<button type="button" class="go" data-w="' + esc(w.id) + '">Смотреть работу →</button>' : "") + "</div>" +
+        (o.otvet ? '<div class="potz-o"><b>Ответ мастера</b><p>' + esc(o.otvet) + "</p></div>" : "") + "</div>";
     }).join("");
     if (L.some(function (o) { return o.kod; })) h += '<p class="pnote">«Заказ подтверждён» - отзыв оставлен по личной ссылке с кодом заказа, которую мастер выдаёт после сдачи работы.</p>';
     return h;
@@ -1368,7 +1374,7 @@
     var dx = e.clientX - pd.x, dy = e.clientY - pd.y;
     if (!pd.m && Math.abs(dx) + Math.abs(dy) > 8) {
       pd.m = true; $("work").classList.add("dragging"); $("dragHint").classList.add("gone");
-      pd.swipe = pd.fit && Math.abs(dx) > Math.abs(dy) && WORKS.length > 1;
+      pd.swipe = pd.fit && Math.abs(dx) > Math.abs(dy) && (VNUTRI ? fotos(S.work).length > 1 : WORKS.length > 1);
     }
     if (!pd.m) return;
     if (pd.swipe) { st.x = pd.sx + dx * .55; applySt(); return; } // фото целиком: листаем работы
@@ -1394,7 +1400,7 @@
     if (p.m) {
       if (p.swipe) {
         var dx = e.clientX - p.x;
-        if (Math.abs(dx) > Math.min(90, innerWidth * .18) && e.type === "pointerup") stepWork(dx < 0 ? 1 : -1);
+        if (Math.abs(dx) > Math.min(90, innerWidth * .18) && e.type === "pointerup") { if (VNUTRI) stepFoto(dx < 0 ? 1 : -1); else stepWork(dx < 0 ? 1 : -1); }
         else animTo(restSt(), 380, eEase);
       } else if (!reduce && performance.now() - p.lt < 90) { glide = { vx: p.vx, vy: p.vy }; wKick(); }
       return;
@@ -1413,6 +1419,8 @@
     clearTimeout(tapTimer);
     tapTimer = setTimeout(function () { lastTap = null; if (note >= 0) closeNote(); else if (!pano) setBare(!bare); else panoHint(false); }, 300);
   }
+  // мышью: браузер начинал перетаскивать выделение/картинку и обрывал жест (pointercancel) - второй свайп не листал
+  $("area").addEventListener("dragstart", function (e) { e.preventDefault(); });
   $("area").addEventListener("pointerup", areaUp); $("area").addEventListener("pointercancel", areaUp);
   // Колесо мыши - приблизить/отдалить. Тачпад ноутбука: щипок (браузер присылает его как колесо с Ctrl) - масштаб,
   // движение двумя пальцами - двигать увеличенное фото. Тачпад узнаём по мелким шагам и боковому сдвигу.
@@ -1581,9 +1589,13 @@
   // Стрелки (кнопки и клавиши) листают фото внутри работы, а свайп по фото - работы (просьба мастера 2026-11-24:
   // клиент листает работы и не догадывается открыть описание, чтобы увидеть остальные фото).
   // После последнего фото стрелка ведёт к следующей работе, с первого фото назад - к последнему фото предыдущей.
-  var NEXT_FOTO = 0;
+  // VP_VNUTRI (пробная главная, мастер 2026-11-27): внутри работы стрелки и свайп листают только её фото по кругу,
+  // к другой работе не уходим - работы листаются в комнате, "Назад" возвращает туда.
+  var NEXT_FOTO = 0, VNUTRI = !!window.VP_VNUTRI;
+  if (VNUTRI) document.documentElement.setAttribute("data-vnutri", "");
   function stepFoto(dir) {
     var n = (S.work && S.work.foto || []).length, j = S.foto + dir;
+    if (VNUTRI) { if (n > 1) showFoto(j); return; }
     if (n > 1 && j >= 0 && j < n) { showFoto(j); return; }
     if (!S.work || WORKS.length < 2) { if (n > 1) showFoto(j); return; }
     var i = WORKS.indexOf(S.work), w = WORKS[(i + dir + WORKS.length) % WORKS.length];
@@ -1593,7 +1605,8 @@
   function navArrows() {
     var n = (S.work && S.work.foto || []).length, c = $("wCnt");
     c.hidden = n < 2; c.innerHTML = n < 2 ? "" : "<b>" + (S.foto + 1) + "</b> / " + n;
-    var more = WORKS.length > 1;
+    var more = WORKS.length > 1 && !VNUTRI;
+    $("work").classList.toggle("odno", VNUTRI && n < 2);
     $("wNext").setAttribute("aria-label", n > 1 && S.foto < n - 1 ? "Следующее фото" : more ? "Следующая работа" : "Следующее фото");
     $("wPrev").setAttribute("aria-label", n > 1 && S.foto > 0 ? "Предыдущее фото" : more ? "Предыдущая работа" : "Предыдущее фото");
     $("wNext").title = $("wNext").getAttribute("aria-label"); $("wPrev").title = $("wPrev").getAttribute("aria-label");
