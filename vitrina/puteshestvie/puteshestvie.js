@@ -102,6 +102,8 @@
   }
   function fotos(w) { return (w.foto && w.foto.length) ? w.foto : [null]; }
   function cover(w) { return srcOf(fotos(w)[0]); }
+  // титульное фото комнаты: k.titul (мастер выбрал в Мастерской любое фото) или первое фото первой работы
+  function roomCover(k) { return k.titul ? srcOf({ src: k.titul }) : k.works.length ? cover(k.works[0]) : ""; }
   var WM = "";
   function makeWM() {
     var t = esc((D.master && D.master.znak) || (D.master && D.master.imya) || "");
@@ -129,7 +131,7 @@
     var R = (D.raboty || []).filter(function (w) { return w && w.id; });
     var src = Array.isArray(D.komnaty) && D.komnaty.length ? D.komnaty : null;
     ROOMS = [];
-    if (src) src.forEach(function (k) { if (k && (k.id || k.nazvanie)) ROOMS.push({ id: String(k.id || slug(k.nazvanie)), nazvanie: k.nazvanie || k.id, hint: k.hint || "", col: +k.col || 0, span: +k.span || 1, row: +k.row || 0, works: [] }); });
+    if (src) src.forEach(function (k) { if (k && (k.id || k.nazvanie)) ROOMS.push({ id: String(k.id || slug(k.nazvanie)), nazvanie: k.nazvanie || k.id, hint: k.hint || "", col: +k.col || 0, span: +k.span || 1, row: +k.row || 0, titul: typeof k.titul === "string" ? k.titul : "", works: [] }); });
     ROOMBY = {}; ROOMS.forEach(function (k) { ROOMBY[k.id] = k; });
     R.forEach(function (w) {
       var k = (w.komnata && ROOMBY[w.komnata]) || null;
@@ -137,6 +139,15 @@
       if (!k) { var id = slug(w.vid || "Работы"); k = ROOMBY[id]; if (!k) { k = { id: id, nazvanie: w.vid || "Работы", hint: "", col: 0, span: 1, row: 0, works: [] }; ROOMS.push(k); ROOMBY[id] = k; } }
       k.works.push(w); w._k = k;
     });
+    // порядок комнат: D.poryadok (Мастерская) или порядок по умолчанию страницы (window.VP_PORYADOK) - список id сверху вниз;
+    // остальные комнаты - следом, как были. При своём порядке раскладка этажей строится заново (по две на этаж).
+    var PO = Array.isArray(D.poryadok) && D.poryadok.length ? D.poryadok : Array.isArray(window.VP_PORYADOK) ? window.VP_PORYADOK : null;
+    if (PO) {
+      var pos = {}; PO.forEach(function (id, i) { if (pos[id] == null) pos[id] = i; });
+      var o0 = ROOMS.slice(), before = ROOMS.map(function (k) { return k.id; }).join();
+      ROOMS.sort(function (a, b) { var x = pos[a.id] != null ? pos[a.id] : 1e3 + o0.indexOf(a), y = pos[b.id] != null ? pos[b.id] : 1e3 + o0.indexOf(b); return x - y; });
+      if (ROOMS.map(function (k) { return k.id; }).join() !== before) ROOMS.forEach(function (k) { k.col = 0; k.row = 0; });
+    }
     // раскладка по умолчанию: по две комнаты на этаж, широкая то слева, то справа; нечётная последняя - во весь этаж
     var bad = ROOMS.some(function (k) { return !k.col || !k.row || k.col + k.span - 1 > 3; });
     if (bad) ROOMS.forEach(function (k, i) {
@@ -264,7 +275,7 @@
       b.type = "button";
       b.style.gridColumn = k.col + " / span " + k.span; b.style.gridRow = String(k.row);
       var rv = ws.some(function (w) { return otzyvy(w).length; }), pn = ws.some(function (w) { return w.panorama; });
-      b.innerHTML = '<div class="ph"' + (ws.length ? ' style="background-image:url(&quot;' + esc(cover(ws[0])) + '&quot;)"' : "") + '></div><div class="dark"></div><div class="lamp"></div>' +
+      b.innerHTML = '<div class="ph"' + (ws.length ? ' style="background-image:url(&quot;' + esc(roomCover(k)) + '&quot;)"' : "") + '></div><div class="dark"></div><div class="lamp"></div>' +
         (ws.length ? '<div class="tags"><span>' + ws.length + " " + plural(ws.length, ["работа", "работы", "работ"]) + "</span>" + (rv ? '<span class="rv">отзыв</span>' : "") + (pn ? '<span class="pn">обзор</span>' : "") + "</div>" : "") +
         '<div class="t"><b>' + esc(k.nazvanie) + "</b><span>" + esc(ws.length ? (k.hint || "") : "скоро здесь появятся работы") + "</span></div>";
       b.setAttribute("aria-label", k.nazvanie + (ws.length ? ", " + ws.length + " " + plural(ws.length, ["работа", "работы", "работ"]) : ", пока пусто"));
@@ -273,10 +284,19 @@
       b.vpN = ws.length; b.vpCover = function (j) { return ws[j] ? cover(ws[j]) : ""; }; b.vpGo = function (j) { if (ws[j]) nav({ s: "work", w: ws[j] }); };
       b.style.setProperty("--i", (k.row - 1) * 3 + k.col - 1);
       if (k.span === 1 && String(k.nazvanie || "").length > 16) b.classList.add("long"); // на телефоне - мельче, чтобы не налезало
+      b.setAttribute("data-k", k.id);
       f.appendChild(b); TILES[k.id] = b;
     });
     if (!WORKS.length) { $("tourBtn").hidden = true; $("allBtn").hidden = true; }
+    try { document.dispatchEvent(new CustomEvent("vp-house")); } catch (e) {}
   }
+  // для слоя оформления (dizajn2/foto-dom.js - дом на фото): комнаты по порядку обхода и вход в комнату.
+  // VP_TILE(k) - свой элемент вместо плитки дома: от него комната "вырастает" и в него "сжимается".
+  window.VP_HOUSE = {
+    rooms: function () { return ROOMS.slice().sort(function (a, b) { return a.row - b.row || a.col - b.col; }).map(function (k) { return { id: k.id, nazvanie: k.nazvanie, hint: k.hint, n: k.works.length, cover: roomCover(k) }; }); },
+    open: function (id) { var t = TILES[id]; if (t) t.click(); }
+  };
+  function tileOf(k) { var t = window.VP_TILE && window.VP_TILE(k.id); return t || TILES[k.id]; }
   $("tourBtn").onclick = function () { var k = firstRoom(); if (k) nav({ s: "room", k: k }); };
   $("writeBtn").onclick = function () { openModal(null); };
   // на телефоне нет наведения: свет включается в комнате, которая сейчас посередине экрана
@@ -496,7 +516,7 @@
     f.appendChild(im); f.appendChild(el("i")); document.body.appendChild(f); return f;
   }
   function flyInto(k, done) {
-    var tile = TILES[k.id], src = cover(k.works[0]);
+    var tile = tileOf(k), src = roomCover(k);
     loadImg(src, function (sz) {
       if (reduce || !tile || !tile.animate) { done(); return; }
       var r = tile.getBoundingClientRect();
@@ -515,9 +535,9 @@
   }
   // обратно: комната сжимается в свою плитку на доме, свет гаснет
   function flyOut(k, done) {
-    var src = cover(k.works[0]);
+    var src = roomCover(k);
     loadImg(src, function (sz) {
-      var tile = TILES[k.id];
+      var tile = tileOf(k);
       done();
       if (reduce || !tile || !tile.animate) return;
       var hm = $("home"), r0 = tile.getBoundingClientRect();

@@ -41,6 +41,9 @@
   // у работ ещё: komnata (перенос), udalit: [ссылки фото], udalitW (удалить работу), tochki: { ссылка или "m:<id>": [точки] }
   // комнаты: novye [{ id, nazvanie, hint, posle }], udalit [{ id, kuda, nazvanie }], vernut [id]; шрифты: shrift { titul, kartochki }
   S.komn = S.komn || {}; S.komn.novye = S.komn.novye || []; S.komn.udalit = S.komn.udalit || []; S.komn.vernut = S.komn.vernut || [];
+  // порядок комнат в доме: poryadok [id сверху вниз]; титульные фото комнат: titul { id комнаты: ссылка фото "@id" или "" - первое фото }
+  if (S.poryadok && !Array.isArray(S.poryadok)) delete S.poryadok;
+  if (S.titul && typeof S.titul !== "object") delete S.titul;
   var saveT = 0;
   function save() { clearTimeout(saveT); saveT = setTimeout(function () { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Браузеру не хватило памяти - скачайте пакет"); } counts(); }, 250); }
 
@@ -308,7 +311,36 @@
     S.komn.novye.forEach(function (k) { insRoom(list, { id: k.id, nazvanie: k.nazvanie, hint: k.hint || "", posle: k.posle, draft: true }); });
     var dd = {}; S.komn.udalit.forEach(function (d) { dd[d.id] = d; });
     list.forEach(function (k) { if (dd[k.id]) k.del = dd[k.id]; });
+    list = sortRooms(list);
     return withDel ? list : list.filter(function (k) { return !k.del; });
+  }
+  // ---------- порядок комнат и титульные фото ----------
+  function poryPub() { var p = SL().poryadok; return Array.isArray(p) ? p : []; }
+  function poryCur() { return S.poryadok || poryPub(); }
+  function poryCh() { return !!S.poryadok && S.poryadok.join() !== poryPub().join(); }
+  function sortRooms(list) {
+    var po = poryCur(); if (!po.length) return list;
+    var pos = {}, o = list.slice(); po.forEach(function (id, i) { if (pos[id] == null) pos[id] = i; });
+    return o.sort(function (a, b) { return (pos[a.id] != null ? pos[a.id] : 1e3 + o.indexOf(a)) - (pos[b.id] != null ? pos[b.id] : 1e3 + o.indexOf(b)); });
+  }
+  function moveRoom(id, d) {
+    var ids = allRooms(true).map(function (k) { return k.id; }), i = ids.indexOf(id), j = i + d;
+    if (i < 0 || j < 0 || j >= ids.length) return;
+    ids.splice(j, 0, ids.splice(i, 1)[0]);
+    S.poryadok = ids; if (!poryCh()) delete S.poryadok; save();
+  }
+  function titulPub() { var t = SL().titul; return t && typeof t === "object" ? t : {}; }
+  function titulOf(id) { return S.titul && id in S.titul ? S.titul[id] : titulPub()[id] || ""; }
+  function titulCh() { return S.titul ? Object.keys(S.titul).filter(function (id) { return (S.titul[id] || "") !== (titulPub()[id] || ""); }).length : 0; }
+  // фото, которые уже на витрине, у работ комнаты (новые фото черновика можно выбрать после публикации)
+  function roomFotos(rid) {
+    var out = [];
+    (D.raboty || []).forEach(function (w) {
+      var e = kEdit(w.id); if (roomOf(w.id) !== rid || (e && (e.udalitW || e.skryt))) return;
+      var gone = (e && e.udalit) || [];
+      (w.foto || []).forEach(function (f) { if (f && f.src && gone.indexOf(refOf(f.src)) < 0) out.push({ src: f.src, ref: refOf(f.src), t: w.nazvanie }); });
+    });
+    return out;
   }
   function roomName(id) { var k = allRooms(true).filter(function (x) { return x.id === id; })[0]; return k ? k.nazvanie : ""; }
   function kEdit(id) { return S.k.filter(function (x) { return x.rabota === id; })[0] || null; }
@@ -516,15 +548,26 @@
 
   // ---------- Комнаты ----------
   var DELR = null; // комната, для которой открыт вопрос "куда перенести работы"
+  var TITR = null; // комната, для которой открыт выбор титульного фото
   function vKomnaty() {
     var R = allRooms(true), live = R.filter(function (k) { return !k.del; }), PK = slojKomn();
     var gone = PK.udalit.filter(function (id) { return S.komn.vernut.indexOf(id) < 0; });
     var h = '<section role="tabpanel"><h1>Комнаты</h1><p class="lead">Комнаты - это разделы дома на витрине. Можно добавить свою (гараж, подвал, мансарда, баня) и удалить ненужную. Новая комната появится в доме, когда в ней будет хотя бы одна работа: выберите её в карточке работы.</p>' +
-      '<div class="eyebrow">Комнаты в доме</div><div class="card"><div class="list kl">' + R.map(function (k) {
+      '<div class="eyebrow">Комнаты в доме</div><p class="mhs" style="margin:-6px 0 12px">Сверху вниз, как в доме. Стрелки меняют порядок, нажатие на фото - выбрать титульное фото комнаты.</p><div class="card"><div class="list kl">' + R.map(function (k) {
         var n = worksIn(k.id), st = k.del ? "Удалится после публикации" + (k.del.kuda ? ", работы - в «" + esc(roomName(k.del.kuda)) + "»" : n ? ", работы скроются" : "") :
           (n + " " + plural(n, ["работа", "работы", "работ"]) + (k.draft ? " · новая, появится после публикации" : k.vern ? " · вернётся после публикации" : k.svoj ? " · ваша комната" : "") + (!n && (k.draft || k.svoj) ? " · без работ в доме не видна" : ""));
-        var row = '<div class="row' + (k.del ? " hidden-w" : "") + '"><span class="sp"><b>' + esc(k.nazvanie) + "</b><br><span>" + st + "</span></span>" +
+        var tf = !k.del && n ? roomFotos(k.id) : [], tr = titulOf(k.id), tc = tf.filter(function (f) { return f.ref === tr; })[0] || tf[0];
+        var li = live.indexOf(k);
+        var row = '<div class="row' + (k.del ? " hidden-w" : "") + '">' +
+          (tc ? '<button type="button" class="ktit" data-tit="' + esc(k.id) + '" aria-expanded="' + (TITR === k.id) + '" aria-label="Титульное фото комнаты «' + esc(k.nazvanie) + '»" title="Титульное фото"><img src="' + esc(tc.src) + '" alt="" loading="lazy" decoding="async"></button>' : "") +
+          '<span class="sp"><b>' + esc(k.nazvanie) + "</b><br><span>" + st + "</span></span>" +
+          (k.del ? "" : '<span class="kmv"><button type="button" class="btn l sm" data-up="' + esc(k.id) + '" aria-label="Выше"' + (li <= 0 ? " disabled" : "") + '>&#8593;</button><button type="button" class="btn l sm" data-dn="' + esc(k.id) + '" aria-label="Ниже"' + (li < 0 || li >= live.length - 1 ? " disabled" : "") + ">&#8595;</button></span>") +
           (k.del ? '<button type="button" class="btn l sm" data-undel="' + esc(k.id) + '">Не удалять</button>' : '<button type="button" class="btn l sm" data-del="' + esc(k.id) + '">Удалить</button>') + "</div>";
+        if (TITR === k.id && tf.length) {
+          row += '<div class="kdel"><p>Титульное фото - его видно на комнате в доме. Выберите любое фото этой комнаты.</p><div class="fon-pick" data-tpick="' + esc(k.id) + '">' +
+            tf.map(function (f) { return '<button type="button" data-ref="' + esc(f.ref) + '" aria-pressed="' + (f === tc) + '" aria-label="' + esc(f.t) + '"><img src="' + esc(f.src) + '" alt="" loading="lazy" decoding="async"></button>'; }).join("") +
+            '</div><div class="btns">' + (tr ? '<button type="button" class="btn l sm" data-tfirst="' + esc(k.id) + '">Первое фото, как было</button>' : "") + '<button type="button" class="btn l sm" id="kTitX">Готово</button></div></div>';
+        }
         if (DELR === k.id && !k.del) {
           var others = live.filter(function (x) { return x.id !== k.id; });
           row += '<div class="kdel"><p>В комнате ' + n + " " + plural(n, ["работа", "работы", "работ"]) + ". Что с ними сделать?</p>" +
@@ -538,7 +581,7 @@
       '<div class="f"><label for="kNm">Название</label><input id="kNm" data-voice maxlength="40" placeholder="Гараж"></div>' +
       '<div class="f"><label for="kHint">Что там бывает</label><input id="kHint" maxlength="60" placeholder="стеллажи, верстаки, шкафы для инструмента"><small>Мелкая подпись под названием в доме. Можно не писать.</small></div>' +
       '<div class="f w"><label for="kPos">Место в доме</label><select id="kPos"><option value="">В конце</option><option value="^">Первой</option>' +
-      live.map(function (x) { return '<option value="' + esc(x.id) + '">После «' + esc(x.nazvanie) + "»</option>"; }).join("") + "</select><small>Комнаты стоят в доме по порядку: на компьютере по три в ряд, на телефоне по две.</small></div>" +
+      live.map(function (x) { return '<option value="' + esc(x.id) + '">После «' + esc(x.nazvanie) + "»</option>"; }).join("") + "</select><small>Комнаты стоят в доме по порядку, сверху вниз. Порядок меняют стрелки в списке выше.</small></div>" +
       '</div><div class="btns"><button type="button" class="btn" id="kAdd">Добавить комнату</button></div></div>' +
       (gone.length ? '<div class="eyebrow">Удалённые комнаты</div><div class="card"><div class="list">' + gone.map(function (id) {
         return '<div class="row"><span class="sp"><b>' + esc(PK.imena[id] || "Комната") + '</b></span><button type="button" class="btn l sm" data-vern="' + esc(id) + '">Вернуть</button></div>';
@@ -551,6 +594,18 @@
       DELR = id; vKomnaty(); var k = $("kKuda"); if (k) k.focus();
     }; });
     if ($("kDelGo")) $("kDelGo").onclick = function () { var id = DELR; DELR = null; delRoom(id, $("kKuda").value); };
+    [].forEach.call(document.querySelectorAll("[data-up],[data-dn]"), function (b) { b.onclick = function () {
+      var id = b.getAttribute("data-up") || b.getAttribute("data-dn"); moveRoom(id, b.hasAttribute("data-up") ? -1 : 1); vKomnaty();
+      var nb = document.querySelector('[data-' + (b.hasAttribute("data-up") ? "up" : "dn") + '="' + id + '"]'); if (nb && !nb.disabled) nb.focus(); else { nb = document.querySelector('[data-up="' + id + '"],[data-dn="' + id + '"]'); if (nb) nb.focus(); }
+    }; });
+    [].forEach.call(document.querySelectorAll("[data-tit]"), function (b) { b.onclick = function () { var id = b.getAttribute("data-tit"); TITR = TITR === id ? null : id; vKomnaty(); }; });
+    function setTit(id, ref) { S.titul = S.titul || {}; S.titul[id] = ref; if ((titulPub()[id] || "") === ref) delete S.titul[id]; if (!Object.keys(S.titul).length) delete S.titul; save(); }
+    [].forEach.call(document.querySelectorAll("[data-tpick]"), function (g) { g.onclick = function (e) {
+      var b = e.target.closest("button[data-ref]"); if (!b) return;
+      setTit(g.getAttribute("data-tpick"), b.getAttribute("data-ref")); toast("Титульное фото выбрано. На витрине - после публикации"); vKomnaty();
+    }; });
+    [].forEach.call(document.querySelectorAll("[data-tfirst]"), function (b) { b.onclick = function () { setTit(b.getAttribute("data-tfirst"), ""); vKomnaty(); }; });
+    if ($("kTitX")) $("kTitX").onclick = function () { TITR = null; vKomnaty(); };
     if ($("kDelNo")) $("kDelNo").onclick = function () { DELR = null; vKomnaty(); };
     [].forEach.call(document.querySelectorAll("[data-undel]"), function (b) { b.onclick = function () { var id = b.getAttribute("data-undel"); S.komn.udalit = S.komn.udalit.filter(function (d) { return d.id !== id; }); save(); vKomnaty(); }; });
     [].forEach.call(document.querySelectorAll("[data-vern]"), function (b) { b.onclick = function () { S.komn.vernut.push(b.getAttribute("data-vern")); save(); toast("Комната вернётся после публикации"); vKomnaty(); }; });
@@ -978,7 +1033,7 @@
       raboty: S.novye.filter(function (w) { return (w.media || []).some(function (m) { return m.st === "ok"; }) || w.nazvanie || w.rasskaz || wfHas(w); }).length,
       pravka: S.k.filter(function (w) { return !w.udalitW && (w.nazvanie != null || w.rasskaz != null || w.komnata || WF.some(function (f) { return w[f[0]] != null; })); }).length,
       skryt: S.k.filter(function (w) { return w.skryt && !w.udalitW; }).length, vernut: (S.vernut || []).length, znak: znakChanged(),
-      komn: S.komn.novye.length + S.komn.udalit.length + S.komn.vernut.length, shrift: shriftCh() ? 1 : 0, kalk: kalkCh() ? 1 : 0,
+      komn: S.komn.novye.length + S.komn.udalit.length + S.komn.vernut.length + (poryCh() ? 1 : 0) + titulCh(), shrift: shriftCh() ? 1 : 0, kalk: kalkCh() ? 1 : 0,
       udalF: S.k.reduce(function (a, w) { return a + (w.udalitW ? 0 : (w.udalit || []).length); }, 0),
       tochki: S.novye.concat(S.k).filter(function (w) { return !w.udalitW && w.tochki && Object.keys(w.tochki).length; }).length,
       udalW: S.k.filter(function (w) { return w.udalitW; }).length,
@@ -1007,6 +1062,8 @@
     if (S.komn.novye.length) L.push("Новые комнаты: " + S.komn.novye.map(function (k) { return k.nazvanie; }).join(", "));
     if (S.komn.udalit.length) L.push("Удалить комнаты: " + S.komn.udalit.map(function (d) { return d.nazvanie || "комната"; }).join(", "));
     if (S.komn.vernut.length) L.push("Вернуть комнаты: " + S.komn.vernut.length);
+    if (poryCh()) L.push("Порядок комнат в доме");
+    if (titulCh()) L.push("Титульные фото комнат: " + titulCh());
     if (c.shrift) L.push("Шрифты");
     if (c.kalk) L.push("Цены для расчёта");
     if (c.vernut) L.push("Вернуть на витрину: " + c.vernut);
@@ -1206,6 +1263,8 @@
       chain = chain.then(function () { Object.keys(moves).forEach(function (id) { if (moves[id]) target(id).komnata = moves[id]; else hide(id); }); });
       if (shriftCh()) L.shrift = { titul: shrVal("titul"), kartochki: shrVal("kartochki") };
       if (kalkCh()) L.kalk = S.kalk;
+      if (poryCh()) L.poryadok = S.poryadok.slice();
+      if (titulCh()) { L.titul = L.titul || {}; Object.keys(S.titul).forEach(function (id) { if (S.titul[id]) L.titul[id] = S.titul[id]; else delete L.titul[id]; }); }
       // фон: undefined - не трогаем, null - вернуть подборку, иначе новый фон
       chain = chain.then(function () { return fonOut(function (m) { return enc("m:" + m.id).then(function (f) { return enc("k:" + m.id).then(function (k) { return { f: f, k: k }; }); }); }); })
         .then(function (F) { if (F === null) delete L.fon; else if (F) L.fon = F; });
@@ -1313,6 +1372,8 @@
     var mv = {}; S.komn.udalit.forEach(function (d) { (D.raboty || []).forEach(function (w) { if (roomOf(w.id) === d.id) mv[w.id] = d.kuda || ""; }); });
     if (shriftCh()) P.shrift = { titul: shrVal("titul"), kartochki: shrVal("kartochki") };
     if (kalkCh()) P.kalk = S.kalk;
+    if (poryCh()) P.poryadok = S.poryadok.slice();
+    if (titulCh()) { P.titul = {}; Object.keys(S.titul).forEach(function (id) { P.titul[id] = S.titul[id] || ""; }); }
     S.novye.forEach(function (w) { var md = media(w.media || []); if (!md.foto.length && !md.video.length && !w.nazvanie && !w.rasskaz && !wfHas(w)) return; var nw = { id: w.id, nazvanie: w.nazvanie || "Новая работа", komnata: w.komnata, rasskaz: w.rasskaz || "", foto: md.foto, video: md.video }; WF.forEach(function (f) { if (w[f[0]] && String(w[f[0]]).trim()) nw[f[0]] = String(w[f[0]]).trim(); }); P.novye_raboty.push(nw); tk(w.id, w); });
     S.k.forEach(function (w) {
       if (w.udalitW) { (P.udalit_raboty = P.udalit_raboty || []).push(w.rabota); delete mv[w.rabota]; return; }

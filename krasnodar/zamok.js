@@ -159,8 +159,9 @@
   }
 
   // ---------- фото ----------
+  function isRef(x) { return typeof x === "string" && /^@[0-9a-f]{8,}$/.test(x); }
   function ids(x, out) {
-    if (typeof x === "string") { if (/^@[0-9a-f]{8,}$/.test(x)) out[x.slice(1)] = 1; }
+    if (typeof x === "string") { if (isRef(x)) out[x.slice(1)] = 1; }
     else if (Array.isArray(x)) x.forEach(function (y) { ids(y, out); });
     else if (x && typeof x === "object") Object.keys(x).forEach(function (k) { ids(x[k], out); });
     return out;
@@ -255,8 +256,9 @@
       watchSwap();
       return gateP;
     }).then(function () {
-      if (lazy) return function (ref) { if (typeof ref !== "string" || ref.charAt(0) !== "@") return ref; var id = ref.slice(1); return map[id] || PH + "#kr=" + id; };
-      return function (ref) { return typeof ref === "string" && ref.charAt(0) === "@" ? (map[ref.slice(1)] || "") : ref; };
+      // ссылка на фото - только "@" + шестнадцатеричный id; остальные строки с "@" (Telegram "@имя") не трогаем
+      if (lazy) return function (ref) { if (!isRef(ref)) return ref; var id = ref.slice(1); return map[id] || PH + "#kr=" + id; };
+      return function (ref) { return isRef(ref) ? (map[ref.slice(1)] || "") : ref; };
     });
   }
   function mapDeep(x, fn) {
@@ -340,7 +342,7 @@
       }, Promise.resolve()).then(function () {
         hide.remove();
         // чистая версия для клиентов: скрытый вход мастера удержанием знака (master-vhod.js)
-        if (window.MEBEL_TOOL === "kr-klient" || window.MEBEL_TOOL === "kr-proba") loadScript(BASE + "master-vhod.js").catch(function () {});
+        if (window.MEBEL_TOOL === "kr-klient" || window.MEBEL_TOOL === "kr-proba" || window.MEBEL_TOOL === "kr-novaya") loadScript(BASE + "master-vhod.js").catch(function () {});
         if (opts && opts.back === "none") return; // главная (дом): возвращаться некуда
         var a = document.createElement("a"); a.id = "krBack"; a.href = BASE; a.textContent = "← Назад"; a.title = "Назад к дому"; if (opts && opts.back === "bl") a.className = "bl";
         document.body.appendChild(a);

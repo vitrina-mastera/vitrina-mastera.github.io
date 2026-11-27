@@ -1,0 +1,77 @@
+/* Дом на фото (пробная главная Краснодара) - к foto-dom.js. Всё под html[data-fd]. */
+html[data-fd] #house{display:none!important}
+html[data-fd] .hero{padding-bottom:0!important;min-height:0!important}
+html[data-fd] .hero-t{padding-bottom:clamp(18px,3vh,30px)}
+html[data-fd] .d2-hw{margin-top:var(--fdm,0px)!important;perspective:none!important;animation:none!important}
+html[data-fd] #home.enter .fd{animation:fdEnter 1.4s cubic-bezier(.3,0,.2,1) .4s both}
+@keyframes fdEnter{from{opacity:0;transform:translate3d(0,40px,0)}to{opacity:1;transform:none}}
+html[data-fdr] #home.enter .fd{animation:none}
+
+/* сцена: на телефоне фото во всю ширину, на широком экране - колонка, по бокам то же фото, сильно размытое и тёмное */
+.fd{position:relative;z-index:1;width:100vw;margin-left:calc(50% - 50vw);isolation:isolate;overflow:hidden;overflow:clip}
+/* верх фото и боков растворяется в фоне первого экрана (видео за шапкой) - без резкой границы */
+.fd-side,.fd-col{-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 340px);mask-image:linear-gradient(180deg,transparent 0,#000 340px)}
+html[data-fd] .d2-kino{height:100vh!important;height:100lvh!important}
+.fd-side{position:absolute;inset:0;z-index:-1;background:#0F0F0E center/100% 100% no-repeat;opacity:.55}
+.fd-side::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,15,14,.92),rgba(15,15,14,.55) 35%,rgba(15,15,14,.55) 65%,rgba(15,15,14,.92))}
+.fd-col{position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:1170/6204;container-type:inline-size}
+.fd-img{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;pointer-events:none}
+/* затемнение как на первом экране + плавный вход из тёмной шапки сверху и выход в белый низ страницы */
+.fd-veil{position:absolute;inset:0;pointer-events:none;background:
+  linear-gradient(180deg,rgba(15,15,14,.55) 0%,rgba(15,15,14,.2) 8%,rgba(15,15,14,0) 13%,rgba(15,15,14,0) 93%,rgba(255,255,255,0) 97.6%,#fff 100%),
+  rgba(12,11,10,.34)}
+@media (min-width:601px){.fd-veil{background:
+  linear-gradient(180deg,rgba(15,15,14,.55) 0%,rgba(15,15,14,.2) 8%,rgba(15,15,14,0) 13%,rgba(15,15,14,0) 100%),
+  linear-gradient(90deg,rgba(15,15,14,.5),rgba(15,15,14,0) 12%,rgba(15,15,14,0) 88%,rgba(15,15,14,.5)),
+  rgba(12,11,10,.34)}}
+
+/* комнаты: по очереди слева и справа, место по высоте - в foto-dom.js (доля высоты фото) */
+.fd-rooms{position:absolute;inset:0}
+.fd-card{position:absolute;width:42%;margin:0;padding:0;border:0;background:none;color:#F1EEE8;text-align:left;cursor:pointer;font:inherit;-webkit-tap-highlight-color:transparent;view-timeline:--fdc block}
+.fd-card.l{left:5%}
+.fd-card.r{right:5%}
+.fd-in{display:block;will-change:transform,opacity;opacity:calc(var(--p,0)*1.6);transform:translate3d(0,calc((1 - var(--p,0))*64px),0)}
+.fd-ph{position:relative;display:block;aspect-ratio:4/5;overflow:hidden;background:#1B1A18;box-shadow:0 18px 40px -18px rgba(0,0,0,.75)}
+.fd-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transform:scale(calc(1.16 - var(--p,0)*.16));will-change:transform}
+.fd-dk{position:absolute;inset:0;background:#0B0A09;opacity:calc((1 - var(--p,0))*.75)}
+.fd-t{display:block;padding:12px 2px 0;text-shadow:0 1px 10px rgba(0,0,0,.7),0 0 2px rgba(0,0,0,.5)}
+.fd-t b{display:block;font-family:var(--sans,system-ui,sans-serif);font-weight:500;font-size:12px;line-height:1.35;letter-spacing:.2em;text-transform:uppercase}
+.fd-ln{display:block;height:1px;margin:9px 0 7px;background:rgba(241,238,232,.75);transform-origin:0 50%;transform:scaleX(calc(var(--p,0)*.6))}
+.fd-t small{display:block;font-size:11.5px;letter-spacing:.06em;color:rgba(241,238,232,.72)}
+.fd-card:focus-visible{outline:none}
+.fd-card:focus-visible .fd-ph{outline:1px solid #F1EEE8;outline-offset:4px}
+@media (hover:hover){.fd-card:hover .fd-ln{background:#fff}.fd-card:hover .fd-t b{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}}
+@container (min-width:520px){.fd-t b{font-size:13px}}
+
+/* браузер сам двигает проявление по прокрутке - на видеокарте, ровно с пальцем */
+html[data-fdv] .fd-in{opacity:0;animation:fdIn linear both;animation-timeline:--fdc;animation-range:cover 0% cover 50%}
+html[data-fdv] .fd-ph img{animation:fdImg linear both;animation-timeline:--fdc;animation-range:cover 0% cover 50%}
+html[data-fdv] .fd-dk{animation:fdDk linear both;animation-timeline:--fdc;animation-range:cover 0% cover 50%}
+html[data-fdv] .fd-ln{animation:fdLn linear both;animation-timeline:--fdc;animation-range:cover 12% cover 54%}
+@keyframes fdIn{0%{opacity:0;transform:translate3d(0,64px,0)}62%{opacity:1}100%{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes fdImg{0%{transform:scale(1.16)}100%{transform:scale(1)}}
+@keyframes fdDk{0%{opacity:.75}100%{opacity:0}}
+@keyframes fdLn{0%{transform:scaleX(0)}100%{transform:scaleX(.6)}}
+/* без анимаций по просьбе системы - всё видно сразу */
+html[data-fdr] .fd-in,html[data-fdr] .fd-ph img,html[data-fdr] .fd-dk,html[data-fdr] .fd-ln{--p:1;animation:none!important}
+
+/* подсказка под крышей: пока человек не начал вести */
+.fd-hint{position:absolute;left:0;right:0;top:3.2%;margin:0;display:flex;flex-direction:column;align-items:center;gap:10px;color:rgba(241,238,232,.92);text-shadow:0 1px 8px rgba(0,0,0,.8);font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;pointer-events:none;transition:opacity .6s ease}
+.fd-hint i{display:block;width:1px;height:38px;background:linear-gradient(rgba(241,238,232,0),rgba(241,238,232,.85));animation:fdHint 2.2s ease-in-out infinite;transform-origin:50% 0}
+.fd-hint.off{opacity:0}
+@keyframes fdHint{0%{transform:scaleY(0);opacity:0}40%{opacity:1}100%{transform:scaleY(1) translateY(14px);opacity:0}}
+html[data-fdr] .fd-hint i{animation:none}
+
+/* ниже фото - белый фон и лента видео (просьба мастера) */
+html[data-fd] .reels,html[data-fd] .reels.d2-low{background:#fff!important;color:#141413}
+html[data-fd] .reels .d2-lbg{display:none!important}
+html[data-fd] .reels.d2-low .eyebrow,html[data-fd] .reels .eyebrow{color:rgba(20,20,19,.55)!important}
+html[data-fd] .reels.d2-low h2,html[data-fd] .reels h2{color:#141413!important}
+html[data-fd] .reels.d2-low .reels-h p,html[data-fd] .reels .reels-h p{color:rgba(20,20,19,.62)!important}
+html[data-fd] .reels.d2-low .reels-h p a{color:#141413!important;text-decoration-color:rgba(20,20,19,.35)!important}
+html[data-fd] .reels.d2-low .reel.ph-empty{background:rgba(20,20,19,.03)!important;border-color:rgba(20,20,19,.16)!important}
+html[data-fd] .reels.d2-low .reel.ph-empty .pl{border-color:rgba(20,20,19,.4)!important;color:rgba(20,20,19,.8)!important}
+html[data-fd] .reels.d2-low .reel.ph-empty .rt b{color:#141413!important}
+html[data-fd] .reels.d2-low .reel.ph-empty .rt span{color:rgba(20,20,19,.6)!important}
+html[data-fd] .reels.d2-low .reel:not(.ph-empty){box-shadow:0 0 0 1px rgba(20,20,19,.1)!important}
+html[data-fd] .foot{background:#fff!important;color:rgba(20,20,19,.55)!important;border-top-color:rgba(20,20,19,.1)!important}
