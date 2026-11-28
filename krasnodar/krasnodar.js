@@ -323,6 +323,7 @@
   KrZamok.unlock().then(function (r) {
     D = r.data; V = D.vitrina || {}; A = D.anketa || {}; S = load();
     renderHead(); renderWorks(); renderQs(); renderRev(); fill(); bind(); route();
+    if (KrZamok.otkryto && $("out")) $("out").remove(); // открытый вход: выходить не из чего
     document.body.classList.remove("locked");
   });
 })();

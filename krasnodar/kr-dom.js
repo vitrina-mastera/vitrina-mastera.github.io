@@ -34,7 +34,9 @@
     '<a href="masterskaya/">' + I('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>') + "Мастерская</a>" +
     '<a href="master/">' + I('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>') + "Вопросы и правки</a></div>" +
     '<button type="button" id="krOut">Выйти</button>';
+  // открытый вход (enc/otkryto.json): пин-кода нет, "Выйти" не нужен - после выхода витрина тут же открылась бы снова
+  if (window.KrZamok && KrZamok.otkryto) { bar.querySelector(".t span").textContent = "Открыта для всех по ссылке, без пин-кода."; bar.querySelector("#krOut").remove(); }
   home.insertBefore(bar, top);
   if (window.MebelSite && MebelSite.nav) MebelSite.nav(bar.querySelector(".krnav"));
-  document.getElementById("krOut").onclick = function () { if (window.KrZamok) KrZamok.logout(); };
+  if (document.getElementById("krOut")) document.getElementById("krOut").onclick = function () { if (window.KrZamok) KrZamok.logout(); };
 })();

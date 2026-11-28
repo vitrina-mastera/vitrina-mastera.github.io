@@ -7,7 +7,11 @@
    каждый раз; "Выйти" его стирает.
    Фото: служебный работник sw.js отдаёт расшифрованное фото по адресу f/<id>.jpg (по мере
    прокрутки). Если браузер его не поддерживает - все фото расшифровываются сразу.
-   Шифрует файлы site/tools/zashifrovat-krasnodar.js. */
+   Шифрует файлы site/tools/zashifrovat-krasnodar.js.
+   ОТКРЫТЫЙ ВХОД (с 2026-11-28, по просьбе Александра): если рядом лежит enc/otkryto.json с готовым ключом,
+   пин-код не спрашивается - ключ берётся оттуда, всё остальное (ленивая расшифровка фото, sw.js, правки
+   мастера в m.bin, публикация из Мастерской) работает как раньше. Вернуть пин-код: удалить enc/otkryto.json
+   (или запустить шифрование с --zakryto). Код мастера от этого не зависит. */
 (function () {
   "use strict";
   if (window.KrZamok) return;
@@ -60,6 +64,14 @@
       return subtle.importKey("raw", new Uint8Array(bits, 0, 32), { name: "AES-GCM" }, false, ["decrypt"]);
     });
   }
+  // открытый вход: enc/otkryto.json = { v, salt, k } - тот же ключ AES, что выводится из пин-кода, но готовый
+  var OPEN = false;
+  function openKey(meta) {
+    return fetch(BASE + "enc/otkryto.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (o) {
+      if (!o || !o.k || o.salt !== meta.salt) return null;
+      return subtle.importKey("raw", b64(o.k), { name: "AES-GCM" }, false, ["decrypt"]);
+    }).catch(function () { return null; });
+  }
   function fetchBin(name) {
     return fetch(BASE + "enc/" + name, { cache: "no-cache" }).then(function (r) {
       if (!r.ok) throw new Error("нет файла " + name);
@@ -95,8 +107,11 @@
     "#krLock button{margin-top:26px;width:100%;font:inherit;font-weight:500;font-size:11px;letter-spacing:.24em;text-transform:uppercase;min-height:48px;border:1px solid var(--kr-ink,#F1EEE8);border-radius:0;background:transparent;color:var(--kr-ink,#F1EEE8);cursor:pointer;transition:background-color .3s,color .3s}",
     "@media (hover:hover){#krLock button:not(:disabled):hover{background:var(--kr-ink,#F1EEE8);color:var(--kr-bg,#121211)}}",
     "#krLock button:disabled{opacity:.4;cursor:default}",
-    "#krLock .msg{min-height:22px;margin-top:14px;font-size:13.5px;color:var(--kr-err,#E3A08F)}",
+    "#krLock .msg{min-height:22px;margin:14px 0 0;padding:0;border:0;border-radius:0;background:none;max-height:none;overflow:visible;white-space:normal;font-size:13.5px;line-height:1.5;color:var(--kr-err,#E3A08F)}", // .msg есть и у страниц витрины (зелёный пузырь WhatsApp) - здесь он не нужен
     "#krLock .msg.ok{color:var(--kr-muted,#A6A198)}",
+    // экран загрузки и ошибки открытого входа: без замка, поля и кнопки
+    "#krLock.wait .ic,#krLock.wait input,#krLock.wait button,#krLock.wait p,#krLock.wait .foot{display:none}",
+    "#krLock.wait h1{font-size:24px;opacity:.85}#krLock.wait{animation:krWin .6s ease both}@keyframes krWin{from{opacity:0}}",
     "#krLock .foot{margin-top:34px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--kr-faint,#77726B)}",
     "#krBack{position:fixed;right:10px;top:calc(10px + env(safe-area-inset-top));z-index:2147482000;display:inline-flex;align-items:center;gap:6px;background:rgba(18,18,17,.85);color:var(--kr-ink,#F1EEE8);border:1px solid rgba(255,255,255,.18);border-radius:0;padding:8px 14px;font:500 10.5px var(--kr-sans,system-ui,sans-serif);letter-spacing:.2em;text-transform:uppercase;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.25);backdrop-filter:blur(6px)}",
     "#krBack.bl{top:auto;right:auto;left:12px;bottom:calc(14px + env(safe-area-inset-bottom))}",
@@ -125,8 +140,18 @@
     if (vv) { var f = function () { if (!el.isConnected) { vv.removeEventListener("resize", f); vv.removeEventListener("scroll", f); return; } el.style.top = vv.offsetTop + "px"; el.style.height = vv.height + "px"; el.style.bottom = "auto"; }; vv.addEventListener("resize", f); vv.addEventListener("scroll", f); f(); }
     return el;
   }
+  // тихий экран загрузки (открытый вход): появляется, только если открытие идёт дольше 0,7 с
+  var WT = 0, ASKED = false;
+  function waitScreen() {
+    WT = setTimeout(function () {
+      WT = 0; if (document.getElementById("krLock")) return;
+      var el = lockScreen(); el.classList.add("wait");
+      var h = el.querySelector("h1"); if (h) h.textContent = "Открываю витрину";
+      msg("Загружаю фото...", true);
+    }, 700);
+  }
   function msg(t, ok) { var m = document.getElementById("krMsg"); if (m) { m.textContent = t || ""; m.className = "msg" + (ok ? " ok" : ""); } }
-  function unlockScreen() { var el = document.getElementById("krLock"); if (el) el.remove(); }
+  function unlockScreen() { clearTimeout(WT); WT = 0; var el = document.getElementById("krLock"); if (el) el.remove(); }
 
   // попытки: на статическом сайте надёжно ограничить их нельзя (можно перебирать файлы и без страницы),
   // поэтому здесь только пауза от случайного перебора руками. Защиту даёт длина пина и 600 000 повторов.
@@ -134,7 +159,9 @@
   function setTries(o) { try { localStorage.setItem(TRIES, JSON.stringify(o)); } catch (e) {} }
 
   function askPin(meta, dataBuf) {
+    clearTimeout(WT); WT = 0; ASKED = true;
     var el = lockScreen(), f = el.querySelector("form"), inp = el.querySelector("#krPin"), go = el.querySelector("#krGo");
+    if (el.classList.contains("wait")) { el.classList.remove("wait"); el.querySelector("h1").textContent = "Закрытая витрина"; msg(""); }
     setTimeout(function () { inp.focus(); }, 30);
     return new Promise(function (done) {
       f.onsubmit = function (e) {
@@ -275,17 +302,25 @@
       document.getElementById("krGo").disabled = true;
       return new Promise(function () {});
     }
-    var meta, dataBuf;
+    var meta, dataBuf, metaP = fetch(BASE + "enc/meta.json", { cache: "no-cache" }).then(function (r) { return r.json(); });
+    waitScreen(); // долгая загрузка без пин-кода - тихий экран "Открываю витрину", а не пустота
     return Promise.all([
-      fetch(BASE + "enc/meta.json", { cache: "no-cache" }).then(function (r) { return r.json(); }),
-      fetchBin("d.bin"), getKey()
+      metaP, fetchBin("d.bin"), getKey(), metaP.then(openKey)
     ]).then(function (a) {
       meta = a[0]; dataBuf = a[1];
-      var rec = a[2];
-      if (rec && rec.key && rec.salt === meta.salt) {
-        return open(rec.key, dataBuf).then(function (plain) { return { key: rec.key, plain: plain }; }, function () { return askPin(meta, dataBuf); });
+      var rec = a[2], ok = a[3];
+      if (ok) { OPEN = true; window.KrZamok.otkryto = true; }
+      // открытый вход: ключ из otkryto.json, пин не нужен; кладём его в IndexedDB - оттуда берёт sw.js
+      function viaOpen() {
+        if (!ok) return askPin(meta, dataBuf);
+        return open(ok, dataBuf).then(function (plain) {
+          return putKey({ key: ok, salt: meta.salt, otkryto: true }).then(function () { return { key: ok, plain: plain }; });
+        }, function () { OPEN = false; window.KrZamok.otkryto = false; return askPin(meta, dataBuf); });
       }
-      return askPin(meta, dataBuf);
+      if (rec && rec.key && rec.salt === meta.salt) {
+        return open(rec.key, dataBuf).then(function (plain) { return { key: rec.key, plain: plain }; }, viaOpen);
+      }
+      return viaOpen();
     }).then(function (r) {
       var data = JSON.parse(new TextDecoder().decode(r.plain));
       return sloj(r.key, data).then(function () { r.data = data; return r; });
@@ -293,12 +328,16 @@
       var data = r.data;
       var el = document.getElementById("krLock");
       if (el) msg("Открываю фото...", true);
-      return photoMap(r.key, data, function (d, n) { if (el) msg("Открываю фото: " + d + " из " + n, true); }).then(function (fn) {
+      return photoMap(r.key, data, function (d, n) { el = document.getElementById("krLock"); if (el) msg("Открываю фото: " + d + " из " + n, true); }).then(function (fn) {
         unlockScreen();
+        if (/^Закрытая витрина$/.test(document.title) && data.vitrina && data.vitrina.master && data.vitrina.master.imya) document.title = data.vitrina.master.imya;
         return { data: mapDeep(data, fn), photo: fn };
       });
     }).catch(function (e) {
-      lockScreen(); msg("Не удалось открыть витрину: " + (e && e.message || e) + ". Проверьте интернет и обновите страницу.");
+      clearTimeout(WT); WT = 0;
+      var el = lockScreen();
+      if (!ASKED) { el.classList.add("wait"); var h = el.querySelector("h1"); if (h) h.textContent = "Витрина не открылась"; } // пин не спрашивали - без поля и кнопки
+      msg("Не удалось открыть витрину: " + (e && e.message || e) + ". Проверьте интернет и обновите страницу.");
       throw e;
     });
   }
@@ -350,5 +389,5 @@
     });
   }
 
-  window.KrZamok = { when: when, unlock: unlock, page: page, logout: logout, base: BASE, idb: idb, b64: b64, fetchBin: fetchBin, mime: mime };
+  window.KrZamok = { otkryto: false, when: when, unlock: unlock, page: page, logout: logout, base: BASE, idb: idb, b64: b64, fetchBin: fetchBin, mime: mime };
 })();
