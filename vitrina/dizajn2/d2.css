@@ -1114,3 +1114,64 @@ html[data-d2p] .d2-mx.d2-mxa svg{width:36px;height:22px}
    показывала прямоугольную обводку). Только завитушки по углам и короткие полоски от них. */
 html[data-d2p] #enterBtn,html[data-d2p] #enterBtn:hover,html[data-d2p] #enterBtn:focus,html[data-d2p] #enterBtn:focus-visible,html[data-d2p] #enterBtn:active{border:0!important;outline:0!important;box-shadow:none!important;background:none!important}
 html[data-d2p] #enterBtn:focus-visible{text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:1px}
+
+/* ===== Заставка v2 (html[data-zs], флаг window.D2_ZS2; 2026-11-28, просьба Александра: "всё плавно") =====
+   Почему лагало: анимации заставки стартовали при загрузке страницы, пока она ещё скрыта (идёт расшифровка и
+   загрузка скриптов), - человек видел случайную середину; шрифт мастера подменялся прямо во время появления
+   названия; завитушки рисовались штрихом (stroke-dashoffset) - это перерисовка на основном потоке, и любая
+   загрузка в этот момент их дёргала.
+   Теперь: d2.js ставит #doors.zs-vis, когда заставка реально видна (космос плавно проявляется), и #doors.zs-go,
+   когда готовы шрифты и знак и основной поток свободен. Только тогда идёт сценарий: название - слабо, ярче,
+   вспышка, устанавливается; род занятий; "Войти в дом" и сразу за ним завитушки. Всё - только opacity/transform
+   (их ведёт видеокарта, загрузка на основном потоке не мешает). Завитушка открывается "шторкой" из своего угла:
+   окно со сдвигом и встречный сдвиг содержимого - картинка неподвижна, двигается только край. */
+html[data-zs] #doors .d2-space,html[data-zs] #doors .d2-dmark,html[data-zs] #doors .plate b,html[data-zs] #doors .plate span,html[data-zs] #doors #enterBtn{animation:none;opacity:0}
+html[data-zs] #doors .plate::before,html[data-zs] #doors .plate b[data-t]::after,html[data-zs] #doors .d2-dmark::after,html[data-zs] #doors .plate span::before,html[data-zs] #doors .plate span::after{animation:none;opacity:0}
+html[data-zs] #doors .d2-dmark{filter:brightness(1.3)}
+html[data-zs] #doors.zs-vis .d2-space{animation:zsFade 1.4s ease-out both}
+/* космос: слой звёзд меньше (было +700 px с каждой стороны - огромная текстура для видеокарты телефона), та же скорость */
+html[data-zs] #doors .d2-space .s1{width:calc(120% + 140px);height:calc(120% + 70px);animation:zsDrift 48s linear infinite alternate}
+@keyframes zsDrift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-140px,-70px,0)}}
+html[data-zs] #doors.zs-go .d2-dmark{animation:zsMark 1.4s cubic-bezier(.25,.6,.3,1) .1s both}
+html[data-zs] #doors.zs-go .d2-dmark::after{animation:zsFlash .9s ease-in-out 1.6s both}
+html[data-zs] #doors.zs-go .plate b{animation:zsName 1.6s linear .25s both}
+html[data-zs] #doors.zs-go .plate b[data-t]::after{animation:zsFlash .85s ease-in-out 1.7s both}
+html[data-zs] #doors.zs-go .plate::before{animation:zsHalo 1.5s ease-out 1.62s both}
+html[data-zs] #doors.zs-go .plate span{animation:zsUp .9s cubic-bezier(.2,.7,.2,1) 2.3s both}
+html[data-zs] #doors.zs-go .plate span::before,html[data-zs] #doors.zs-go .plate span::after{animation:zsLine .8s cubic-bezier(.4,0,.2,1) 2.5s both}
+html[data-zs] #doors.zs-go #enterBtn{animation:zsUp .8s cubic-bezier(.2,.7,.2,1) 2.75s both}
+html[data-zs] #doors.zs-go:not(.zs-done) .d2-dmark,html[data-zs] #doors.zs-go:not(.zs-done) .plate b,html[data-zs] #doors.zs-go:not(.zs-done) .plate span,html[data-zs] #doors.zs-go:not(.zs-done) #enterBtn{will-change:opacity,transform}
+@keyframes zsFade{from{opacity:0}to{opacity:1}}
+@keyframes zsMark{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+/* название: сначала слабое (до 30%), потом набирает яркость; вспышка - копия названия со свечением поверх */
+@keyframes zsName{0%{opacity:0;transform:scale(1.035);animation-timing-function:cubic-bezier(.3,0,.5,1)}45%{opacity:.3;transform:scale(1.018);animation-timing-function:cubic-bezier(.45,0,.3,1)}100%{opacity:1;transform:none}}
+@keyframes zsFlash{0%{opacity:0}28%{opacity:1}100%{opacity:0}}
+@keyframes zsHalo{0%{opacity:0;transform:scale(.85)}22%{opacity:1;transform:none}100%{opacity:.32;transform:scale(1.03)}}
+@keyframes zsUp{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:none}}
+@keyframes zsLine{from{opacity:0;transform:scaleX(0)}to{opacity:.6;transform:none}}
+/* завитушки: окно (.zs-m) повёрнуто под 30 градусов к своему углу и въезжает, содержимое (.zs-i) едет навстречу */
+html[data-zs] .zs-orn .zs-c{position:absolute;width:78px;height:46px;overflow:visible}
+html[data-zs] .zs-orn .zs-m{position:absolute;left:0;top:0;width:114px;height:88px;overflow:hidden;transform-origin:0 0;
+  transform:translate(3px,44px) rotate(-30deg) translate(-8px,-44px) translateX(-114px);
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 18px),transparent)}
+html[data-zs] .zs-orn .zs-i{position:absolute;left:0;top:0;width:78px;height:46px;transform-origin:0 0;transform:translateX(114px) translate(8px,44px) rotate(30deg) translate(-3px,-44px)}
+html[data-zs] #enterBtn .zs-orn svg{position:absolute;left:0;top:0;width:78px;height:46px}
+html[data-zs] .zs-orn svg path{stroke-dasharray:none;stroke-dashoffset:0;animation:none!important}
+html[data-zs] #doors.zs-go .zs-orn .zs-m{animation:zsWm .95s cubic-bezier(.4,.1,.25,1) 3.0s both}
+html[data-zs] #doors.zs-go .zs-orn .zs-i{animation:zsWi .95s cubic-bezier(.4,.1,.25,1) 3.0s both}
+html[data-zs] #doors.zs-go .zs-orn .c4 .zs-m,html[data-zs] #doors.zs-go .zs-orn .c4 .zs-i{animation-delay:3.18s}
+html[data-zs] #doors.zs-go:not(.zs-done) .zs-orn .zs-m,html[data-zs] #doors.zs-go:not(.zs-done) .zs-orn .zs-i{will-change:transform}
+@keyframes zsWm{from{transform:translate(3px,44px) rotate(-30deg) translate(-8px,-44px) translateX(-114px)}to{transform:translate(3px,44px) rotate(-30deg) translate(-8px,-44px) translateX(0)}}
+@keyframes zsWi{from{transform:translateX(114px) translate(8px,44px) rotate(30deg) translate(-3px,-44px)}to{transform:translateX(0) translate(8px,44px) rotate(30deg) translate(-3px,-44px)}}
+/* слабые телефоны: без ореола и свечения знака, остальное то же (это дёшево) */
+html[data-zs][data-d2q="0"] #doors.zs-go .plate::before{animation:zsFade32 .8s ease-out 1.62s both}
+html[data-zs][data-d2q="0"] #doors.zs-go .d2-dmark::after{animation:none}
+@keyframes zsFade32{from{opacity:0}to{opacity:.32}}
+/* "меньше движения" в системе: всё сразу на месте */
+@media (prefers-reduced-motion:reduce){
+  html[data-zs] #doors .d2-space,html[data-zs] #doors .d2-dmark,html[data-zs] #doors .plate b,html[data-zs] #doors .plate span,html[data-zs] #doors #enterBtn{animation:none!important;opacity:1}
+  html[data-zs] #doors .plate::before{animation:none!important;opacity:.32}
+  html[data-zs] #doors .plate span::before,html[data-zs] #doors .plate span::after{animation:none!important;opacity:.6}
+  html[data-zs] #doors .plate b[data-t]::after,html[data-zs] #doors .d2-dmark::after{animation:none!important;opacity:0}
+  html[data-zs] .zs-orn .zs-m,html[data-zs] .zs-orn .zs-i{animation:none!important;transform:none}
+}

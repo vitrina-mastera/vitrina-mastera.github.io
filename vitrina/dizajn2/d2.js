@@ -82,6 +82,9 @@
   // вход: знак над названием
   var dui = document.querySelector("#doors .door-ui"), dmark = null;
   if (dui) { dmark = el("div", "d2-dmark"); dmark.hidden = true; dui.insertBefore(dmark, dui.firstChild); }
+  // заставка v2 (window.D2_ZS2): сценарий стартует, только когда заставка видна и всё для неё готово (см. zsGate ниже)
+  var ZS = !!(window.D2_ZS2 && window.D2_P && dui), logoOk = !M.logo, logoCbs = [];
+  if (ZS) H.setAttribute("data-zs", "");
   // "Просто": на заставке лёгкий "космос" сзади и завитки по углам кнопки "Войти в дом" (стили в d2.css)
   if (window.D2_P && dui) {
     var sp = el("div", "d2-space", '<i class="neb"></i><i class="neb2"></i><i class="s1"></i><i class="s2"></i>'); sp.setAttribute("aria-hidden", "true");
@@ -97,7 +100,8 @@
     var eb = $("enterBtn");
     if (eb) {
       var C = '<path pathLength="1" d="M3 44 C2 28 8 15 22 9 C34 4 52 6 76 3"/><path pathLength="1" d="M8 31 C9 22 15 17 22 17.5 C28 18 30 23.5 26.5 26.5 C23.5 29 19 27.5 19.6 24 C20 22 22 21 23.6 22 M30 12 C38 10 46 10.5 54 9.5"/>';
-      var orn = el("span", "d2-orn", ["c1", "c2", "c3", "c4"].map(function (c) { return '<svg class="' + c + '" viewBox="0 0 78 46">' + C + "</svg>"; }).join("") + '<i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i>');
+      var orn = ZS ? el("span", "d2-orn zs-orn", ["c1", "c4"].map(function (c) { return '<span class="zs-c ' + c + '"><span class="zs-m"><span class="zs-i"><svg viewBox="0 0 78 46">' + C + "</svg></span></span></span>"; }).join("")) :
+        el("span", "d2-orn", ["c1", "c2", "c3", "c4"].map(function (c) { return '<svg class="' + c + '" viewBox="0 0 78 46">' + C + "</svg>"; }).join("") + '<i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i>');
       orn.setAttribute("aria-hidden", "true"); eb.appendChild(orn);
     }
   }
@@ -113,7 +117,48 @@
   loadLogo(function () {
     brandSlots.forEach(fillLogo);
     if (dmark) { dmark.innerHTML = LOGO; dmark.hidden = false; }
+    logoOk = true; logoCbs.splice(0).forEach(function (f) { f(); });
   });
+
+  // ---------- заставка v2: когда начинать ----------
+  // Страница закрытой витрины скрыта (#krHide), пока расшифровываются данные и грузятся скрипты; в это время
+  // заставку не начинаем. Когда она видна: космос проявляется сразу (.zs-vis); сценарий (.zs-go) - когда загружены
+  // шрифты названия и кнопки и знак (не дольше 1,5 с) и основной поток освободился после сборки страницы.
+  if (ZS) (function zsGate() {
+    var d = $("doors"), started = false;
+    if (!d) return;
+    function visible() { return d.classList.contains("on") && !d.classList.contains("open") && !document.getElementById("krHide") && !document.hidden; }
+    function later(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
+    function fontOf(e, w, txt) {
+      if (!e || !document.fonts || !document.fonts.load) return null;
+      var f = getComputedStyle(e).fontFamily;
+      return f ? document.fonts.load(w + " 40px " + f, txt).catch(function () {}) : null;
+    }
+    function go() {
+      d.classList.add("zs-go");
+      setTimeout(function () { d.classList.add("zs-done"); }, 4800); // анимации закончились - снимаем will-change, освобождаем память
+    }
+    function start() {
+      started = true; mo.disconnect(); document.removeEventListener("visibilitychange", check);
+      d.classList.add("zs-vis");
+      if (mqR.matches) { go(); return; }
+      var w = [fontOf($("dName"), 400, NAME), fontOf($("dRole"), 500, $("dRole").textContent || "Мебель"), fontOf($("enterBtn"), 400, "Войти в дом")].filter(Boolean);
+      if (!logoOk) w.push(new Promise(function (ok) { logoCbs.push(ok); }));
+      Promise.race([Promise.all(w), later(1500)]).then(function () {
+        // дождаться паузы в работе основного потока (сборка дома, подмена фото), но не дольше 0,7 с
+        return new Promise(function (ok) { if (window.requestIdleCallback) requestIdleCallback(ok, { timeout: 700 }); else setTimeout(ok, 150); });
+      }).then(function () {
+        if (litT) litT(); // копия названия для вспышки - уже с итоговым текстом
+        requestAnimationFrame(function () { requestAnimationFrame(go); });
+      });
+    }
+    function check() { if (!started && visible()) start(); }
+    var mo = new MutationObserver(check);
+    mo.observe(d, { attributes: true, attributeFilter: ["class"] });
+    mo.observe(document.head, { childList: true });
+    document.addEventListener("visibilitychange", check);
+    setTimeout(check, 0);
+  })();
 
   // ---------- меню на весь экран ----------
   var menu = el("div", "d2-menu"); menu.id = "d2menu"; menu.setAttribute("role", "dialog"); menu.setAttribute("aria-modal", "true"); menu.setAttribute("aria-label", "Меню"); menu.inert = true;
