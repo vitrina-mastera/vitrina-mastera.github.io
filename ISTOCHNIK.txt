@@ -1,3 +1,3 @@
 Собрано из исходников витрин (site/vitrina, site/vitriny, site/krasnodar) скриптом site/tools/vitriny-vynos.py
-Коммит: 29e4cbcc33e4
-Время: 2026-11-28 11:39 UTC
+Коммит: dd71bc8bc123
+Время: 2026-11-28 12:11 UTC

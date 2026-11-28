@@ -126,6 +126,7 @@
     var s = document.createElement("style"); s.id = "krCss"; s.textContent = CSS; document.head.appendChild(s); }
   function lockScreen() {
     style();
+    if (LD) loaderOff(true);
     var el = document.getElementById("krLock");
     if (el) return el;
     el = document.createElement("div"); el.id = "krLock";
@@ -140,9 +141,60 @@
     if (vv) { var f = function () { if (!el.isConnected) { vv.removeEventListener("resize", f); vv.removeEventListener("scroll", f); return; } el.style.top = vv.offsetTop + "px"; el.style.height = vv.height + "px"; el.style.bottom = "auto"; }; vv.addEventListener("resize", f); vv.addEventListener("scroll", f); f(); }
     return el;
   }
+  // ---------- красивая загрузка (window.KR_ZAGRUZKA, пробно на novaya/; 2026-11-28, просьба Александра) ----------
+  // Раньше на долю секунды мелькал экран "Открываю витрину" и сразу пропадал - выглядело как лаг. Теперь с первого
+  // кадра тёмный экран с кольцами: тонкие дуги вращаются и то расходятся веером, то снова собираются. Крутится хотя
+  // бы один полный круг, даже если всё загрузилось мгновенно, и уходит в момент, когда дуги снова собрались вместе.
+  // Вращаются отдельные элементы (transform) - это ведёт видеокарта, загрузка на основном потоке их не дёргает.
+  // Когда загрузка начинает гаснуть - событие "kr-zagruzka" (по нему d2.js начинает заставку).
+  var LD = null, LD_T0 = 0, LD_CYC = 2200, LD_GO = false;
+  var LD_CSS = [
+    "#krLoad{position:fixed;inset:0;z-index:2147483001;background:#0F0F0E;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;pointer-events:auto;animation:krLdIn .5s ease-out both}",
+    "#krLoad.out{animation:krLdOut .7s ease-in both;pointer-events:none}",
+    "#krLoad .rg{position:relative;width:92px;height:92px;transform:translateZ(0)}",
+    "#krLoad .rg svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;animation:krLdR 2.2s cubic-bezier(.55,0,.4,1) infinite both;will-change:transform}",
+    "#krLoad .rg circle{fill:none;stroke:rgba(244,238,226,.9);stroke-width:1.5;stroke-linecap:round}",
+    "#krLoad .cap{font:300 10px/1 var(--kr-sans,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif);letter-spacing:.42em;text-indent:.42em;text-transform:uppercase;color:rgba(241,238,232,.62);animation:krLdCap 2.2s ease-in-out infinite both}",
+    "@keyframes krLdIn{from{opacity:0}to{opacity:1}}",
+    "@keyframes krLdOut{from{opacity:1;transform:none}to{opacity:0;transform:scale(1.04)}}",
+    "@keyframes krLdR{from{transform:rotate(0)}to{transform:rotate(360deg)}}",
+    "@keyframes krLdCap{0%,100%{opacity:.45}50%{opacity:1}}",
+    "@media (prefers-reduced-motion:reduce){#krLoad .rg svg,#krLoad .cap{animation:none}}"
+  ].join("\n");
+  function loaderOn() {
+    if (LD || !window.KR_ZAGRUZKA) return;
+    var st = document.createElement("style"); st.id = "krLoadCss"; st.textContent = LD_CSS; document.head.appendChild(st);
+    LD = document.createElement("div"); LD.id = "krLoad"; LD.setAttribute("role", "status"); LD.setAttribute("aria-label", "Загружаю витрину");
+    // пять колец: радиус, длина дуги (доля круга), с какого угла начинается; задержка вращения растёт к краю
+    var R = [[9, .30, 200], [17, .34, 190], [25, .36, 180], [33, .38, 170], [41, .40, 160]], h = "";
+    R.forEach(function (r, i) {
+      var c = 2 * Math.PI * r[0];
+      h += '<svg viewBox="-46 -46 92 92" aria-hidden="true" style="animation-delay:' + (i * .14).toFixed(2) + 's"><circle r="' + r[0] + '" stroke-dasharray="' + (c * r[1]).toFixed(1) + " " + c.toFixed(1) +
+        '" transform="rotate(' + r[2] + ')" style="stroke-opacity:' + (1 - i * .1).toFixed(2) + '"/></svg>';
+    });
+    LD.innerHTML = '<div class="rg">' + h + '</div><div class="cap">Загружаю фото</div>';
+    (document.body || document.documentElement).appendChild(LD);
+    LD_T0 = performance.now();
+  }
+  // убрать загрузку: дождаться конца круга (не раньше первого), когда дуги снова вместе, и плавно погасить
+  function loaderOff(now) {
+    if (!LD || LD_GO) return;
+    LD_GO = true;
+    var el = LD, reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var t = performance.now() - LD_T0, mid = .28 * 1000; // середина задержек колец - момент, когда они ближе всего друг к другу
+    var wait = now ? 0 : reduce ? Math.max(0, 800 - t) : Math.max(1, Math.ceil((t - mid + 150) / LD_CYC)) * LD_CYC + mid - 150 - t;
+    setTimeout(function () {
+      el.classList.add("out");
+      try { window.dispatchEvent(new Event("kr-zagruzka")); } catch (e) {}
+      setTimeout(function () { el.remove(); var c = document.getElementById("krLoadCss"); if (c) c.remove(); LD = null; }, 760);
+    }, Math.max(0, wait));
+  }
+  window.KR_ZAGRUZKA_ON = function () { return !!LD && !LD.classList.contains("out"); };
+
   // тихий экран загрузки (открытый вход): появляется, только если открытие идёт дольше 0,7 с
   var WT = 0, ASKED = false;
   function waitScreen() {
+    if (LD) return; // красивая загрузка уже на экране
     WT = setTimeout(function () {
       WT = 0; if (document.getElementById("krLock")) return;
       var el = lockScreen(); el.classList.add("wait");
@@ -369,7 +421,8 @@
   // страница витрины (вариант 3 или 4) внутри закрытой части: данные - из расшифровки, дальше - обычные скрипты
   function page(opts) {
     style();
-    var hide = document.createElement("style"); hide.id = "krHide"; hide.textContent = "body>*:not(#krLock){visibility:hidden}"; document.head.appendChild(hide);
+    var hide = document.createElement("style"); hide.id = "krHide"; hide.textContent = "body>*:not(#krLock):not(#krLoad){visibility:hidden}"; document.head.appendChild(hide);
+    loaderOn();
     return unlock().then(function (r) {
       window.VITRINA = r.data.vitrina;
       var list = (opts && opts.scripts) || [];
@@ -380,6 +433,7 @@
         });
       }, Promise.resolve()).then(function () {
         hide.remove();
+        loaderOff();
         // чистая версия для клиентов: скрытый вход мастера удержанием знака (master-vhod.js)
         if (window.MEBEL_TOOL === "kr-klient" || window.MEBEL_TOOL === "kr-proba" || window.MEBEL_TOOL === "kr-novaya") loadScript(BASE + "master-vhod.js").catch(function () {});
         if (opts && opts.back === "none") return; // главная (дом): возвращаться некуда

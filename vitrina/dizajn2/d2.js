@@ -127,7 +127,7 @@
   if (ZS) (function zsGate() {
     var d = $("doors"), started = false;
     if (!d) return;
-    function visible() { return d.classList.contains("on") && !d.classList.contains("open") && !document.getElementById("krHide") && !document.hidden; }
+    function visible() { return d.classList.contains("on") && !d.classList.contains("open") && !document.getElementById("krHide") && !(window.KR_ZAGRUZKA_ON && window.KR_ZAGRUZKA_ON()) && !document.hidden; }
     function later(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
     function fontOf(e, w, txt) {
       if (!e || !document.fonts || !document.fonts.load) return null;
@@ -139,7 +139,7 @@
       setTimeout(function () { d.classList.add("zs-done"); }, 4800); // анимации закончились - снимаем will-change, освобождаем память
     }
     function start() {
-      started = true; mo.disconnect(); document.removeEventListener("visibilitychange", check);
+      started = true; mo.disconnect(); document.removeEventListener("visibilitychange", check); window.removeEventListener("kr-zagruzka", check);
       d.classList.add("zs-vis");
       if (mqR.matches) { go(); return; }
       var w = [fontOf($("dName"), 400, NAME), fontOf($("dRole"), 500, $("dRole").textContent || "Мебель"), fontOf($("enterBtn"), 400, "Войти в дом")].filter(Boolean);
@@ -157,6 +157,7 @@
     mo.observe(d, { attributes: true, attributeFilter: ["class"] });
     mo.observe(document.head, { childList: true });
     document.addEventListener("visibilitychange", check);
+    window.addEventListener("kr-zagruzka", check); // красивая загрузка (zamok.js) начала гаснуть
     setTimeout(check, 0);
   })();
 
